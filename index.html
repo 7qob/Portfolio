@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title></title>
+  <meta name="description" content="">
+
+  <!-- Open Graph (empty — fill before sharing) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="">
+  <meta property="og:description" content="">
+  <meta property="og:image" content="">
+  <meta property="og:url" content="">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cascadia+Mono:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Bento grid: nav lives inside the clickable boxes -->
+  <nav aria-label="Hauptnavigation" class="bento">
+
+    <section class="box area-name" aria-labelledby="lbl-name">
+      <h1 class="hero__title" id="lbl-name">Hello I'm <span class="accent">kiraa1q</span></h1>
+      <p class="box__text">I'm a 17 year old computer science student, currently working on <span class="accent">modd</span>.</p>
+      <p class="hero__loc">
+        <span class="hero__loc-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+        Bern, Switzerland
+      </p>
+    </section>
+
+    <section class="box area-stuff" aria-labelledby="lbl-stuff">
+      <h2 class="box__label" id="lbl-stuff"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>Stuff I use</h2>
+
+      <div class="stuff-group">
+        <span class="sublabel">Tools</span>
+        <ul class="entry-list">
+          <li class="entry">
+            <span class="entry__name">VS Codium</span>
+            <span class="entry__note">My main editor — all of VS Code, without the telemetry.</span>
+          </li>
+          <li class="entry">
+            <span class="entry__name">Flow Launcher</span>
+            <span class="entry__note">Keyboard launcher I use to open apps and files in a keystroke.</span>
+          </li>
+          <li class="entry">
+            <span class="entry__name">i3wm</span>
+            <span class="entry__note">Tiling window manager that keeps my Linux workspace keyboard-driven.</span>
+          </li>
+          <li class="entry">
+            <span class="entry__name">Glaze WM</span>
+            <span class="entry__note">Brings that same i3-style tiling over to Windows.</span>
+          </li>
+          <li class="entry">
+            <span class="entry__name">Windows 11</span>
+            <span class="entry__note">Daily driver for everything outside the homelab.</span>
+          </li>
+          <li class="entry">
+            <span class="entry__name">Alacritty</span>
+            <span class="entry__note">Fast, minimal, GPU-accelerated terminal emulator.</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="stuff-group">
+        <span class="sublabel">Techstack</span>
+        <ul class="entry-list">
+          <li class="entry">
+            <span class="entry__name">TypeScript</span>
+            <span class="entry__note">The backbone of most of my web work — I type everything from the frontend down to the API so the compiler catches mistakes before they ship.</span>
+          </li>
+          <li class="entry">
+            <span class="entry__name">Rust</span>
+            <span class="entry__note">My pick when speed and correctness really matter — it's what modd is built in, and the borrow checker keeps the whole thing honest.</span>
+          </li>
+          <li class="entry">
+            <span class="entry__name">React</span>
+            <span class="entry__note">My go-to for building interactive interfaces — component-driven UIs that stay manageable as a project grows.</span>
+          </li>
+          <li class="entry">
+            <span class="entry__name">Node.js / Express</span>
+            <span class="entry__note">Lightweight APIs and backends behind my apps — quick to stand up and easy to keep small and readable.</span>
+          </li>
+          <li class="entry">
+            <span class="entry__name">Python</span>
+            <span class="entry__note">My duct tape for quick scripts, automation, and the glue code around AI models and experiments.</span>
+          </li>
+          <li class="entry">
+            <span class="entry__name">Raspberry Pi</span>
+            <span class="entry__note">The little always-on server my projects live on — cheap, low-power, and surprisingly capable as a home backend.</span>
+          </li>
+          <li class="entry">
+            <span class="entry__name">Docker</span>
+            <span class="entry__note">Keeps every service isolated and reproducible, so I can tear something down and bring it back exactly the same.</span>
+          </li>
+          <li class="entry">
+            <span class="entry__name">Cloudflare Tunnels</span>
+            <span class="entry__note">Exposes my self-hosted apps to the internet without opening a single port on my network.</span>
+          </li>
+          <li class="entry">
+            <span class="entry__name">self-hosting</span>
+            <span class="entry__note">A bit of a philosophy for me — I'd rather run and own my services than rent them from someone else's cloud.</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="box area-github" aria-labelledby="lbl-github">
+      <h2 class="box__label" id="lbl-github"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>GitHub</h2>
+      <!-- Heatmap rendered by script.js from github-contributions-api.jogruber.de (third-party service). -->
+      <div id="gh-graph" class="gh-graph" role="img" aria-label="GitHub Beitragsverlauf des letzten Jahres"></div>
+    </section>
+
+    <!-- Links column: 5 standalone boxes, each its own clickable element. -->
+    <section class="box-stack area-buttons" aria-label="Links">
+
+      <a class="link-box" href="https://github.com/kiraa1q" target="_blank" rel="noopener">
+        <span class="link-box__caption">Profile</span>
+        <span class="link-box__label">
+          <span class="link-box__icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+          </span>
+          GitHub
+        </span>
+        <span class="link-box__note">this is where my stuff lies</span>
+        <span class="box-arrow box-arrow--external" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+        </span>
+      </a>
+
+      <a class="link-box" href="mailto:EMAIL">
+        <span class="link-box__caption">Reach me</span>
+        <span class="link-box__label">
+          <span class="link-box__icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </span>
+          Email
+        </span>
+        <span class="link-box__note">the fastest way to reach me directly</span>
+        <span class="box-arrow box-arrow--external" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+        </span>
+      </a>
+
+      <!-- Vault: intended to download personal info behind a login. A static
+           site can't actually gate this — real auth requires a backend.
+           Placeholder href until that exists. -->
+      <a class="link-box" href="#" aria-label="Vault (Login erforderlich)">
+        <span class="link-box__caption">Private</span>
+        <span class="link-box__label">
+          <span class="link-box__icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </span>
+          Vault
+        </span>
+        <span class="link-box__note">private files, unlocked after login</span>
+        <span class="box-arrow box-arrow--external" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+        </span>
+      </a>
+
+      <button class="link-box" type="button" id="theme-toggle">
+        <span class="link-box__caption">Theme</span>
+        <span class="link-box__label">
+          <span class="link-box__icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </span>
+          Dark/Bright
+        </span>
+        <span class="link-box__note">switch between dark and light mode</span>
+      </button>
+
+      <!-- 5th slot — blank placeholder for now. -->
+      <button class="link-box" type="button" aria-label="Coming soon"></button>
+
+    </section>
+
+    <a class="box box--link area-about" href="about.html" aria-labelledby="lbl-about">
+      <h2 class="box__label" id="lbl-about"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>About me</h2>
+      <p class="box__text">Most of what I build starts as something I wanted for myself — a tool, a server, a small game. Outside of code I draw, mod games, and dig deep into topics I'm curious about, cybersecurity especially.</p>
+
+      <p class="box__text">I'm based in Bern, Switzerland and currently looking for a Praktikum, focused on security tooling, self-hosting, and AI. I speak German (native), English, and French, and I'm learning Mandarin.</p>
+
+      <span class="box-arrow" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </span>
+    </a>
+
+    <section class="box box--link area-projects" aria-labelledby="lbl-projects">
+      <h2 class="box__label" id="lbl-projects"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Projects</h2>
+
+      <!-- Stretched link: the whole box navigates to the projects page,
+           while the GitHub link below stays independently clickable. -->
+      <a class="stretched-link" href="projects.html" aria-label="All projects"></a>
+
+      <ul class="project-teaser">
+        <li class="project-teaser__item">
+          <div class="project-teaser__head">
+            <span class="project-teaser__name">modd</span>
+            <span class="status">WIP</span>
+          </div>
+          <ul class="chips">
+            <li class="chip">Rust</li>
+            <li class="chip">Ratatui</li>
+          </ul>
+          <p class="project-teaser__desc">A terminal-based inference engine in Rust for running local GGUF models.</p>
+        </li>
+        <li class="project-teaser__item">
+          <div class="project-teaser__head">
+            <span class="project-teaser__name">BOARD_NAME</span>
+            <span class="status">WIP</span>
+          </div>
+          <ul class="chips">
+            <li class="chip">Rust</li>
+          </ul>
+          <p class="project-teaser__desc">A self-hosted anonymous textboard and wiki built around a calm reading-room feel.</p>
+        </li>
+        <li class="project-teaser__item">
+          <div class="project-teaser__head">
+            <span class="project-teaser__name">Stalkr</span>
+          </div>
+          <ul class="chips">
+            <li class="chip">React</li>
+            <li class="chip">TypeScript</li>
+            <li class="chip">Node.js</li>
+          </ul>
+          <p class="project-teaser__desc">Real-time Minecraft server dashboard with RCON and NBT parsing, running on a Raspberry Pi 5.</p>
+        </li>
+      </ul>
+
+      <a class="more-link" href="https://github.com/kiraa1q" target="_blank" rel="noopener">
+        More on GitHub
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+      </a>
+
+      <span class="box-arrow" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </span>
+    </section>
+
+    <section class="box area-interests" aria-labelledby="lbl-interests">
+      <h2 class="box__label" id="lbl-interests"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Interests</h2>
+      <ul class="chips">
+        <li class="chip">Cybersecurity</li>
+        <li class="chip">Self-hosting / homelab</li>
+        <li class="chip">Artificial Intelligence</li>
+        <li class="chip">Modding games</li>
+        <li class="chip">Drawing</li>
+        <li class="chip">Research</li>
+        <li class="chip">Anime/Manga</li>
+      </ul>
+    </section>
+
+    <section class="box area-hates" aria-labelledby="lbl-hates">
+      <h2 class="box__label" id="lbl-hates"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>Hates</h2>
+      <ul class="chips">
+        <li class="chip">Telemetry</li>
+        <li class="chip">Bloatware</li>
+        <li class="chip">Vendor lock-in</li>
+        <li class="chip">Ads &amp; tracking</li>
+        <li class="chip">Subscriptions</li>
+      </ul>
+    </section>
+
+  </nav>
+
+  <footer class="site-footer">
+    <span>&copy; <span id="year"></span> &middot; v1.0.0</span>
+    <a href="impressum.html">Impressum<svg class="footer-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+    <a href="https://github.com/kiraa1q" aria-label="GitHub">GitHub<svg class="footer-arrow footer-arrow--external" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></a>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

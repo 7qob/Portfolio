@@ -1,0 +1,847 @@
+/* ===========================================================
+   Portfolio scaffold — shared styles
+   Retro / KISS / classic. Dark theme. 1px borders, no radius.
+   =========================================================== */
+
+/* ---- Design tokens ---- */
+:root {
+  --bg:           #1b1b1b;
+  --bg-raised:    #262626;
+
+  /* Text — three tones, used consistently across the site:
+     --text       primary  (names, titles, key labels)
+     --text-muted secondary (captions, meta, descriptions, chip text)
+     --accent     highlight (sparingly — 1-2 things per view) */
+  --text:         #f4f4f4;
+  --text-muted:   #aeaeae;
+  --border:       #4d4d4d;
+  --border-hover: var(--text);   /* high-contrast border on hover (white on dark) */
+  --accent:       #f5a623;
+
+  /* Type scale (rem-based) */
+  --fs-name:      1.5rem;    /* hero name, bold            */
+  --fs-heading:   1.125rem;  /* project / section titles   */
+  --fs-body:      0.9rem;    /* base body text             */
+  --fs-caption:   0.7rem;    /* uppercase section labels   */
+  --fs-meta:      0.625rem;  /* dates / status / meta       */
+
+  --border-width: 1px;
+  --radius:       0;
+  --space:        8px;
+  --gap:          calc(var(--space) * 2);   /* single knob for all inter-box spacing */
+  --motion:       250ms ease-in-out;        /* single knob for all transitions */
+
+  /* slight depth — kept subtle so the retro/flat look survives */
+  --shadow:       0 2px 8px rgba(0, 0, 0, 0.55);
+
+  --font-mono:    "Cascadia Mono", "JetBrains Mono", "Courier New", ui-monospace, monospace;
+}
+
+/* Light theme — toggled via the Dark/Bright button (adds .light on <html>) */
+:root.light {
+  --bg:        #f4f4f4;
+  --bg-raised: #ffffff;
+  --text:      #1b1b1b;
+  --text-muted:  #5a5a5a;
+  --border:    #c9c9c9;
+  --accent:    #b8860b;
+  --shadow:    0 2px 8px rgba(0, 0, 0, 0.15);
+  --gh-l0:     #ebedf0;
+}
+
+/* ---- Reset ---- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  line-height: 1.5;
+  height: 100vh;
+  height: 100dvh;          /* lock to the viewport — the page never scrolls */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: var(--gap);
+  gap: var(--gap);
+}
+
+/* ---- Generic box ---- */
+.box {
+  position: relative;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  box-shadow: var(--shadow);
+  padding: calc(var(--space) * 2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden auto;        /* scroll vertically if content exceeds the box */
+  scrollbar-width: none;        /* Firefox: hide the scrollbar, keep scrolling */
+  -ms-overflow-style: none;     /* old Edge / IE */
+  transition: filter var(--motion), background var(--motion), border-color var(--motion), color var(--motion);
+}
+
+.box::-webkit-scrollbar,
+.link-box::-webkit-scrollbar {  /* Chrome / Safari / new Edge */
+  display: none;
+}
+
+/* Every box brightens and its border goes high-contrast (white on dark) on hover. */
+.box:hover {
+  filter: brightness(1.15);
+  border-color: var(--border-hover);
+}
+
+/* ---- Shared type roles -------------------------------------------------- */
+
+/* Section captions: TOOLS, ABOUT ME, etc. One rule for every box label. */
+.box__label,
+.link-box__caption,
+.field__label {
+  font-size: var(--fs-caption);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* Caption icon (top-left of each box) — sits before the label text. */
+.box__label {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) * 0.75);
+}
+
+.box__label svg {
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+}
+
+/* Hero heading: "Hello I'm <name>" with an italic accent name. */
+.hero__title {
+  font-size: var(--fs-name);
+  line-height: 1.15;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Italic accent — used for the name and the project in the pitch. */
+.accent {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.hero__title .accent {
+  font-size: 1.25em;   /* name reads a touch larger, like the reference */
+}
+
+/* Body copy: descriptions, pitch, prose — muted, capped line length. */
+.box__text {
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  max-width: 60ch;
+  color: var(--text-muted);
+}
+
+/* Hero location line (pin icon + place). */
+.hero__loc {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) * 0.75);
+  font-size: var(--fs-body);
+  color: var(--text-muted);
+}
+
+.hero__loc-icon {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  color: var(--text-muted);
+}
+
+.hero__loc-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+}
+
+/* ---- Chips: reusable tech / interest tags ---- */
+.chips {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space);
+}
+
+.chip {
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  padding: calc(var(--space) * 0.25) calc(var(--space) * 0.75);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ---- Entry list: name + one-line note (Tools, Techstack) ---- */
+.entry-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 0.75);
+}
+
+.entry {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 0.25);
+  min-width: 0;
+}
+
+.entry__name {
+  font-size: var(--fs-body);
+  line-height: 1.2;
+  color: var(--text);
+}
+
+/* Description note under each entry — body size, muted (matches project descriptions). */
+.entry__note {
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* ---- "Stuff I use": two labelled sub-sections (Tools / Techstack) ---- */
+.stuff-group {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 0.5);
+}
+
+/* Sub-section label inside a box (TOOLS, TECHSTACK). */
+.sublabel {
+  font-size: var(--fs-caption);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ---- Status badge (WIP, etc.) — muted meta, not accent ---- */
+.status {
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 calc(var(--space) * 0.5);
+  font-size: var(--fs-meta);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ---- Projects teaser list (home projects box) ---- */
+.project-teaser {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+/* One project preview: title+status, chips, one-line description. */
+.project-teaser__item {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 0.5);
+  padding: var(--space) 0;
+}
+
+.project-teaser__item:first-child {
+  padding-top: 0;
+}
+
+/* Thin 1px divider between the two rows. */
+.project-teaser__item + .project-teaser__item {
+  border-top: var(--border-width) solid var(--border);
+}
+
+.project-teaser__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space);
+}
+
+/* Push the status chip to the right edge of the row. */
+.project-teaser__head .status {
+  margin-left: auto;
+}
+
+.project-teaser__name {
+  font-size: var(--fs-body);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.project-teaser__desc {
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* Stretched link: makes the whole box clickable without wrapping the
+   content in an <a> (so the GitHub link below can stay a real link). */
+.stretched-link {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.stretched-link:focus-visible {
+  outline-offset: -2px;   /* keep the focus ring inside the clipped box */
+}
+
+/* Muted "More on GitHub ->" pinned to the bottom; sits above the
+   stretched link so it stays independently clickable. */
+.more-link {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--space) * 0.5);
+  font-size: var(--fs-caption);
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--motion);
+}
+
+.more-link svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  transition: transform var(--motion);
+}
+
+.more-link:hover,
+.more-link:focus-visible {
+  color: var(--text);
+  outline: none;
+}
+
+.more-link:hover svg,
+.more-link:focus-visible svg {
+  transform: translate(2px, -2px);   /* external -> up-right, matching site */
+}
+
+.more-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .more-link:hover svg,
+  .more-link:focus-visible svg {
+    transform: none;
+  }
+}
+
+/* ===========================================================
+   Bento grid (index.html)
+   7 columns × 5 rows, mapped 1:1 to the paper sketch.
+   =========================================================== */
+.bento {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(5, minmax(0, 1fr));   /* 5 equal rows, won't grow to content */
+  gap: var(--gap);
+  grid-template-areas:
+    "name      name   projects  projects  stuff stuff buttons"
+    "about     about  projects  projects  stuff stuff buttons"
+    "about     about  projects  projects  stuff stuff buttons"
+    "interests hates  projects  projects  stuff stuff buttons"
+    "interests hates  github    github    stuff stuff buttons";
+  flex: 1;
+  min-height: 0;   /* allow the grid to shrink to the viewport so boxes scroll */
+}
+
+.area-name      { grid-area: name; }
+.area-github    { grid-area: github; }
+.area-stuff     { grid-area: stuff; }
+.area-buttons   { grid-area: buttons; }
+.area-about     { grid-area: about; }
+.area-projects  { grid-area: projects; }
+.area-interests { grid-area: interests; }
+.area-hates     { grid-area: hates; }
+
+/* ---- GitHub contribution heatmap (data: third-party service) ---- */
+/* Levels are derived from --accent, so the heatmap follows the accent. */
+:root {
+  --gh-l0: #1a1a1a;   /* empty cell */
+  --gh-l1: color-mix(in srgb, var(--accent) 28%, var(--gh-l0));
+  --gh-l2: color-mix(in srgb, var(--accent) 52%, var(--gh-l0));
+  --gh-l3: color-mix(in srgb, var(--accent) 76%, var(--gh-l0));
+  --gh-l4: var(--accent);
+}
+
+/* The graph scrolls horizontally inside its box (the page never scrolls).
+   Scrollbar hidden for a cleaner look; JS anchors it to the recent weeks. */
+.gh-graph {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: auto;
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* old Edge / IE */
+}
+
+.gh-graph::-webkit-scrollbar {  /* Chrome / Safari / new Edge */
+  display: none;
+}
+
+.gh-grid {
+  width: max-content;
+}
+
+/* The heatmap — small fixed squares; overflow is handled by .gh-graph scroll */
+.gh-cells {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, 10px);
+  grid-auto-columns: 10px;
+  gap: 3px;
+}
+
+.gh-cell {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--gh-l0);
+}
+
+.gh-cell[data-level="1"] { background: var(--gh-l1); }
+.gh-cell[data-level="2"] { background: var(--gh-l2); }
+.gh-cell[data-level="3"] { background: var(--gh-l3); }
+.gh-cell[data-level="4"] { background: var(--gh-l4); }
+
+.gh-cell--pad { background: transparent; }
+
+/* ===========================================================
+   Clickable nav boxes
+   =========================================================== */
+.box--link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* Keyboard focus gets the same highlight as hover.
+   (.box:hover already covers the mouse-hover case for these boxes.) */
+.box--link:focus-visible {
+  filter: brightness(1.15);
+  border-color: var(--border-hover);
+}
+
+/* Visible focus everywhere */
+a:focus-visible,
+.box--link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ===========================================================
+   Navigation arrow — top-right marker on boxes that link out
+   =========================================================== */
+/* Sits in the top-right corner with the same inset as the caption.
+   Decorative (aria-hidden) and click-through so the box stays the link. */
+.box-arrow {
+  position: absolute;
+  top: calc(var(--space) * 2);
+  right: calc(var(--space) * 2);
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  color: var(--text-muted);   /* muted by default */
+  opacity: 0.6;
+  pointer-events: none;
+  transition: transform var(--motion), opacity var(--motion), color var(--motion);
+}
+
+.box-arrow svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+}
+
+/* On box hover/focus the arrow brightens and nudges in its own direction. */
+.box:hover .box-arrow,
+.box--link:focus-visible .box-arrow,
+.link-box:hover .box-arrow,
+.link-box:focus-visible .box-arrow {
+  color: var(--text);
+  opacity: 1;
+  transform: translateX(2px);            /* arrow-right -> right */
+}
+
+.box:hover .box-arrow--external,
+.box--link:focus-visible .box-arrow--external,
+.link-box:hover .box-arrow--external,
+.link-box:focus-visible .box-arrow--external {
+  transform: translate(2px, -2px);       /* arrow-up-right -> up-right */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .box:hover .box-arrow,
+  .box--link:focus-visible .box-arrow,
+  .link-box:hover .box-arrow,
+  .link-box:focus-visible .box-arrow,
+  .box:hover .box-arrow--external,
+  .box--link:focus-visible .box-arrow--external,
+  .link-box:hover .box-arrow--external,
+  .link-box:focus-visible .box-arrow--external {
+    transform: none;
+  }
+}
+
+/* ===========================================================
+   Links column — 5 standalone link boxes
+   =========================================================== */
+/* Container holds the column's grid-area but is borderless; each child
+   box carries its own border. The 5 boxes divide the height evenly. */
+.box-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);   /* matches the bento grid gap so rows line up */
+  min-height: 0;
+  min-width: 0;
+}
+
+/* Each box is itself the clickable element (<a> or <button>). Styled like
+   the other bento boxes; flex:1 so all five share the column equally.
+   Content is top-aligned so the caption sits in the top-left corner,
+   matching the GITHUB / TOOLS / TECHSTACK boxes. */
+.link-box {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: var(--space);
+  padding: calc(var(--space) * 2);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  overflow: hidden auto;        /* scroll vertically if content exceeds the box */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  transition: filter var(--motion), background var(--motion), border-color var(--motion), color var(--motion);
+}
+
+/* Caption styling comes from the shared caption rule (.box__label, …). */
+
+/* Label = the box's primary line (icon slot + action name). */
+.link-box__label {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) * 1.25);
+  font-size: var(--fs-body);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Description note under a link box's label — body size, muted (consistent with entries). */
+.link-box__note {
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* Feather icon slot (~20px). Collapses if ever left empty so the label
+   stays flush-left. */
+.link-box__icon {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+}
+
+.link-box__icon:empty {
+  display: none;
+}
+
+/* Feather icons are stroked outlines — keep fill off and let stroke
+   follow currentColor (e.g. when the light theme changes --text). */
+.link-box__icon svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+}
+
+/* Hover/focus brightens the box and lights up its border. */
+.link-box:hover,
+.link-box:focus-visible {
+  filter: brightness(1.15);
+  border-color: var(--border-hover);
+}
+
+.link-box:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ===========================================================
+   Subpages (projects / about / impressum)
+   =========================================================== */
+.subpage-main {
+  flex: 1;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: calc(var(--space) * 3);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 3);
+}
+
+.back-link {
+  display: inline-block;
+  text-decoration: none;
+  color: var(--text);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space) calc(var(--space) * 2);
+  font-size: 1rem;
+  line-height: 1;
+  align-self: flex-start;
+  transition: filter var(--motion), background var(--motion), color var(--motion), border-color var(--motion);
+}
+
+.back-link:hover,
+.back-link:focus-visible {
+  filter: brightness(1.15);
+  border-color: var(--border-hover);
+}
+
+.back-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Subpage H1 — heading scale, same muted uppercase treatment as captions. */
+.page-title {
+  font-size: var(--fs-heading);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+  border-bottom: var(--border-width) solid var(--border);
+  padding-bottom: calc(var(--space) * 2);
+}
+/* .field__label styling comes from the shared caption rule. */
+
+/* ---- Prose (about page) ---- */
+.prose {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 2);
+  max-width: 60ch;
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.prose strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* ---- Project cards (projects page) — ordered, numbered list ---- */
+.project-grid {
+  list-style: none;
+  counter-reset: project;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 2);
+  max-width: 70ch;
+}
+
+.project {
+  counter-increment: project;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  padding: calc(var(--space) * 2);
+}
+
+.project__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space);
+}
+
+/* Numbered marker: 01, 02, … */
+.project__head::before {
+  content: counter(project, decimal-leading-zero);
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+}
+
+.project__title {
+  font-size: var(--fs-heading);
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Status sits at the right edge of the project header. */
+.project__head .status {
+  margin-left: auto;
+}
+
+/* One-line, muted description. */
+.project__desc {
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* ===========================================================
+   Footer (shared)
+   =========================================================== */
+.site-footer {
+  border-top: var(--border-width) solid var(--border);
+  padding-top: calc(var(--space) * 2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--space) * 2);
+  justify-content: space-between;
+  font-size: var(--fs-caption);
+  color: var(--text-muted);
+}
+
+.site-footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--space) * 0.5);
+  color: var(--text-muted);
+  text-decoration: none;
+  border-bottom: var(--border-width) solid var(--border);
+  transition: color var(--motion), border-color var(--motion);
+}
+
+.site-footer a:hover,
+.site-footer a:focus-visible {
+  color: var(--text);
+  border-color: var(--text);
+  outline: none;
+}
+
+/* Inline arrow on footer links: -> for the Impressum page, up-right for
+   external GitHub. Inherits currentColor, so it brightens with the link
+   text on hover — no separate motion, consistent with the rest of the site. */
+.footer-arrow {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  transition: transform var(--motion), color var(--motion);
+}
+
+.site-footer a:hover .footer-arrow,
+.site-footer a:focus-visible .footer-arrow {
+  transform: translateX(2px);            /* arrow-right -> right */
+}
+
+.site-footer a:hover .footer-arrow--external,
+.site-footer a:focus-visible .footer-arrow--external {
+  transform: translate(2px, -2px);       /* arrow-up-right -> up-right */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-footer a:hover .footer-arrow,
+  .site-footer a:focus-visible .footer-arrow,
+  .site-footer a:hover .footer-arrow--external,
+  .site-footer a:focus-visible .footer-arrow--external {
+    transform: none;
+  }
+}
+
+/* ===========================================================
+   Responsive
+   5 cols (sketch = 7 tracks) -> 2 cols -> 1 col
+   =========================================================== */
+@media (max-width: 768px) {
+  .bento {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: none;                  /* let stacked boxes size to content */
+    grid-auto-rows: minmax(110px, auto);
+    grid-template-areas:
+      "name      name"
+      "about     about"
+      "interests hates"
+      "stuff     stuff"
+      "projects  projects"
+      "github    github"
+      "buttons   buttons";
+  }
+
+  /* Let the link boxes keep a tappable height instead of being crushed
+     into the short auto-row; the stack grows to fit them. */
+  .link-box {
+    min-height: 56px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bento {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    grid-template-areas:
+      "name"
+      "about"
+      "interests"
+      "hates"
+      "stuff"
+      "projects"
+      "github"
+      "buttons";
+  }
+}
