@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title></title>
+  <title>kiraa1q · Portfolio</title>
   <meta name="description" content="">
 
   <!-- Open Graph (empty — fill before sharing) -->
@@ -13,109 +13,77 @@
   <meta property="og:image" content="">
   <meta property="og:url" content="">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cascadia+Mono:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='.5' y='.5' width='31' height='31' fill='%230e0e0e' stroke='%232a2a2a'/%3E%3Crect x='9' y='9' width='14' height='14' fill='%23ff1e2f'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
+
+  <!-- Apply the saved theme before first paint, so a light-mode visitor
+       never sees a dark flash when moving between pages. -->
+  <script>
+    try {
+      if (localStorage.getItem("theme") === "light") {
+        document.documentElement.classList.add("light");
+      }
+    } catch (e) {}
+  </script>
 </head>
 <body>
 
-  <!-- Bento grid: nav lives inside the clickable boxes -->
-  <nav aria-label="Hauptnavigation" class="bento">
+  <!-- The site's one navigation. Byte-identical on every page except for
+       which link carries aria-current, so "where can I go" never depends on
+       "where am I". Sticky on mobile — see .site-header in style.css. -->
+  <header class="site-header">
+    <nav class="site-nav" aria-label="Main">
+      <a href="index.html" aria-current="page">Home</a>
+      <a href="projects.html">Projects</a>
+      <a href="about.html">About</a>
+      <a href="vault/index.html">Vault</a>
+    </nav>
+    <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" aria-pressed="false">
+      <span data-theme-icon>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </span>
+    </button>
+  </header>
+
+  <!-- Bento grid: this is the page's content, not a nav landmark — wrapping
+       the hero, the about copy and the contribution graph in <nav> made the
+       landmark useless to a screen reader. The header nav is the landmark. -->
+  <main class="bento">
 
     <section class="box area-name" aria-labelledby="lbl-name">
       <h1 class="hero__title" id="lbl-name">Hello I'm <span class="accent">kiraa1q</span></h1>
-      <p class="box__text">I'm a 17 year old computer science student, currently working on <span class="accent">modd</span>.</p>
+      <p class="box__text">I'm a 17 year old computer science student, currently working on <span class="accent">small projects</span>.</p>
       <p class="hero__loc">
         <span class="hero__loc-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
         Bern, Switzerland
       </p>
     </section>
 
-    <section class="box area-stuff" aria-labelledby="lbl-stuff">
-      <h2 class="box__label" id="lbl-stuff"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>Stuff I use</h2>
-
-      <div class="stuff-group">
-        <span class="sublabel">Tools</span>
-        <ul class="entry-list">
-          <li class="entry">
-            <span class="entry__name">VS Codium</span>
-            <span class="entry__note">My main editor — all of VS Code, without the telemetry.</span>
-          </li>
-          <li class="entry">
-            <span class="entry__name">Flow Launcher</span>
-            <span class="entry__note">Keyboard launcher I use to open apps and files in a keystroke.</span>
-          </li>
-          <li class="entry">
-            <span class="entry__name">i3wm</span>
-            <span class="entry__note">Tiling window manager that keeps my Linux workspace keyboard-driven.</span>
-          </li>
-          <li class="entry">
-            <span class="entry__name">Glaze WM</span>
-            <span class="entry__note">Brings that same i3-style tiling over to Windows.</span>
-          </li>
-          <li class="entry">
-            <span class="entry__name">Windows 11</span>
-            <span class="entry__note">Daily driver for everything outside the homelab.</span>
-          </li>
-          <li class="entry">
-            <span class="entry__name">Alacritty</span>
-            <span class="entry__note">Fast, minimal, GPU-accelerated terminal emulator.</span>
-          </li>
-        </ul>
+    <!-- Each project card carries its own gradient border (.is-*), which is
+         also the accent on that project's page. -->
+    <section class="box box--link box--edge is-comfy area-comfy" aria-labelledby="lbl-comfy">
+      <a class="stretched-link" href="project-comfyui.html" aria-label="ComfyUI × Krea 2 — project page"></a>
+      <span class="box-arrow" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </span>
+      <h2 class="box__label" id="lbl-comfy"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Featured</h2>
+      <div class="project-box__head">
+        <span class="project-box__name project-box__name--lg">ComfyUI × Krea 2</span>
       </div>
-
-      <div class="stuff-group">
-        <span class="sublabel">Techstack</span>
-        <ul class="entry-list">
-          <li class="entry">
-            <span class="entry__name">TypeScript</span>
-            <span class="entry__note">The backbone of most of my web work — I type everything from the frontend down to the API so the compiler catches mistakes before they ship.</span>
-          </li>
-          <li class="entry">
-            <span class="entry__name">Rust</span>
-            <span class="entry__note">My pick when speed and correctness really matter — it's what modd is built in, and the borrow checker keeps the whole thing honest.</span>
-          </li>
-          <li class="entry">
-            <span class="entry__name">React</span>
-            <span class="entry__note">My go-to for building interactive interfaces — component-driven UIs that stay manageable as a project grows.</span>
-          </li>
-          <li class="entry">
-            <span class="entry__name">Node.js / Express</span>
-            <span class="entry__note">Lightweight APIs and backends behind my apps — quick to stand up and easy to keep small and readable.</span>
-          </li>
-          <li class="entry">
-            <span class="entry__name">Python</span>
-            <span class="entry__note">My duct tape for quick scripts, automation, and the glue code around AI models and experiments.</span>
-          </li>
-          <li class="entry">
-            <span class="entry__name">Raspberry Pi</span>
-            <span class="entry__note">The little always-on server my projects live on — cheap, low-power, and surprisingly capable as a home backend.</span>
-          </li>
-          <li class="entry">
-            <span class="entry__name">Docker</span>
-            <span class="entry__note">Keeps every service isolated and reproducible, so I can tear something down and bring it back exactly the same.</span>
-          </li>
-          <li class="entry">
-            <span class="entry__name">Cloudflare Tunnels</span>
-            <span class="entry__note">Exposes my self-hosted apps to the internet without opening a single port on my network.</span>
-          </li>
-          <li class="entry">
-            <span class="entry__name">self-hosting</span>
-            <span class="entry__note">A bit of a philosophy for me — I'd rather run and own my services than rent them from someone else's cloud.</span>
-          </li>
-        </ul>
-      </div>
+      <ul class="chips">
+        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/></svg>ComfyUI</li>
+        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Krea 2</li>
+      </ul>
+      <p class="box__text">A polished, custom ComfyUI node-graph workflow built around Krea 2 — a reusable pipeline tuned to get the most out of the model.</p>
     </section>
 
     <section class="box area-github" aria-labelledby="lbl-github">
       <h2 class="box__label" id="lbl-github"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>GitHub</h2>
       <!-- Heatmap rendered by script.js from github-contributions-api.jogruber.de (third-party service). -->
-      <div id="gh-graph" class="gh-graph" role="img" aria-label="GitHub Beitragsverlauf des letzten Jahres"></div>
+      <div id="gh-graph" class="gh-graph" role="img" aria-label="GitHub contributions over the last year"></div>
     </section>
 
-    <!-- Links column: 5 standalone boxes, each its own clickable element. -->
+    <!-- Links column: 3 standalone boxes, each its own clickable element. -->
     <section class="box-stack area-buttons" aria-label="Links">
 
       <a class="link-box" href="https://github.com/kiraa1q" target="_blank" rel="noopener">
@@ -126,13 +94,13 @@
           </span>
           GitHub
         </span>
-        <span class="link-box__note">this is where my stuff lies</span>
+        <span class="link-box__note">this is where my stuff lies.</span>
         <span class="box-arrow box-arrow--external" aria-hidden="true">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
         </span>
       </a>
 
-      <a class="link-box" href="mailto:EMAIL">
+      <a class="link-box" href="mailto:matti.naef@bwdbern.ch">
         <span class="link-box__caption">Reach me</span>
         <span class="link-box__label">
           <span class="link-box__icon" aria-hidden="true">
@@ -140,16 +108,18 @@
           </span>
           Email
         </span>
-        <span class="link-box__note">the fastest way to reach me directly</span>
+        <span class="link-box__note">the fastest way to reach me directly.</span>
         <span class="box-arrow box-arrow--external" aria-hidden="true">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
         </span>
       </a>
 
-      <!-- Vault: intended to download personal info behind a login. A static
-           site can't actually gate this — real auth requires a backend.
-           Placeholder href until that exists. -->
-      <a class="link-box" href="#" aria-label="Vault (Login erforderlich)">
+      <!-- Relative and same-tab: the Vault is an internal page, not an
+           outbound link. The old absolute https://kira1q.dev/vault broke on
+           file:// and on the LAN, and 404s until the Pi serves the domain.
+           It is password-protected server-side (nginx Basic Auth) — see
+           deploy/nginx-kira1q.dev.conf. -->
+      <a class="link-box" href="vault/index.html">
         <span class="link-box__caption">Private</span>
         <span class="link-box__label">
           <span class="link-box__icon" aria-hidden="true">
@@ -157,25 +127,16 @@
           </span>
           Vault
         </span>
-        <span class="link-box__note">private files, unlocked after login</span>
-        <span class="box-arrow box-arrow--external" aria-hidden="true">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+        <span class="link-box__note">CV and school reports. Password required.</span>
+        <span class="box-arrow" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </span>
       </a>
 
-      <button class="link-box" type="button" id="theme-toggle">
-        <span class="link-box__caption">Theme</span>
-        <span class="link-box__label">
-          <span class="link-box__icon" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-          </span>
-          Dark/Bright
-        </span>
-        <span class="link-box__note">switch between dark and light mode</span>
-      </button>
-
-      <!-- 5th slot — blank placeholder for now. -->
-      <button class="link-box" type="button" aria-label="Coming soon"></button>
+      <!-- The theme toggle used to be a fourth box here. It is a site-wide
+           setting, not a destination, so it never belonged next to "my GitHub
+           profile" and "my CV" — it lives in the header now, on every page
+           rather than only this one. -->
 
     </section>
 
@@ -190,88 +151,69 @@
       </span>
     </a>
 
-    <section class="box box--link area-projects" aria-labelledby="lbl-projects">
-      <h2 class="box__label" id="lbl-projects"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Projects</h2>
-
-      <!-- Stretched link: the whole box navigates to the projects page,
-           while the GitHub link below stays independently clickable. -->
-      <a class="stretched-link" href="projects.html" aria-label="All projects"></a>
-
-      <ul class="project-teaser">
-        <li class="project-teaser__item">
-          <div class="project-teaser__head">
-            <span class="project-teaser__name">modd</span>
-            <span class="status">WIP</span>
-          </div>
-          <ul class="chips">
-            <li class="chip">Rust</li>
-            <li class="chip">Ratatui</li>
-          </ul>
-          <p class="project-teaser__desc">A terminal-based inference engine in Rust for running local GGUF models.</p>
-        </li>
-        <li class="project-teaser__item">
-          <div class="project-teaser__head">
-            <span class="project-teaser__name">BOARD_NAME</span>
-            <span class="status">WIP</span>
-          </div>
-          <ul class="chips">
-            <li class="chip">Rust</li>
-          </ul>
-          <p class="project-teaser__desc">A self-hosted anonymous textboard and wiki built around a calm reading-room feel.</p>
-        </li>
-        <li class="project-teaser__item">
-          <div class="project-teaser__head">
-            <span class="project-teaser__name">Stalkr</span>
-          </div>
-          <ul class="chips">
-            <li class="chip">React</li>
-            <li class="chip">TypeScript</li>
-            <li class="chip">Node.js</li>
-          </ul>
-          <p class="project-teaser__desc">Real-time Minecraft server dashboard with RCON and NBT parsing, running on a Raspberry Pi 5.</p>
-        </li>
-      </ul>
-
-      <a class="more-link" href="https://github.com/kiraa1q" target="_blank" rel="noopener">
-        More on GitHub
-        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-      </a>
-
+    <section class="box box--link box--edge is-ignite area-ignite" aria-labelledby="lbl-ignite">
+      <a class="stretched-link" href="project-ignite.html" aria-label="Ignite — project page"></a>
       <span class="box-arrow" aria-hidden="true">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
       </span>
-    </section>
-
-    <section class="box area-interests" aria-labelledby="lbl-interests">
-      <h2 class="box__label" id="lbl-interests"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Interests</h2>
+      <h2 class="box__label" id="lbl-ignite"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Project</h2>
+      <div class="project-box__head">
+        <span class="project-box__name">Ignite</span>
+        <span class="status">WIP</span>
+      </div>
       <ul class="chips">
-        <li class="chip">Cybersecurity</li>
-        <li class="chip">Self-hosting / homelab</li>
-        <li class="chip">Artificial Intelligence</li>
-        <li class="chip">Modding games</li>
-        <li class="chip">Drawing</li>
-        <li class="chip">Research</li>
-        <li class="chip">Anime/Manga</li>
+        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="6.3"/><circle cx="12" cy="12" r="2.4"/><g stroke-width="2.6" stroke-linecap="butt"><path d="M12 5.7V2.5M12 18.3v3.2M5.7 12H2.5M18.3 12h3.2M7.55 7.55L5.28 5.28M16.45 16.45l2.27 2.27M16.45 7.55l2.27-2.27M7.55 16.45l-2.27 2.27"/></g></svg>Rust</li>
+        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Reverse</li>
+        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>SSE streaming</li>
+        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>Cloudflare Tunnel</li>
       </ul>
+      <p class="box__text">A standalone reverse proxy that safely exposes any local LLM server — KoboldCpp, llama.cpp, Ollama — to the internet: token auth, per-IP rate limiting, a GPU concurrency cap, request queue, SSE streaming, and one-command Cloudflare Tunnel setup.</p>
     </section>
 
-    <section class="box area-hates" aria-labelledby="lbl-hates">
-      <h2 class="box__label" id="lbl-hates"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>Hates</h2>
+    <section class="box box--link box--edge is-kobui area-kobui" aria-labelledby="lbl-kobui">
+      <a class="stretched-link" href="project-kobui.html" aria-label="Kobui — project page"></a>
+      <span class="box-arrow" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </span>
+      <h2 class="box__label" id="lbl-kobui"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Project</h2>
+      <div class="project-box__head">
+        <span class="project-box__name">Kobui</span>
+      </div>
       <ul class="chips">
-        <li class="chip">Telemetry</li>
-        <li class="chip">Bloatware</li>
-        <li class="chip">Vendor lock-in</li>
-        <li class="chip">Ads &amp; tracking</li>
-        <li class="chip">Subscriptions</li>
+        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="10" ry="4.2"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(120 12 12)"/></svg>React</li>
+        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19"/><g stroke-width="1.8"><path d="M6 12.4h6.4M9.2 12.4V19"/><path d="M19.9 13.6a2.1 2.1 0 0 0-3.5 1.5c0 1.9 3.5 1.2 3.5 3.1a2.1 2.1 0 0 1-3.5 1.4"/></g></svg>TypeScript</li>
+        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></svg>KoboldCpp</li>
       </ul>
+      <p class="box__text">A local-only AI chat frontend made with React for the inference engine KoboldCpp.</p>
     </section>
 
-  </nav>
+    <!-- Stalkr was the one project with a page and a card on projects.html
+         but no presence here, so the home page showed three of four and gave
+         no hint there was a fourth. Full-width bottom band. -->
+    <section class="box box--link box--edge is-stalkr area-stalkr" aria-labelledby="lbl-stalkr">
+      <a class="stretched-link" href="project-stalkr.html" aria-label="Stalkr — project page"></a>
+      <span class="box-arrow" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </span>
+      <h2 class="box__label" id="lbl-stalkr"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Project</h2>
+      <div class="project-box__head">
+        <span class="project-box__name">Stalkr</span>
+      </div>
+      <ul class="chips">
+        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="10" ry="4.2"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(120 12 12)"/></svg>React</li>
+        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19"/><g stroke-width="1.8"><path d="M6 12.4h6.4M9.2 12.4V19"/><path d="M19.9 13.6a2.1 2.1 0 0 0-3.5 1.5c0 1.9 3.5 1.2 3.5 3.1a2.1 2.1 0 0 1-3.5 1.4"/></g></svg>TypeScript</li>
+        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l8.7 5v10L12 22l-8.7-5V7z"/></svg>Node.js</li>
+      </ul>
+      <p class="box__text">Real-time Minecraft server dashboard with RCON and NBT parsing, running on a Raspberry Pi 5.</p>
+    </section>
 
+  </main>
+
+  <!-- Legal + credit only. Navigation is in the header. -->
   <footer class="site-footer">
-    <span>&copy; <span id="year"></span> &middot; v1.0.0</span>
-    <a href="impressum.html">Impressum<svg class="footer-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
-    <a href="https://github.com/kiraa1q" aria-label="GitHub">GitHub<svg class="footer-arrow footer-arrow--external" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></a>
+    <span class="site-footer__meta">&copy; <span id="year"></span> kiraa1q &middot; v1.0.0</span>
+    <a href="impressum.html">Impressum</a>
+    <a href="https://github.com/kiraa1q" target="_blank" rel="noopener">GitHub<svg class="footer-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></a>
   </footer>
 
   <script src="script.js"></script>

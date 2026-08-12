@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About · kiraa1q</title>
+  <meta name="description" content="">
+
+  <!-- Open Graph (empty — fill before sharing) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="">
+  <meta property="og:description" content="">
+  <meta property="og:image" content="">
+  <meta property="og:url" content="">
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='.5' y='.5' width='31' height='31' fill='%230e0e0e' stroke='%232a2a2a'/%3E%3Crect x='9' y='9' width='14' height='14' fill='%23ff1e2f'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Apply the saved theme before first paint, so a light-mode visitor
+       never sees a dark flash when moving between pages. -->
+  <script>
+    try {
+      if (localStorage.getItem("theme") === "light") {
+        document.documentElement.classList.add("light");
+      }
+    } catch (e) {}
+  </script>
+</head>
+<body>
+
+  <!-- The site's one navigation. Byte-identical on every page except for
+       which link carries aria-current, so "where can I go" never depends on
+       "where am I". Sticky on mobile — see .site-header in style.css. -->
+  <header class="site-header">
+    <nav class="site-nav" aria-label="Main">
+      <a href="index.html">Home</a>
+      <a href="projects.html">Projects</a>
+      <a href="about.html" aria-current="page">About</a>
+      <a href="vault/index.html">Vault</a>
+    </nav>
+    <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" aria-pressed="false">
+      <span data-theme-icon>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </span>
+    </button>
+  </header>
+
+  <div class="page-head">
+    <h1 class="page-head__title" id="page-title">About</h1>
+    <p class="page-head__lede">Who I am, what I'm into, and what I'm looking for.</p>
+  </div>
+
+  <main class="page-body" aria-labelledby="page-title">
+    <div class="about">
+
+      <!-- Opening: the prose people came for, at reading size, with the same
+           facts as a scannable sheet beside it. -->
+      <div class="about__top">
+        <div class="about__lead">
+          <p>I'm a 17 year old computer science student in Bern, Switzerland. Most of what I build starts as something I wanted for myself — a tool, a server, a small game.</p>
+          <p>That is where everything on this site came from: a reverse proxy so my own LLM server can be reached from outside without being left open (Ignite), a chat frontend that never leaves my machine (Kobui), a dashboard for the Minecraft server on my Raspberry Pi (Stalkr), and a ComfyUI workflow I kept tuning until it was worth reusing.</p>
+          <p>Outside of code I draw, mod games, and dig deep into topics I'm curious about, cybersecurity especially.</p>
+          <p>Right now I'm looking for a <strong>Praktikum</strong>, focused on security tooling, self-hosting, and AI.</p>
+        </div>
+
+        <!-- Data sheet: the same facts as the prose, scannable in two seconds. -->
+        <section class="box box--static" aria-labelledby="lbl-glance">
+          <h2 class="box__label" id="lbl-glance"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>At a glance</h2>
+          <dl class="spec">
+            <div class="spec__row">
+              <dt class="spec__key">Location</dt>
+              <dd class="spec__val">Bern, Switzerland</dd>
+            </div>
+            <div class="spec__row">
+              <dt class="spec__key">Studying</dt>
+              <dd class="spec__val">Computer science</dd>
+            </div>
+            <div class="spec__row">
+              <dt class="spec__key">Looking for</dt>
+              <dd class="spec__val">Praktikum</dd>
+            </div>
+            <div class="spec__row">
+              <dt class="spec__key">Focus</dt>
+              <dd class="spec__val">Security tooling, self-hosting, AI</dd>
+            </div>
+          </dl>
+        </section>
+      </div>
+
+      <section class="about-band" aria-labelledby="lbl-interests">
+        <h2 class="section-label" id="lbl-interests">Interests</h2>
+        <ul class="chips">
+          <li class="chip">Cybersecurity</li>
+          <li class="chip">Self-hosting / homelab</li>
+          <li class="chip">Artificial Intelligence</li>
+          <li class="chip">Modding games</li>
+          <li class="chip">Drawing</li>
+          <li class="chip">Research</li>
+          <li class="chip">Anime/Manga</li>
+        </ul>
+      </section>
+
+      <!-- Four languages as a full-width band rather than a four-row card:
+           the level is the interesting part, and this puts it under the
+           language instead of pushing it to a far right edge. -->
+      <section class="about-band" aria-labelledby="lbl-langs">
+        <h2 class="section-label" id="lbl-langs">Languages</h2>
+        <dl class="datarow">
+          <div class="datarow__cell">
+            <dt>German</dt>
+            <dd>Native</dd>
+          </div>
+          <div class="datarow__cell">
+            <dt>English</dt>
+            <dd>Spoken</dd>
+          </div>
+          <div class="datarow__cell">
+            <dt>French</dt>
+            <dd>Spoken</dd>
+          </div>
+          <div class="datarow__cell">
+            <dt>Mandarin</dt>
+            <dd>Learning</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="about-band" aria-labelledby="lbl-contact">
+        <h2 class="section-label" id="lbl-contact">Get in touch</h2>
+        <div class="about-contact">
+
+          <a class="link-box" href="mailto:matti.naef@bwdbern.ch">
+            <span class="link-box__caption">Reach me</span>
+            <span class="link-box__label">
+              <span class="link-box__icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </span>
+              Email
+            </span>
+            <span class="link-box__note">the fastest way to reach me directly.</span>
+            <span class="box-arrow box-arrow--external" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+            </span>
+          </a>
+
+          <a class="link-box" href="https://github.com/kiraa1q" target="_blank" rel="noopener">
+            <span class="link-box__caption">Profile</span>
+            <span class="link-box__label">
+              <span class="link-box__icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+              </span>
+              GitHub
+            </span>
+            <span class="link-box__note">this is where my stuff lies.</span>
+            <span class="box-arrow box-arrow--external" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+            </span>
+          </a>
+
+          <a class="link-box" href="vault/index.html">
+            <span class="link-box__caption">Private</span>
+            <span class="link-box__label">
+              <span class="link-box__icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </span>
+              Vault
+            </span>
+            <span class="link-box__note">CV and school reports. Password required.</span>
+            <span class="box-arrow" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </span>
+          </a>
+
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Legal + credit only. Navigation is in the header. -->
+  <footer class="site-footer">
+    <span class="site-footer__meta">&copy; <span id="year"></span> kiraa1q &middot; v1.0.0</span>
+    <a href="impressum.html">Impressum</a>
+    <a href="https://github.com/kiraa1q" target="_blank" rel="noopener">GitHub<svg class="footer-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></a>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
