@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>PROJECT NAME · kiraa1q</title>
+  <meta name="description" content="">
+
+  <!-- Open Graph (empty — fill before sharing) -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="">
+  <meta property="og:description" content="">
+  <meta property="og:image" content="">
+  <meta property="og:url" content="">
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='.5' y='.5' width='31' height='31' fill='%230e0e0e' stroke='%232a2a2a'/%3E%3Crect x='9' y='9' width='14' height='14' fill='%23ff1e2f'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+
+  <script>
+    try {
+      if (localStorage.getItem("theme") === "light") {
+        document.documentElement.classList.add("light");
+      }
+    } catch (e) {}
+  </script>
+</head>
+<body>
+
+<!--
+=========================================================================
+  PROJECT PAGE TEMPLATE
+  Copy this file to project-<slug>.html and fill in the marked slots.
+  This file is not linked from anywhere and is marked noindex.
+=========================================================================
+
+  ADDING OR SWAPPING A PROJECT — the complete list. Five places, no more,
+  and only one of them is CSS.
+
+  1. THIS FILE -> project-<slug>.html
+       Replace: <title>, the <h1>, the .is-SLUG class on .page-head,
+       the lede, chips, datarow, body sections, repo link.
+
+  2. style.css — ONE line in the palette block (search "Per-project
+     palettes"), plus one line in the light-theme block below it:
+       .is-<slug>          { --edge-1: #shade; --edge-2: #BRAND; --edge-3: #tint; }
+       :root.light .is-<slug> { ...darker versions, brand must clear 3:1 on white... }
+     --edge-2 is the project's actual colour; the other two are a darker
+     and a lighter version of it. Nothing else in the CSS is per-project.
+
+  3. projects.html — the card in .project-grid. Copy an existing <li>,
+     change the .is-<slug> class, the href, the label, chips and text.
+     Add .is-wide if it should take a full row.
+
+  4. index.html — only if the project appears on the home bento. Same
+     card markup, plus the grid area: the .area-* class and the matching
+     name inside .bento's grid-template-areas in style.css.
+
+  5. The NEIGHBOURS' pagers — the previous and next project pages each
+     link to this one at the bottom. Search for "pager" in the two
+     adjacent project-*.html files. This is the only cross-file edit;
+     order is: comfyui -> ignite -> kobui -> stalkr.
+
+  REMOVING a project: delete its page, its card in projects.html (and
+  index.html), its palette line, and re-link the pagers on either side.
+
+-------------------------------------------------------------------------
+  CONTENT BLOCKS AVAILABLE (all in style.css, all project-agnostic).
+  Pick what the project actually needs and delete the rest — a page with
+  three blocks is fine, an empty labelled block is not.
+
+    .project__lede    one-sentence pitch, set large
+    .chips            tech tags with icons (icons: copy from another page)
+    .datarow          hard facts in a band between hairlines
+    .project__section titled block, wraps any of the below
+    .steps            numbered procedure (pipeline stages, setup)
+    .feature-list     flat "what it does" list
+    .spec-table       real tabular data, wrap in .table-wrap
+    .note             short aside; add .note--accent for a WIP notice
+    .figure           screenshot + caption
+    .figure-row       two or three figures side by side
+    <code>            filenames, ports, commands
+=========================================================================
+-->
+
+  <!-- The site's one navigation. Byte-identical on every page except for
+       which link carries aria-current, so "where can I go" never depends on
+       "where am I". Sticky on mobile — see .site-header in style.css. -->
+  <header class="site-header">
+    <nav class="site-nav" aria-label="Main">
+      <a href="index.html">Home</a>
+      <a href="projects.html" aria-current="page">Projects</a>
+      <a href="about.html">About</a>
+      <a href="vault/index.html">Vault</a>
+    </nav>
+    <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" aria-pressed="false">
+      <span data-theme-icon>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </span>
+    </button>
+  </header>
+
+  <!-- SLOT: .is-SLUG keys the title rule to this project's colour. The header
+       above is identical on every page — never edit it per project. -->
+  <div class="page-head page-head--project is-SLUG">
+    <!-- SLOT: name. Optional <span class="status">WIP</span> after it. -->
+    <h1 class="page-head__title" id="page-title">PROJECT NAME</h1>
+  </div>
+
+  <main class="page-body page-body--project" aria-labelledby="page-title">
+    <article class="project">
+
+      <!-- SLOT: one sentence. What it is, in plain words. -->
+      <p class="project__lede">One sentence describing the project.</p>
+
+      <!-- SLOT: tech chips. Copy the <svg> for a language from any other
+           project page; a chip with no icon renders fine too. -->
+      <ul class="chips">
+        <li class="chip">Language</li>
+        <li class="chip">Framework</li>
+      </ul>
+
+      <!-- SLOT: 3-4 hard facts. More than four and the row gets thin. -->
+      <dl class="datarow">
+        <div class="datarow__cell">
+          <dt>Type</dt>
+          <dd>What kind of thing it is</dd>
+        </div>
+        <div class="datarow__cell">
+          <dt>Stack</dt>
+          <dd>Main technology</dd>
+        </div>
+        <div class="datarow__cell">
+          <dt>Status</dt>
+          <dd>Shipped / Work in progress</dd>
+        </div>
+      </dl>
+
+      <!-- BLOCK: numbered procedure -->
+      <section class="project__section" aria-labelledby="lbl-steps">
+        <h2 class="section-label" id="lbl-steps">How it works</h2>
+        <ol class="steps">
+          <li><span><b>Stage name — </b>what happens, with <code>literals</code> marked up.</span></li>
+          <li><span>A step with no bold lead-in.</span></li>
+        </ol>
+      </section>
+
+      <!-- BLOCK: flat feature list -->
+      <section class="project__section" aria-labelledby="lbl-does">
+        <h2 class="section-label" id="lbl-does">What it does</h2>
+        <ul class="feature-list">
+          <li>One capability per line</li>
+          <li>Short, no sentences</li>
+        </ul>
+      </section>
+
+      <!-- BLOCK: tabular data -->
+      <section class="project__section" aria-labelledby="lbl-table">
+        <h2 class="section-label" id="lbl-table">What it expects</h2>
+        <div class="table-wrap">
+          <table class="spec-table">
+            <thead><tr><th>Column</th><th>Column</th></tr></thead>
+            <tbody>
+              <tr><td>Value</td><td><code>literal</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- BLOCK: aside. .note--accent for a WIP / caveat notice. -->
+      <div class="note">A caveat, a disclosure, or a <strong>detail</strong> worth pulling out.</div>
+
+      <!-- BLOCK: screenshot. Put the file in assets/ first, then delete
+           the surrounding comment markers. Use .figure-row to place two
+           side by side. -->
+      <!--
+      <figure class="figure">
+        <img src="assets/SLUG-shot.png" alt="Describe what is shown" loading="lazy" decoding="async">
+        <figcaption>Short caption</figcaption>
+      </figure>
+      -->
+
+      <!-- SLOT: link to the repo itself, not the profile. -->
+      <a class="more-link" href="https://github.com/kiraa1q/REPO" target="_blank" rel="noopener">
+        kiraa1q/REPO
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+      </a>
+
+    </article>
+
+    <!-- SLOT: pager. Drop either link if this is first or last. -->
+    <nav class="pager" aria-label="More projects">
+      <a class="pager__prev" href="project-PREV.html">
+        <span class="pager__dir">&larr; Previous</span>
+        <span>Previous project</span>
+      </a>
+      <a class="pager__next" href="project-NEXT.html">
+        <span class="pager__dir">Next &rarr;</span>
+        <span>Next project</span>
+      </a>
+    </nav>
+  </main>
+
+  <!-- Legal + credit only. Navigation is in the header. -->
+  <footer class="site-footer">
+    <span class="site-footer__meta">&copy; <span id="year"></span> kiraa1q &middot; v1.0.0</span>
+    <a href="impressum.html">Impressum</a>
+    <a href="https://github.com/kiraa1q" target="_blank" rel="noopener">GitHub<svg class="footer-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></a>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

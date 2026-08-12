@@ -1,0 +1,16 @@
+# Private vault documents — CV, Zeugnisse, anything else personal.
+#
+# These are uploaded straight to the Pi at /var/www/kira1q.dev/vault/files/
+# and must never enter git history. A commit is permanent: deleting the file
+# in a later commit does not remove it from the repository, and if this ever
+# gets pushed to a public GitHub remote, the whole history goes with it.
+vault/files/
+
+# Basic Auth password files. The real one lives on the Pi at
+# /etc/nginx/.htpasswd-vault; this only catches a stray local copy.
+.htpasswd
+.htpasswd*
+*.htpasswd
+
+# Upload artefacts
+dist-*.zip

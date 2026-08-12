@@ -2,51 +2,73 @@
    Portfolio scaffold — shared styles
    Retro / KISS / classic. Dark theme. 1px borders, no radius.
    =========================================================== */
-
-/* ---- Design tokens ---- */
+   
+/* ---- Design system tokens ---- */
 :root {
-  --bg:           #1b1b1b;
-  --bg-raised:    #262626;
+  --bg:          #0e0e0e;   /* page                              */
+  --panel:       #1a1a1a;   /* cards                             */
+  --panel-alt:   #141414;   /* nested surfaces / inset wells     */
+  --line:        #2a2a2a;   /* card + element borders            */
+  --line-soft:   #202020;   /* dividers inside a card            */
+  /* Times is a thin-stemmed face; light-on-dark it renders lighter than a
+     mono or a sans at the same value, so body and caption tones sit a step
+     brighter here than the palette they replaced. */
+  --fg:          #d2d2d2;   /* body text                         */
+  --fg-strong:   #efefef;   /* headings, name                    */
+  --fg-mute:     #8a8a8a;   /* section eyebrows, captions        */
+  --accent:      #ff1e2f;   /* section eyebrows, captions  #DE9100;      #ff1e2f;  */
 
-  /* Text — three tones, used consistently across the site:
-     --text       primary  (names, titles, key labels)
-     --text-muted secondary (captions, meta, descriptions, chip text)
-     --accent     highlight (sparingly — 1-2 things per view) */
-  --text:         #f4f4f4;
-  --text-muted:   #aeaeae;
-  --border:       #4d4d4d;
-  --border-hover: var(--text);   /* high-contrast border on hover (white on dark) */
-  --accent:       #f5a623;
+  --bw:          1px;
 
-  /* Type scale (rem-based) */
-  --fs-name:      1.5rem;    /* hero name, bold            */
-  --fs-heading:   1.125rem;  /* project / section titles   */
-  --fs-body:      0.9rem;    /* base body text             */
-  --fs-caption:   0.7rem;    /* uppercase section labels   */
-  --fs-meta:      0.625rem;  /* dates / status / meta       */
+  /* Legacy aliases — existing rules reference these names.
+     Eyebrows/captions are switched to --fg-mute at their own rules;
+     --text-muted therefore carries the body tone. */
+  --bg-raised:    var(--panel);
+  --text:         var(--fg-strong);
+  --text-muted:   var(--fg);
+  --border:       var(--line);
+  --border-hover: #3a3a3a;          /* hover border */
 
-  --border-width: 1px;
+  /* Type scale (rem-based). Sized for a serif: Times has a small x-height,
+     so every step sits above what the old mono/sans pairing needed to read
+     at the same apparent size. */
+  --fs-name:      1.75rem;   /* hero name, bold            */
+  --fs-heading:   1.25rem;   /* project / section titles   */
+  --fs-body:      1rem;      /* base body text             */
+  --fs-caption:   0.75rem;   /* uppercase section labels   */
+  --fs-meta:      0.7rem;    /* dates / status / meta       */
+
+  --border-width: var(--bw);
   --radius:       0;
   --space:        8px;
   --gap:          calc(var(--space) * 2);   /* single knob for all inter-box spacing */
-  --motion:       250ms ease-in-out;        /* single knob for all transitions */
+  --motion:       120ms ease;               /* color / border-color transitions */
 
-  /* slight depth — kept subtle so the retro/flat look survives */
-  --shadow:       0 2px 8px rgba(0, 0, 0, 0.55);
+  /* No --shadow token, deliberately. Every box used to carry
+     `0 2px 8px rgba(0,0,0,.55)`, which fought the whole point of the design:
+     a 1px line and a soft drop shadow are two different visual languages, and
+     the shadow was the one nobody asked for. Depth here comes from the border
+     and the panel/bg contrast, nothing else. */
 
-  --font-mono:    "Cascadia Mono", "JetBrains Mono", "Courier New", ui-monospace, monospace;
+  --font: "Times New Roman", Times, serif;
 }
 
-/* Light theme — toggled via the Dark/Bright button (adds .light on <html>) */
+/* Light theme — toggled via the Dark/Bright button (adds .light on <html>).
+   Only primitives are overridden; the aliases above re-resolve through var(). */
 :root.light {
-  --bg:        #f4f4f4;
-  --bg-raised: #ffffff;
-  --text:      #1b1b1b;
-  --text-muted:  #5a5a5a;
-  --border:    #c9c9c9;
-  --accent:    #b8860b;
-  --shadow:    0 2px 8px rgba(0, 0, 0, 0.15);
-  --gh-l0:     #ebedf0;
+  --bg:           #f4f4f4;
+  --panel:        #ffffff;
+  --panel-alt:    #ececec;
+  --line:         #c9c9c9;
+  --line-soft:    #dcdcdc;
+  --fg:           #3a3a3a;
+  --fg-strong:    #1b1b1b;
+  --fg-mute:      #6a6a6a;
+  /** --accent:       #b8860b;  **/
+  --accent:       #ff505e;
+
+  --border-hover: #9a9a9a;
+  --gh-l0:        #ebedf0;
 }
 
 /* ---- Reset ---- */
@@ -58,64 +80,235 @@
   padding: 0;
 }
 
+/* Same 18px as before on a default browser, but expressed relatively so a
+   visitor who has raised their base font size still gets a bigger site.
+   A px value here would silently override that preference. */
 html {
-  font-size: 16px;
+  font-size: 112.5%;
 }
 
+/* The page scrolls like a normal document.
+   It used to be locked to the viewport (`height:100dvh; overflow:hidden`) so
+   the bento would fit on exactly one screen, with each box scrolling its own
+   overflow behind a hidden scrollbar. On a 1366×640 laptop that silently ate
+   47px of the hero, 32px of Ignite and 76px of the About box — which is the
+   paragraph saying I'm looking for a Praktikum. No scrollbar, no fade, no
+   way for the reader to know. A layout that hides content on a common screen
+   size is broken however good it looks on a big one, so the lock is gone:
+   min-height keeps the footer down on tall screens, and short screens scroll. */
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-mono);
-  line-height: 1.5;
-  height: 100vh;
-  height: 100dvh;          /* lock to the viewport — the page never scrolls */
-  overflow: hidden;
+  font-family: var(--font);
+  line-height: 1.55;
+  /* No -webkit-font-smoothing: antialiased here. On a serif this thins the
+     stems further on a dark background, which is the opposite of what light
+     text on #0e0e0e needs — the default rendering keeps them solid. */
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   padding: var(--gap);
   gap: var(--gap);
 }
 
-/* ---- Generic box ---- */
+/* ===========================================================
+   Site header — the site's one navigation
+   ===========================================================
+   This replaces three partial navigations with a single complete one:
+
+     - the per-page back arrow (only ever went "up" one level, and from the
+       home bento it went to a page you had never seen),
+     - the footer nav (12.6px type, 23px tall, and on mobile it sat 2076px
+       down a 2158px page — you had to scroll the entire site to navigate),
+     - "the bento boxes are the nav" (which never included Projects at all).
+
+   One bar, identical on every page, so where you can go never depends on
+   where you are. Every state — resting, hover, current — keeps the SAME
+   geometry and changes only colour; that rule is inherited from the old
+   footer nav, where giving the active item a thicker border shifted the
+   whole row by a pixel on every page change.
+
+   Deliberately small. The bar is chrome, not content: at 44px tall with
+   0.85rem links and a bordered 44px button it was the loudest object on
+   every page and the first thing your eye landed on, above the actual work.
+   It is now a 30px typographic strip — small caps, hairline rules, no
+   boxes — so the bento is what you see first. The tap-target height it gave
+   up is handed back in the mobile breakpoint, where a finger needs it and
+   the bar has a full row to itself anyway. */
+.site-header {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) * 2);
+  border-bottom: var(--border-width) solid var(--border);
+}
+
+/* The bar used to open with a "kiraa1q" wordmark. It is gone: the page
+   title, the favicon and the hero all already say whose site this is, so
+   the wordmark was the third answer to a question nobody asked twice — and
+   it was the one bold, full-contrast object in a strip whose whole job is
+   to stay quiet. Nothing was lost navigationally either; it linked to the
+   home page, which is what HOME does. */
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 0;               /* the padding on each link is the spacing */
+  margin-right: auto;   /* nav anchors left, the toggle sits hard right */
+}
+
+/* With the wordmark gone the nav opens the bar, so the first link's text —
+   not its padding — should sit on the page's left edge. That puts HOME on
+   the same vertical line as the bento's left column and the footer's credit,
+   which is the spine the whole layout is built on. Same at the other end. */
+.site-nav a:first-child { padding-left: 0; }
+.site-nav a:last-child  { padding-right: 0; }
+
+/* Small caps at --fs-caption: the nav now matches the box labels (ABOUT ME,
+   PROJECT, GITHUB) instead of shouting over them, and the letter-spacing is
+   what keeps 11px type readable. The 1px underline replaces the old 2px one
+   so the marker is a hairline like every other rule on the site. */
+.site-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 calc(var(--space) * 1.25);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-mute);
+  text-decoration: none;
+  border-bottom: var(--border-width) solid transparent;
+  transition: color var(--motion), border-color var(--motion);
+}
+
+.site-nav a:hover,
+.site-nav a:focus-visible {
+  color: var(--text);
+  border-bottom-color: var(--text);
+  outline: none;
+}
+
+.site-nav a[aria-current="page"] {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+.site-nav a:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* ---- Generic box ----
+   No overflow handling and no scrollbar-hiding: a box is exactly as tall as
+   what is in it. The old `overflow:hidden auto` + `scrollbar-width:none` pair
+   was what made the clipping above invisible — it created a scroll container
+   and then removed the only evidence that it had scrolled. */
 .box {
   position: relative;
+  isolation: isolate;   /* keeps the inner glow (z-index:-1) inside the card */
   border: var(--border-width) solid var(--border);
   border-radius: var(--radius);
   background: var(--bg-raised);
-  box-shadow: var(--shadow);
   padding: calc(var(--space) * 2);
   display: flex;
   flex-direction: column;
   gap: var(--space);
-  min-height: 0;
   min-width: 0;
-  overflow: hidden auto;        /* scroll vertically if content exceeds the box */
-  scrollbar-width: none;        /* Firefox: hide the scrollbar, keep scrolling */
-  -ms-overflow-style: none;     /* old Edge / IE */
-  transition: filter var(--motion), background var(--motion), border-color var(--motion), color var(--motion);
+  transition: border-color var(--motion), color var(--motion);
 }
 
-.box::-webkit-scrollbar,
-.link-box::-webkit-scrollbar {  /* Chrome / Safari / new Edge */
-  display: none;
-}
-
-/* Every box brightens and its border goes high-contrast (white on dark) on hover. */
+/* Hover: border lifts to --border-hover and text goes to --fg-strong. */
 .box:hover {
-  filter: brightness(1.15);
+  color: var(--fg-strong);
   border-color: var(--border-hover);
+}
+
+/* ===========================================================
+   Inner corner wash — the border hover, on the inside
+   ===========================================================
+   The gradient border (.box--edge, below) lights the bottom-right corner of
+   the RIM on hover. This is the same event drawn on the FACE: a soft wash
+   bleeding in from that same corner, same trigger, same 260ms fade. The two
+   read as one gesture — the corner warms up, rim and all — instead of a
+   coloured outline sitting on a flat card.
+
+   Same corner, same colour source: a project card washes in its own
+   --edge-2, an ordinary card in --border-hover, which is the exact colour
+   its border is travelling to. That is what keeps this from being a new
+   effect: it is the border hover, given some area.
+
+   Drawn as ::after with z-index:-1 rather than as an extra background layer,
+   because .box--edge already spends both of its background slots on the
+   panel face and the rim gradient. The pseudo-element sits above the card's
+   own background and below its text; .box carries `isolation: isolate` so
+   that negative index stays inside the card instead of falling through to
+   the page background. inset:0 is the padding box, so the wash stops at the
+   border and never muddies the rim. */
+.box,
+.link-box,
+.pager a {
+  --glow: var(--border-hover);
+  --glow-strength: 24%;
+}
+
+.box::after,
+.link-box::after,
+.pager a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  /* Softer than it first shipped, in both senses. Weaker: the peak strength
+     is roughly half. And gentler: the wash is larger (120%/105% instead of
+     90%/80%) and fades out at 75% instead of 60%, with a mid stop at a
+     third of the strength so the ramp curves away instead of running out in
+     a straight line — a small tint spread over more of the card, rather
+     than a bright corner with a visible edge to it. */
+  background: radial-gradient(
+    120% 105% at 100% 100%,
+    color-mix(in srgb, var(--glow) var(--glow-strength), transparent) 0%,
+    color-mix(in srgb, var(--glow) calc(var(--glow-strength) * 0.34), transparent) 38%,
+    transparent 75%
+  );
+  opacity: 0;
+  transition: opacity 260ms ease;   /* in step with the rim's --edge-mix fade */
+}
+
+/* Exactly the states that lift the border — including keyboard focus on a
+   stretched link, where the card itself is never hovered. */
+.box:hover::after,
+.box--link:focus-visible::after,
+.box:has(.stretched-link:focus-visible)::after,
+.link-box:hover::after,
+.link-box:focus-visible::after,
+.pager a:hover::after,
+.pager a:focus-visible::after {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .box::after,
+  .link-box::after,
+  .pager a::after {
+    transition: none;
+  }
 }
 
 /* ---- Shared type roles -------------------------------------------------- */
 
-/* Section captions: TOOLS, ABOUT ME, etc. One rule for every box label. */
+/* Section captions: TOOLS, ABOUT ME, etc. One rule for every box label.
+   Serif capitals need more tracking than mono capitals did — set solid at
+   0.05em they close up into a block. */
 .box__label,
 .link-box__caption,
-.field__label {
+.field__label,
+.section-label,
+.datarow dt {
   font-size: var(--fs-caption);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--fg-mute);
   font-weight: 400;
 }
 
@@ -152,10 +345,65 @@ body {
   font-size: 1.25em;   /* name reads a touch larger, like the reference */
 }
 
+/* Accent discipline: amber stays on the name only. Inline emphasis inside
+   body copy keeps the italic but drops to --fg-strong (no amber). */
+.box__text .accent {
+  color: var(--fg-strong);
+}
+
+/* ---- Reading text: the one place prose lives ---- */
+.box__text,
+.prose,
+.project__lede,
+.page-head__lede,
+.link-box__note,
+.steps > li,
+.note,
+.project__section > p {
+  line-height: 1.7;
+}
+
+/* Inline links inside that same body copy. Nothing on the site linked from
+   within a sentence until now — every other link is a whole box, a nav item
+   or a .more-link, each of which sets its own colour — so an <a> in a
+   paragraph fell through to the browser default and rendered blue, then
+   purple once visited. Those are the only two colours on the page nobody
+   chose. Same selector list as the rule above, so the two stay in step.
+   Underline in --accent rather than colouring the text: it marks the link
+   without punching a bright word into the middle of a grey paragraph. */
+.box__text a,
+.prose a,
+.project__lede a,
+.page-head__lede a,
+.link-box__note a,
+.steps > li a,
+.note a,
+.project__section > p a {
+  color: var(--fg-strong);
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 2px;
+  transition: color var(--motion);
+}
+
+.box__text a:hover,
+.prose a:hover,
+.project__lede a:hover,
+.page-head__lede a:hover,
+.link-box__note a:hover,
+.steps > li a:hover,
+.note a:hover,
+.project__section > p a:hover,
+.box__text a:focus-visible,
+.prose a:focus-visible,
+.note a:focus-visible,
+.project__section > p a:focus-visible {
+  color: var(--accent);
+}
+
 /* Body copy: descriptions, pitch, prose — muted, capped line length. */
 .box__text {
   font-size: var(--fs-body);
-  line-height: 1.5;
   max-width: 60ch;
   color: var(--text-muted);
 }
@@ -193,56 +441,42 @@ body {
 }
 
 .chip {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) * 0.5);
   border: var(--border-width) solid var(--border);
   border-radius: var(--radius);
-  padding: calc(var(--space) * 0.25) calc(var(--space) * 0.75);
+  padding: calc(var(--space) * 0.5) calc(var(--space) * 1);
   font-size: var(--fs-caption);
   letter-spacing: 0.03em;
+  line-height: 1.3;
   color: var(--text-muted);
   white-space: nowrap;
 }
 
-/* ---- Entry list: name + one-line note (Tools, Techstack) ---- */
-.entry-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--space) * 0.75);
-}
+/* Leading mark on tech chips. Everything is drawn in the site's own stroke
+   language — currentColor, no fills, no brand colours — because a chip is a
+   line of 11px text and a full-colour logo at that size is mush that also
+   fights the palette.
 
-.entry {
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--space) * 0.25);
-  min-width: 0;
-}
+   Two kinds of mark share this rule:
+     LANGUAGES (Rust, TypeScript, Python, Node.js, React) carry their real
+       logo's SILHOUETTE, redrawn as strokes: the cog, the TS square, the
+       two snakes, the hexagon, the atom. Shape is doing the work — you read
+       "Rust" from the cog, not from letterforms you cannot resolve.
+     TOOLS (ComfyUI, Krea 2, Cloudflare Tunnel, SSE, …) keep generic marks,
+       because a node graph or a tunnel has no logo worth abstracting.
 
-.entry__name {
-  font-size: var(--fs-body);
-  line-height: 1.2;
-  color: var(--text);
-}
-
-/* Description note under each entry — body size, muted (matches project descriptions). */
-.entry__note {
-  font-size: var(--fs-body);
-  line-height: 1.5;
-  color: var(--text-muted);
-}
-
-/* ---- "Stuff I use": two labelled sub-sections (Tools / Techstack) ---- */
-.stuff-group {
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--space) * 0.5);
-}
-
-/* Sub-section label inside a box (TOOLS, TECHSTACK). */
-.sublabel {
-  font-size: var(--fs-caption);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--text-muted);
+   14px, not 12: the language marks carry interior detail (teeth, letters,
+   the snake interlock) that 12px flattened into a blob. Chips without an
+   icon are unaffected. */
+.chip svg {
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  opacity: 0.85;
 }
 
 /* ---- Status badge (WIP, etc.) — muted meta, not accent ---- */
@@ -253,55 +487,27 @@ body {
   font-size: var(--fs-meta);
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--fg-mute);
 }
 
-/* ---- Projects teaser list (home projects box) ---- */
-.project-teaser {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-}
-
-/* One project preview: title+status, chips, one-line description. */
-.project-teaser__item {
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--space) * 0.5);
-  padding: var(--space) 0;
-}
-
-.project-teaser__item:first-child {
-  padding-top: 0;
-}
-
-/* Thin 1px divider between the two rows. */
-.project-teaser__item + .project-teaser__item {
-  border-top: var(--border-width) solid var(--border);
-}
-
-.project-teaser__head {
+/* ---- Project box (bento home + projects page) — one project per box ---- */
+.project-box__head {
   display: flex;
   align-items: baseline;
   gap: var(--space);
 }
 
-/* Push the status chip to the right edge of the row. */
-.project-teaser__head .status {
-  margin-left: auto;
-}
-
-.project-teaser__name {
-  font-size: var(--fs-body);
+.project-box__name {
+  font-size: var(--fs-heading);
   font-weight: 700;
-  color: var(--text);
+  line-height: 1.2;
+  color: var(--fg-strong);
 }
 
-.project-teaser__desc {
-  font-size: var(--fs-body);
-  line-height: 1.5;
-  color: var(--text-muted);
-}
+/* Featured project name reads larger (matches the projects-page feature card). */
+.project-box__name--lg { font-size: 1.5rem; }
+
+.project-box__head .status { margin-left: auto; }
 
 /* Stretched link: makes the whole box clickable without wrapping the
    content in an <a> (so the GitHub link below can stay a real link). */
@@ -326,7 +532,7 @@ body {
   align-items: center;
   gap: calc(var(--space) * 0.5);
   font-size: var(--fs-caption);
-  color: var(--text-muted);
+  color: var(--fg-mute);
   text-decoration: none;
   transition: color var(--motion);
 }
@@ -351,7 +557,7 @@ body {
 }
 
 .more-link:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 1px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -369,31 +575,39 @@ body {
 .bento {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  grid-template-rows: repeat(5, minmax(0, 1fr));   /* 5 equal rows, won't grow to content */
+  /* Plain 1fr, not minmax(0, 1fr). That explicit 0 floor was the mechanism
+     behind the clipping: it let a row shrink below its own content, and the
+     box then hid the overflow behind a suppressed scrollbar. 1fr resolves to
+     minmax(auto, 1fr), and since .box is no longer a scroll container the
+     auto minimum is the content's height — so a row can share leftover space
+     on a tall screen but can never be shorter than what it holds. */
+  grid-template-rows: repeat(4, 1fr);
   gap: var(--gap);
+  /* Ignite is the only card with a paragraph rather than a sentence, so it
+     is the only one that earns two rows. Kobui and Stalkr are one-liners and
+     sit side by side under Comfy. Fitting the fourth project in without
+     adding a fifth row is what keeps the whole bento on one screen. */
   grid-template-areas:
-    "name      name   projects  projects  stuff stuff buttons"
-    "about     about  projects  projects  stuff stuff buttons"
-    "about     about  projects  projects  stuff stuff buttons"
-    "interests hates  projects  projects  stuff stuff buttons"
-    "interests hates  github    github    stuff stuff buttons";
+    "name   name   comfy  comfy  comfy  comfy  buttons"
+    "about  about  comfy  comfy  comfy  comfy  buttons"
+    "about  about  kobui  kobui  ignite ignite buttons"
+    "github github stalkr stalkr ignite ignite buttons";
   flex: 1;
-  min-height: 0;   /* allow the grid to shrink to the viewport so boxes scroll */
 }
 
 .area-name      { grid-area: name; }
 .area-github    { grid-area: github; }
-.area-stuff     { grid-area: stuff; }
 .area-buttons   { grid-area: buttons; }
 .area-about     { grid-area: about; }
-.area-projects  { grid-area: projects; }
-.area-interests { grid-area: interests; }
-.area-hates     { grid-area: hates; }
+.area-comfy     { grid-area: comfy; }
+.area-ignite    { grid-area: ignite; }
+.area-kobui     { grid-area: kobui; }
+.area-stalkr    { grid-area: stalkr; }
 
 /* ---- GitHub contribution heatmap (data: third-party service) ---- */
 /* Levels are derived from --accent, so the heatmap follows the accent. */
 :root {
-  --gh-l0: #1a1a1a;   /* empty cell */
+  --gh-l0: var(--panel-alt);   /* empty cell — inset, darker than the card */
   --gh-l1: color-mix(in srgb, var(--accent) 28%, var(--gh-l0));
   --gh-l2: color-mix(in srgb, var(--accent) 52%, var(--gh-l0));
   --gh-l3: color-mix(in srgb, var(--accent) 76%, var(--gh-l0));
@@ -443,6 +657,132 @@ body {
 .gh-cell--pad { background: transparent; }
 
 /* ===========================================================
+   Project identity — gradient border ("edge")
+   ===========================================================
+   Each project owns one three-stop gradient. At rest it is not shown at all:
+   the card wears the site's ordinary 1px --border like every other box, and
+   the colour only appears on hover, over a short segment of the bottom-right
+   corner. The palettes are picked for contrast against #1a1a1a AND #fff,
+   since a 1px rim has no area to carry a weak colour.
+
+   Technique: two background layers on the same element —
+     layer 1  flat panel colour, clipped to the padding box (the card face)
+     layer 2  the gradient, clipped to the border box (the 1px rim)
+   The border itself is transparent, so only the rim of layer 2 shows.
+   No pseudo-element, no extra markup, works with border-radius: 0.
+
+   Add the class + one of the .is-* palettes below:
+     <article class="box box--edge is-ignite">                      */
+
+/* One registered percentage drives the whole effect: 0% = every stop resolves
+   to the ordinary --border, so the card is indistinguishable from any other
+   box. 100% = neutral stops lift to --border-hover and the last ~30% of the
+   diagonal takes the project's colour. Registering it is what makes it
+   interpolatable; without @property support (Firefox < 128) the var()
+   fallbacks below keep the rest state correct and the colour simply snaps in
+   on hover instead of fading. Without those fallbacks an unregistered
+   --edge-mix would make the whole gradient invalid at computed-value time,
+   and since the border itself is transparent the card would lose its
+   border entirely. */
+@property --edge-mix {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 0%;
+}
+
+.box--edge {
+  border-color: transparent;
+  /* 135deg, so the stop range 68%->100% lands on the bottom-right corner:
+     the accent is the lower half of the right rim plus the right half of the
+     bottom rim, and nothing else. A colour that ran the full perimeter would
+     read as a highlight box; a short corner segment reads as an accent. */
+  background-image:
+    linear-gradient(var(--panel), var(--panel)),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--border-hover) var(--edge-mix, 0%), var(--border)) 0%,
+      color-mix(in srgb, var(--border-hover) var(--edge-mix, 0%), var(--border)) 68%,
+      color-mix(in srgb, var(--edge-1) var(--edge-mix, 0%), var(--border)) 82%,
+      color-mix(in srgb, var(--edge-2) var(--edge-mix, 0%), var(--border)) 92%,
+      color-mix(in srgb, var(--edge-3) var(--edge-mix, 0%), var(--border)) 100%
+    );
+  background-origin: padding-box, border-box;
+  background-clip: padding-box, border-box;
+  background-size: auto, 100% 100%;
+  background-repeat: no-repeat;
+  transition: --edge-mix 260ms ease;
+}
+
+/* A project card washes in its own colour instead of the neutral grey, so
+   rim and face light up in the same hue. Weaker than the neutral wash:
+   --border-hover is a grey two steps off the panel, while #ff4d00 at the
+   same strength would turn the corner into a highlight box. */
+.box--edge {
+  --glow: var(--edge-2);
+  --glow-strength: 9%;
+}
+
+/* Only on cards that are actually links — the accent is hover feedback, and
+   on a static card it would promise a click. Keyboard users get it too: the
+   stretched link taking focus is the same trigger. */
+.box--edge.box--link:hover,
+.box--edge:has(.stretched-link:hover),
+.box--edge:has(.stretched-link:focus-visible) {
+  --edge-mix: 100%;
+}
+
+/* .box:hover / .box--static:hover would repaint the border grey and kill the
+   gradient — outrank both instead of relying on source order. */
+.box.box--edge,
+.box.box--edge:hover,
+.box.box--edge:focus-within,
+.box.box--edge:focus-visible {
+  border-color: transparent;
+}
+
+/* The accent still appears — it is feedback, not decoration — it just
+   arrives without the fade. */
+@media (prefers-reduced-motion: reduce) {
+  .box--edge { transition: none; }
+}
+
+/* ---- Per-project palettes ----
+   One class per project. Used on the bento card, the projects-page card and
+   the project page's own header, so a project keeps the same signature colour
+   everywhere it appears. */
+/* --edge-2 is the project's actual brand colour and carries the middle of the
+   corner segment; --edge-1 and --edge-3 are a darker and a lighter version of
+   it, so the accent stays one hue and just gains depth.
+                  shade ........ BRAND ........ tint                        */
+.is-ignite  { --edge-1: #b23000; --edge-2: #ff4d00; --edge-3: #ffae00; }  /* lava   */
+.is-comfy   { --edge-1: #8a9a00; --edge-2: #eafb2e; --edge-3: #f7ffa8; }  /* lemon  */
+.is-kobui   { --edge-1: #2b5236; --edge-2: #4e8c5a; --edge-3: #86c795; }  /* green  */
+.is-stalkr  { --edge-1: #23611c; --edge-2: #52c23a; --edge-3: #b6e83a; }  /* grass  */
+
+/* Light theme: the same four hues, shifted down in lightness. The dark-theme
+   hot stops (#ffae00, #b6e83a, #35e0ff) sit at roughly 1.4:1 on white — a 1px
+   rim in those colours simply disappears. These clear 3:1, so the card still
+   has a visible edge and the project is still recognisable by its colour. */
+:root.light .is-ignite  { --edge-1: #7a2000; --edge-2: #d63800; --edge-3: #e07800; }
+/* Comfy's lemon is the hard case — #eafb2e is ~1.2:1 on white and simply is
+   not visible as a 1px line, so light mode uses the olive end of the same
+   hue. It reads as the darker cousin of the brand colour, not a new one. */
+:root.light .is-comfy   { --edge-1: #4d5600; --edge-2: #7d8c00; --edge-3: #a8bd00; }
+:root.light .is-kobui   { --edge-1: #1f3d27; --edge-2: #3a6b44; --edge-3: #55996a; }
+:root.light .is-stalkr  { --edge-1: #1a4a15; --edge-2: #2f8f22; --edge-3: #6d9c00; }
+
+/* The inner wash is darker-than-panel in light mode instead of lighter, so
+   it needs less of itself: a grey shading a white card reads at roughly half
+   the strength it takes to lift a near-black one. */
+:root.light .box,
+:root.light .link-box,
+:root.light .pager a { --glow-strength: 15%; }
+
+/* Comfy's olive is the loudest of the four on white — the strength that
+   makes lava read as a warm corner makes olive read as a stain. */
+:root.light .box--edge { --glow-strength: 6%; }
+
+/* ===========================================================
    Clickable nav boxes
    =========================================================== */
 .box--link {
@@ -454,14 +794,14 @@ body {
 /* Keyboard focus gets the same highlight as hover.
    (.box:hover already covers the mouse-hover case for these boxes.) */
 .box--link:focus-visible {
-  filter: brightness(1.15);
+  color: var(--fg-strong);
   border-color: var(--border-hover);
 }
 
 /* Visible focus everywhere */
 a:focus-visible,
 .box--link:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 1px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -477,7 +817,7 @@ a:focus-visible,
   width: 16px;
   height: 16px;
   display: inline-flex;
-  color: var(--text-muted);   /* muted by default */
+  color: var(--fg-mute);   /* muted by default */
   opacity: 0.6;
   pointer-events: none;
   transition: transform var(--motion), opacity var(--motion), color var(--motion);
@@ -540,8 +880,8 @@ a:focus-visible,
    matching the GITHUB / TOOLS / TECHSTACK boxes. */
 .link-box {
   position: relative;
+  isolation: isolate;   /* see the inner-wash block near .box */
   flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -550,16 +890,12 @@ a:focus-visible,
   border: var(--border-width) solid var(--border);
   border-radius: var(--radius);
   background: var(--bg-raised);
-  box-shadow: var(--shadow);
   color: var(--text);
   font: inherit;
   text-align: left;
   text-decoration: none;
   cursor: pointer;
-  overflow: hidden auto;        /* scroll vertically if content exceeds the box */
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  transition: filter var(--motion), background var(--motion), border-color var(--motion), color var(--motion);
+  transition: border-color var(--motion), color var(--motion);
 }
 
 /* Caption styling comes from the shared caption rule (.box__label, …). */
@@ -608,73 +944,295 @@ a:focus-visible,
   stroke: currentColor;
 }
 
-/* Hover/focus brightens the box and lights up its border. */
+/* Hover/focus lifts the border and text without a brightness filter. */
 .link-box:hover,
 .link-box:focus-visible {
-  filter: brightness(1.15);
+  color: var(--fg-strong);
   border-color: var(--border-hover);
 }
 
 .link-box:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 1px solid var(--accent);
   outline-offset: 2px;
 }
 
 /* ===========================================================
    Subpages (projects / about / impressum)
+   ===========================================================
+   Every subpage is the same three-part shell:
+
+     .page-head    masthead — back arrow, title, theme toggle.
+                   1px bottom rule, mirroring the footer's top rule.
+     .page-body    the only scroll region (the body itself never scrolls).
+     .site-footer  identical to the home page.
+
+   Content boxes reuse .box, so a subpage card and a bento cell are the
+   same object: same border, padding, label and artwork behaviour. Cards
+   that aren't links add .box--static to drop the hover affordance.
    =========================================================== */
-.subpage-main {
-  flex: 1;
-  border: var(--border-width) solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: calc(var(--space) * 3);
+
+/* ---- Page title block ----
+   Just a title and one line about the page. It used to be a three-part
+   masthead (back arrow · title · theme toggle); both controls moved into the
+   site header, so this is now purely typographic. */
+.page-head {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--space) * 3);
+  gap: calc(var(--space) * 0.25);
+  padding-bottom: calc(var(--space) * 2);
+  border-bottom: var(--border-width) solid var(--border);
 }
 
-.back-link {
-  display: inline-block;
-  text-decoration: none;
+/* Page title reads at hero size — the masthead is the page's h1, not a caption. */
+.page-head__title {
+  font-size: var(--fs-name);
+  line-height: 1.15;
+  font-weight: 700;
+  color: var(--fg-strong);
+}
+
+/* One muted line under the title: what this page holds. Wider than the
+   60ch reading measure so it stays a single line on desktop. */
+.page-head__lede {
+  font-size: var(--fs-body);
+  line-height: 1.4;
+  max-width: 80ch;
+  color: var(--text-muted);
+}
+
+/* ---- Page body ----
+   No longer its own scroll region — the document scrolls, so this is just a
+   content column. That also removed a nested scroll container that swallowed
+   wheel events and hid its own scrollbar. */
+.page-body {
+  display: grid;
+  grid-auto-rows: min-content;   /* rows hug their content — boxes never get squashed */
+  align-content: start;
+  gap: var(--gap);
+}
+
+/* In the bento the "More on GitHub" link is bottom-pinned; on a subpage it
+   sits in normal flow, and only its own text should be clickable. */
+.page-body .more-link {
+  margin-top: 0;
+  justify-self: start;
+}
+
+/* ---- Static content box: a .box that is not a link ----
+   Without this the hover state promises a click that never happens. The
+   inner wash is part of that same promise, so it opts out here too. */
+.box--static:hover {
   color: var(--text);
-  border: var(--border-width) solid var(--border);
+  border-color: var(--border);
+}
+
+.box--static:hover::after {
+  opacity: 0;
+}
+
+/* Reading-width box (impressum). */
+.box--narrow {
+  max-width: 72ch;
+}
+
+/* ---- Theme toggle ----
+   The last item in the site header. It used to be a 44px bordered square
+   with a panel fill — a button-shaped object sitting next to plain text
+   links, which made a site-wide preference look like the most important
+   control in the bar. Now it is just the icon: no border, no fill, muted
+   like the nav links and brightening on hover exactly as they do. It grows
+   back to a real tap target in the mobile breakpoint. */
+.icon-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 0 calc(var(--space) * 0.5);
+  /* The padding is tap area, not indent: pulling it back out on the right
+     lands the icon itself on the page's right edge, in line with the bento
+     and the footer — the same spine the first nav link sits on. */
+  margin-right: calc(var(--space) * -0.5);
+  border: 0;
   border-radius: var(--radius);
-  padding: var(--space) calc(var(--space) * 2);
-  font-size: 1rem;
+  background: none;
+  color: var(--fg-mute);
+  font: inherit;
   line-height: 1;
-  align-self: flex-start;
-  transition: filter var(--motion), background var(--motion), color var(--motion), border-color var(--motion);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--motion);
 }
 
-.back-link:hover,
-.back-link:focus-visible {
-  filter: brightness(1.15);
-  border-color: var(--border-hover);
+.icon-btn [data-theme-icon] {
+  width: 16px;
+  height: 16px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
 }
 
-.back-link:focus-visible {
-  outline: 2px solid var(--accent);
+/* The toggle's icon is swapped by script.js, so its svg is styled via the
+   wrapper rather than directly. */
+.icon-btn [data-theme-icon] svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+}
+
+.icon-btn:hover,
+.icon-btn:focus-visible {
+  color: var(--text);
+}
+
+.icon-btn:focus-visible {
+  outline: 1px solid var(--accent);
   outline-offset: 2px;
 }
 
-/* Subpage H1 — heading scale, same muted uppercase treatment as captions. */
-.page-title {
-  font-size: var(--fs-heading);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  font-weight: 400;
+/* ---- Impressum fields ---- */
+.field-list {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 2);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: var(--space);
-  border-bottom: var(--border-width) solid var(--border);
-  padding-bottom: calc(var(--space) * 2);
+  gap: calc(var(--space) * 0.75);
 }
 /* .field__label styling comes from the shared caption rule. */
+
+/* Deliberately empty — the owner fills these in. The inset well gives the
+   blank a shape, so it reads as a slot to fill, not as a broken render. */
+.field__value {
+  display: flex;
+  align-items: center;
+  min-height: calc(var(--space) * 5);
+  padding: var(--space) calc(var(--space) * 1.5);
+  border: var(--border-width) solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--panel-alt);
+  font-size: var(--fs-body);
+  color: var(--text);
+}
+
+/* ---- Vault: private document list ----
+   Downloadable files as hairline-separated rows, the same rhythm as .spec on
+   the about page — the whole row is the link, name on the left, type and size
+   on the right.
+
+   The size is not written into the HTML. script.js reads it from the real
+   response, so the page can never claim a file is 412 KB when it is 3 MB, and
+   a document that has not been uploaded to the Pi yet gets .doc--missing
+   instead of rendering as a dead download. Same principle as .figure hiding
+   itself when its screenshot 404s. */
+.doc-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.doc {
+  border-bottom: var(--border-width) solid var(--line-soft);
+}
+
+.doc:last-child { border-bottom: 0; }
+
+.doc__link {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) * 1.5);
+  padding: calc(var(--space) * 1.5) 0;
+  color: var(--text);
+  text-decoration: none;
+  transition: color var(--motion);
+}
+
+.doc__icon {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  color: var(--fg-mute);
+  transition: color var(--motion);
+}
+
+.doc__icon svg,
+.doc__arrow svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+}
+
+.doc__name {
+  font-size: var(--fs-body);
+  min-width: 0;
+}
+
+/* The German original of a document's name, kept next to the English one so
+   the file is recognisable to a Swiss reader without a second row. */
+.doc__name [lang="de"] { color: var(--fg-mute); }
+
+.doc__meta {
+  margin-left: auto;
+  font-size: var(--fs-caption);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--fg-mute);
+  white-space: nowrap;
+}
+
+.doc__arrow {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  color: var(--fg-mute);
+  opacity: 0.6;
+  transition: transform var(--motion), opacity var(--motion), color var(--motion);
+}
+
+/* A download arrow points down, so it nudges down — every other arrow on the
+   site moves in its own direction and this one should not be the exception. */
+.doc__link:hover,
+.doc__link:focus-visible {
+  color: var(--fg-strong);
+}
+
+.doc__link:hover .doc__icon,
+.doc__link:focus-visible .doc__icon {
+  color: var(--text);
+}
+
+.doc__link:hover .doc__arrow,
+.doc__link:focus-visible .doc__arrow {
+  color: var(--text);
+  opacity: 1;
+  transform: translateY(2px);
+}
+
+/* Not uploaded yet: script.js strips the href, which already makes this a
+   non-link (no focus, no pointer, no navigation). This just says so visually
+   instead of leaving a row that looks clickable and isn't. */
+.doc--missing .doc__link {
+  color: var(--fg-mute);
+  cursor: default;
+}
+
+.doc--missing .doc__arrow { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .doc__link:hover .doc__arrow,
+  .doc__link:focus-visible .doc__arrow {
+    transform: none;
+  }
+}
 
 /* ---- Prose (about page) ---- */
 .prose {
@@ -692,116 +1250,531 @@ a:focus-visible,
   font-weight: 700;
 }
 
-/* ---- Project cards (projects page) — ordered, numbered list ---- */
+/* A write-up slot with nothing in it yet — same inset well as the impressum
+   fields, so it reads as "to be filled", not as a failed render. */
+.prose:empty {
+  display: block;
+  max-width: none;   /* the 60ch reading measure applies to text, not to a slot */
+  min-height: calc(var(--space) * 9);
+  border: var(--border-width) solid var(--line-soft);
+  background: var(--panel-alt);
+}
+
+/* ---- Project cards (projects page) ----
+   Two-column bento. Cards are .box, so they match the home page exactly;
+   the important ones take a full row via .is-wide. */
 .project-grid {
   list-style: none;
-  counter-reset: project;
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--space) * 2);
-  max-width: 70ch;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gap);
 }
 
-.project {
-  counter-increment: project;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space);
-  border: var(--border-width) solid var(--border);
-  border-radius: var(--radius);
-  padding: calc(var(--space) * 2);
+.project-grid > .is-wide {
+  grid-column: 1 / -1;
 }
 
-.project__head {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space);
+/* On a full-width card, margin-left:auto would strand the status badge at the
+   far edge; keep it next to the name it belongs to. */
+.project-grid .project-box__head .status {
+  margin-left: 0;
 }
 
-/* Numbered marker: 01, 02, … */
-.project__head::before {
-  content: counter(project, decimal-leading-zero);
-  font-size: var(--fs-meta);
-  color: var(--text-muted);
-}
-
-.project__title {
-  font-size: var(--fs-heading);
-  font-weight: 700;
-  color: var(--text);
-}
-
-/* Status sits at the right edge of the project header. */
-.project__head .status {
-  margin-left: auto;
-}
-
-/* One-line, muted description. */
-.project__desc {
+/* Capability list inside a project card: the description's enumeration,
+   broken out so it can be scanned instead of read. Capped to the same 60ch
+   measure as .box__text, so it sits in one column with the paragraph above. */
+.feature-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  max-width: 72ch;
+  gap: calc(var(--space) * 1.25) calc(var(--space) * 4);
   font-size: var(--fs-body);
-  line-height: 1.5;
+  line-height: 1.45;
   color: var(--text-muted);
+}
+
+/* Each item gets its own hairline. Six one-line items stacked with nothing
+   between them read as one grey paragraph in a serif; the rule turns the
+   list back into six separate facts without adding a bullet glyph to
+   every row. */
+.feature-list li {
+  display: flex;
+  gap: calc(var(--space) * 1.25);
+  padding-bottom: calc(var(--space) * 1.25);
+  border-bottom: var(--border-width) solid var(--line-soft);
+}
+
+.feature-list li::before {
+  content: "+";
+  flex: 0 0 auto;
+  color: var(--accent);
 }
 
 /* ===========================================================
-   Footer (shared)
-   =========================================================== */
-.site-footer {
-  border-top: var(--border-width) solid var(--border);
-  padding-top: calc(var(--space) * 2);
+   Project detail page (project-*.html)
+   ===========================================================
+   One column, no cards. The previous version was a two-column grid of four
+   bordered boxes wrapped around roughly thirty words, which made every page
+   look like it was still loading — and two of those boxes restated each
+   other ("STACK: React, TypeScript" next to a React chip and a TypeScript
+   chip). A short page should look deliberately short, so this is a spec
+   sheet: lede, tech row, one band of hard facts, then whatever is genuinely
+   known. Sections with nothing real to say are simply absent. */
+.page-body--project {
   display: flex;
-  flex-wrap: wrap;
-  gap: calc(var(--space) * 2);
-  justify-content: space-between;
-  font-size: var(--fs-caption);
+  flex-direction: column;
+  gap: calc(var(--space) * 6);
+}
+
+.project {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(var(--space) * 4);
+}
+
+/* The one-sentence pitch, set larger than body copy — on a page this short
+   it is the content, not an introduction to it. */
+.project__lede {
+  font-size: 1.35rem;
+  line-height: 1.5;
+  max-width: 54ch;
+  color: var(--fg-strong);
+}
+
+/* Hard facts as one horizontal band between hairlines. Full width, so the
+   page has a spine instead of a ragged right edge. */
+.datarow {
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: calc(var(--space) * 2) var(--gap);
+  padding: calc(var(--space) * 2) 0;
+  border-top: var(--border-width) solid var(--border);
+  border-bottom: var(--border-width) solid var(--border);
+}
+
+.datarow__cell {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 0.5);
+  min-width: 0;
+}
+
+.datarow dd {
+  font-size: 1.05rem;
+  line-height: 1.4;
+  color: var(--fg-strong);
+}
+
+/* A titled block (e.g. "What it does"). Only rendered where real content
+   exists — there is no empty-state version on purpose.
+   Each section opens with a hairline the full width of the article, so the
+   page reads as stacked panels instead of one undivided column — the "spec
+   sheet" rhythm the datarow already set. The label sits just under its rule,
+   like a section header on a printed sheet. */
+.project__section {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 2.5);
+  padding-top: calc(var(--space) * 3);
+  border-top: var(--border-width) solid var(--border);
+}
+
+/* A section heading is a heading, not a caption. Everywhere else on the site
+   .section-label marks a small box; here it opens a band of real reading, so
+   it takes the heading size and the full text colour. The accent tick before
+   it is what makes the start of a section findable when scrolling past. */
+.project__section > .section-label,
+.about-band > .section-label {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--space) * 1.25);
+  font-size: var(--fs-heading);
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--fg-strong);
+}
+
+.project__section > .section-label::before,
+.about-band > .section-label::before {
+  content: "";
+  flex: 0 0 auto;
+  width: calc(var(--space) * 2);
+  height: 2px;
+  background: var(--accent);
+  transform: translateY(-0.3em);
+}
+
+.project__section p {
+  font-size: var(--fs-body);
+  max-width: 66ch;
   color: var(--text-muted);
 }
+
+/* ---- Content blocks ----
+   Everything below is content-agnostic: no rule mentions a project. A new
+   project page is written by picking blocks from this set, which is what
+   keeps swapping one project for another an HTML-only job. */
+
+/* Numbered procedure — pipeline stages, setup steps. Leading-zero counters
+   because the rest of the site is monospace and fixed-width reads better. */
+.steps {
+  list-style: none;
+  counter-reset: step;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 1.5);
+  max-width: 68ch;
+}
+
+.steps > li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: calc(var(--space) * 2);
+  font-size: var(--fs-body);
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+.steps > li::before {
+  counter-increment: step;
+  content: counter(step, decimal-leading-zero);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  padding-top: 0.35em;   /* optical baseline match against the bold step title */
+}
+
+.steps b {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--fg-strong);
+}
+
+/* Real tabular data (model files, ports, env keys). Wrapped in .table-wrap
+   so a wide table scrolls itself instead of the page. */
+.table-wrap {
+  align-self: stretch;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.table-wrap::-webkit-scrollbar { display: none; }
+
+.spec-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-body);
+  text-align: left;
+}
+
+.spec-table th {
+  font-size: var(--fs-caption);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 400;
+  color: var(--fg-mute);
+  padding: 0 calc(var(--space) * 3) calc(var(--space) * 1.25) 0;
+  border-bottom: var(--border-width) solid var(--border);
+  white-space: nowrap;
+}
+
+.spec-table td {
+  padding: calc(var(--space) * 1.5) calc(var(--space) * 3) calc(var(--space) * 1.5) 0;
+  border-bottom: var(--border-width) solid var(--line-soft);
+  color: var(--text);
+  vertical-align: top;
+}
+
+.spec-table tr:last-child td { border-bottom: 0; }
+
+/* Filenames, ports, commands. The page font is a serif, so a literal has no
+   letterform cue of its own to mark it — the tracking and the well are
+   carrying the whole distinction. */
+code {
+  font-family: inherit;
+  font-size: 0.95em;
+  letter-spacing: 0.02em;
+  padding: 0 calc(var(--space) * 0.5);
+  background: var(--panel-alt);
+  border: var(--border-width) solid var(--line-soft);
+  color: var(--fg-strong);
+  white-space: nowrap;
+}
+
+/* Short aside — a caveat, a disclosure, a "not public yet". */
+.note {
+  align-self: stretch;
+  max-width: 68ch;
+  padding: calc(var(--space) * 0.5) 0 calc(var(--space) * 0.5) calc(var(--space) * 3);
+  border-left: 2px solid var(--border);
+  font-size: var(--fs-body);
+  font-style: italic;   /* a serif aside marks itself; no second border needed */
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+.note--accent { border-left-color: var(--accent); }
+
+.note strong { color: var(--fg-strong); }
+
+/* ---- Screenshot slot ----
+   Drop an image in assets/ and uncomment the <figure> on the page. Sized by
+   the image's own aspect ratio, capped so a tall screenshot cannot push the
+   rest of the page off-screen. */
+.figure {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 0.75);
+}
+
+.figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+  object-fit: contain;
+  object-position: left top;
+  border: var(--border-width) solid var(--border);
+  background: var(--panel-alt);
+}
+
+.figure figcaption {
+  font-size: var(--fs-caption);
+  color: var(--fg-mute);
+}
+
+/* Two or three shots side by side; collapses to one column on narrow screens. */
+.figure-row {
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--gap);
+}
+
+.figure-row .figure img { max-height: 40vh; }
+
+/* The masthead rule becomes the project's own gradient: the page is colour-
+   matched to the card it was opened from. Drawn as a background so it needs
+   no extra element. */
+.page-head--project {
+  border-bottom: 0;
+  background-image: linear-gradient(90deg, var(--edge-1), var(--edge-2) 45%, var(--edge-3));
+  background-size: 100% 2px;
+  background-position: bottom left;
+  background-repeat: no-repeat;
+}
+
+/* Lede on a project page carries the one-line pitch — same line as the card. */
+.page-head--project .page-head__title { display: flex; align-items: baseline; gap: var(--space); }
+
+/* ---- Pager: previous / next project ----
+   The projects index is one click away in the footer, but someone reading
+   about Ignite most likely wants the next project, not the list.
+   margin-top:auto pins it to the bottom of the viewport on these short
+   pages, so it never floats alone in the middle of empty space. */
+.pager {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+  padding-top: calc(var(--space) * 2);
+  border-top: var(--border-width) solid var(--border);
+}
+
+.pager a {
+  position: relative;
+  isolation: isolate;   /* see the inner-wash block near .box */
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 0.25);
+  flex: 1 1 200px;
+  padding: calc(var(--space) * 1.5) calc(var(--space) * 2);
+  border: var(--border-width) solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color var(--motion), color var(--motion);
+}
+
+.pager a:hover,
+.pager a:focus-visible {
+  border-color: var(--border-hover);
+  color: var(--fg-strong);
+}
+
+.pager__dir {
+  font-size: var(--fs-caption);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--fg-mute);
+}
+
+.pager__next { text-align: right; }
+
+/* First / last project: one link only — don't let it stretch the full width. */
+.pager a:only-child { flex: 0 1 320px; }
+.pager__next:only-child { margin-left: auto; }
+
+/* ---- About page ----
+   Was a 2×2 of equal bordered cards: four boxes of the same weight, so
+   nothing on the page was the first thing to read, and the two data sheets
+   (four rows each) ran out well before the bottom of the screen while the
+   prose that people actually came for sat boxed in a corner at body size.
+
+   This is the project-page shell instead — a lede, a band of hard facts,
+   then titled sections separated by hairlines — so About and every project
+   read as the same document. The only card left is the one thing that is
+   genuinely a set of links. */
+.about {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 6);
+}
+
+/* The opening: prose left, at-a-glance sheet right. On a serif the two want
+   different measures, so this is a real two-track grid rather than the old
+   1.5fr/1fr split that let the paragraph run to whatever was left over. */
+.about__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 20rem);
+  gap: calc(var(--space) * 3) calc(var(--space) * 5);
+  align-items: start;
+}
+
+.about__lead {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 2.5);
+  max-width: 68ch;
+  font-size: var(--fs-body);
+  line-height: 1.75;
+  color: var(--text-muted);
+}
+
+/* First paragraph is the page's real headline — "About" is only a label. */
+.about__lead > p:first-child {
+  font-size: 1.35rem;
+  line-height: 1.5;
+  color: var(--fg-strong);
+}
+
+.about__lead strong {
+  font-weight: 700;
+  color: var(--fg-strong);
+}
+
+/* Titled band, same construction as .project__section — see the heading
+   rule up there, which both share. */
+.about-band {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 2.5);
+  padding-top: calc(var(--space) * 3);
+  border-top: var(--border-width) solid var(--border);
+}
+
+/* Contact row: the page used to end in dead space under two short lists.
+   These are the same three destinations as the home page's link column, at
+   the point where someone who has just read the page wants them. */
+.about-contact {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--gap);
+}
+
+/* ---- Data-sheet rows: label left, value right, hairline between ---- */
+.spec {
+  display: flex;
+  flex-direction: column;
+}
+
+.spec__row {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--space) * 2);
+  padding: calc(var(--space) * 1.25) 0;
+  border-bottom: var(--border-width) solid var(--line-soft);
+}
+
+.spec__row:first-child { padding-top: 0; }
+
+.spec__row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.spec__key {
+  flex: 0 0 auto;
+  font-size: var(--fs-caption);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--fg-mute);
+}
+
+.spec__val {
+  margin-left: auto;
+  min-width: 0;
+  text-align: right;
+  font-size: var(--fs-body);
+  line-height: 1.4;
+  color: var(--text);
+}
+
+/* ===========================================================
+   Footer (shared) — legal + credit, nothing else
+   ===========================================================
+   The footer used to BE the navigation, which is why it carried a three-track
+   centring grid, an absolutely-positioned credit line and a set of rules for
+   keeping the "Home" axis on the page's centre line. Navigation moved to the
+   header, so all of that machinery is gone; what is left is the two things a
+   footer is actually for. margin-top:auto pins it to the bottom of the
+   viewport on pages shorter than one screen. */
+.site-footer {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space) calc(var(--space) * 2);
+  padding-top: calc(var(--space) * 2);
+  border-top: var(--border-width) solid var(--border);
+  font-size: var(--fs-caption);
+  color: var(--fg-mute);
+}
+
+.site-footer__meta { margin-right: auto; }
 
 .site-footer a {
   display: inline-flex;
   align-items: center;
   gap: calc(var(--space) * 0.5);
-  color: var(--text-muted);
+  color: var(--fg-mute);
   text-decoration: none;
-  border-bottom: var(--border-width) solid var(--border);
+  border-bottom: 2px solid transparent;
   transition: color var(--motion), border-color var(--motion);
 }
 
 .site-footer a:hover,
 .site-footer a:focus-visible {
   color: var(--text);
-  border-color: var(--text);
+  border-bottom-color: var(--text);
   outline: none;
 }
 
-/* Inline arrow on footer links: -> for the Impressum page, up-right for
-   external GitHub. Inherits currentColor, so it brightens with the link
-   text on hover — no separate motion, consistent with the rest of the site. */
+/* Small inline arrow beside a link's text. Static on purpose: the site's
+   arrow-nudge belongs to the primary affordances (.box-arrow, .more-link,
+   .doc__arrow), and having a fourth animated arrow system for a 13px glyph
+   in the footer was upkeep with nothing to show for it. */
 .footer-arrow {
   width: 13px;
   height: 13px;
   fill: none;
   stroke: currentColor;
-  transition: transform var(--motion), color var(--motion);
-}
-
-.site-footer a:hover .footer-arrow,
-.site-footer a:focus-visible .footer-arrow {
-  transform: translateX(2px);            /* arrow-right -> right */
-}
-
-.site-footer a:hover .footer-arrow--external,
-.site-footer a:focus-visible .footer-arrow--external {
-  transform: translate(2px, -2px);       /* arrow-up-right -> up-right */
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .site-footer a:hover .footer-arrow,
-  .site-footer a:focus-visible .footer-arrow,
-  .site-footer a:hover .footer-arrow--external,
-  .site-footer a:focus-visible .footer-arrow--external {
-    transform: none;
-  }
 }
 
 /* ===========================================================
@@ -809,24 +1782,79 @@ a:focus-visible,
    5 cols (sketch = 7 tracks) -> 2 cols -> 1 col
    =========================================================== */
 @media (max-width: 768px) {
+  /* The header sticks. Stacked into one or two columns the home page is
+     roughly three screens tall, and navigation that lives at one end of a
+     long page is navigation you have to go looking for — the exact problem
+     the old footer nav had, just at the other end. The negative margins pull
+     the bar out to the viewport edges (body carries --gap of padding) so the
+     background covers the full width once it is stuck. */
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+    margin: calc(var(--gap) * -1) calc(var(--gap) * -1) 0;
+    padding: calc(var(--space) * 0.5) var(--gap) 0;
+  }
+
+  /* The bar used to wrap: wordmark and toggle on line one, nav spread across
+     a second full-width line. With the wordmark gone that first line would
+     hold nothing but the theme toggle, so the wrap is gone too — four links
+     plus the toggle fit on one row inside 320px even at full tap-target
+     height (the 480px rule below tightens the link padding for the last
+     stretch of that).
+
+     Desktop trades height for quiet; a finger cannot. Down here the links go
+     back to a 44px target and the toggle to 40px. */
+  .site-nav a { min-height: 44px; }
+
+  .icon-btn {
+    min-height: 40px;
+    padding: 0 calc(var(--space) * 1.25);
+    margin-right: calc(var(--space) * -1.25);   /* see the desktop rule */
+  }
+
+  .icon-btn [data-theme-icon] {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Keeps its own horizontal scroll (it is wider than a phone), but must
+     claim a real height now that the row no longer dictates one. */
+  .gh-graph {
+    flex: none;
+    min-height: 92px;
+  }
+
   .bento {
     grid-template-columns: repeat(2, 1fr);
     grid-template-rows: none;                  /* let stacked boxes size to content */
     grid-auto-rows: minmax(110px, auto);
     grid-template-areas:
-      "name      name"
-      "about     about"
-      "interests hates"
-      "stuff     stuff"
-      "projects  projects"
-      "github    github"
-      "buttons   buttons";
+      "name    name"
+      "comfy   comfy"
+      "kobui   kobui"
+      "ignite  ignite"
+      "stalkr  stalkr"
+      "about   about"
+      "github  github"
+      "buttons buttons";
   }
 
   /* Let the link boxes keep a tappable height instead of being crushed
      into the short auto-row; the stack grows to fit them. */
   .link-box {
     min-height: 56px;
+  }
+
+  .project-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pager__next { text-align: left; }
+
+  .about__top {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -836,12 +1864,17 @@ a:focus-visible,
     grid-template-rows: none;
     grid-template-areas:
       "name"
+      "comfy"
+      "kobui"
+      "ignite"
+      "stalkr"
       "about"
-      "interests"
-      "hates"
-      "stuff"
-      "projects"
       "github"
       "buttons";
   }
+
+  /* At this width the four nav items plus their padding no longer fit on one
+     row; shrink the horizontal padding rather than the type or the 44px
+     height, both of which are doing real work. */
+  .site-nav a { padding: 0 calc(var(--space) * 0.5); }
 }
