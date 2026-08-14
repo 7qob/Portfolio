@@ -1,0 +1,109 @@
+name: API image
+
+# Builds the API container for the Pi and publishes it to GHCR. The Pi only
+# ever pulls — it never compiles anything, which is the entire reason this
+# workflow exists (better-sqlite3 and argon2 are native modules).
+
+on:
+  push:
+    branches: [main]
+    # The static site is the bulk of this repo and has nothing to do with the
+    # image. Without this filter every CSS tweak would spend twenty minutes
+    # emulating arm64 for a byte-identical result.
+    paths:
+      - 'server/**'
+      - '.github/workflows/api-image.yml'
+  workflow_dispatch:
+
+# A second push while the first is still emulating arm64 should replace it,
+# not queue behind it.
+concurrency:
+  group: api-image-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Runs natively on x64 in about a minute. A type error fails here rather
+  # than twenty minutes into an emulated build.
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install
+        working-directory: server
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: server
+        run: npm run typecheck
+
+      - name: Build
+        working-directory: server
+        run: npm run build
+
+  image:
+    needs: check
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write   # the only write scope this needs
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # The Pi is arm64 and these runners are x64, so the native modules are
+      # compiled under emulation. Slow, but it happens here rather than on the
+      # Pi, and only when server/ actually changes.
+      - uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          # Issued to the run automatically. No personal access token to
+          # create, store or rotate.
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/portfolio-api
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+          labels: |
+            org.opencontainers.image.title=portfolio-api
+            org.opencontainers.image.description=Login, vault and admin API for kira1q.dev
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          platforms: linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Without a cache every run recompiles both native modules under
+          # emulation from scratch.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Summary
+        run: |
+          echo "### Image published" >> "$GITHUB_STEP_SUMMARY"
+          echo '' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo '${{ steps.meta.outputs.tags }}' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo '' >> "$GITHUB_STEP_SUMMARY"
+          echo 'On the Pi: `cd ~/Portfolio && docker compose pull && docker compose up -d`' >> "$GITHUB_STEP_SUMMARY"
