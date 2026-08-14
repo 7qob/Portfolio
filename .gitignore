@@ -18,3 +18,20 @@ dist-*.zip
 # Local editor / tooling config. launch.json points at an absolute path on one
 # machine, so it is useless to anyone else who clones this.
 .claude/
+
+# API build output and dependencies. package-lock.json IS committed — the
+# image builds with `npm ci`, which needs it and refuses to run without it.
+server/node_modules/
+server/dist/
+server/tsconfig.tsbuildinfo
+
+# Local runtime state. On the Pi these live in /var/lib/kira1q/ and are bind
+# mounted; if they ever appear here it is from running the API locally, and
+# they hold password hashes and real people's IP addresses. Never commit them.
+server/data/
+server/vault-files/
+*.db
+*.db-wal
+*.db-shm
+.env
+.env.*
