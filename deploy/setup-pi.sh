@@ -51,24 +51,27 @@ sudo rsync -a --delete \
   --exclude 'vault/files/' \
   "$UPLOAD"/ "$WEBROOT"/
 
-echo "==> Ensuring the vault document directory exists"
-sudo mkdir -p "$WEBROOT/vault/files"
-
 sudo chown -R www-data:www-data "$WEBROOT"
 sudo find "$WEBROOT" -type d -exec chmod 755 {} \;
 sudo find "$WEBROOT" -type f -exec chmod 644 {} \;
 
-echo "==> Checking the vault password file"
-# nginx returns 500 for /vault/ when this is missing — fail-closed, but the
-# error is opaque, so say so here instead of leaving you to read error.log.
-if [ ! -f /etc/nginx/.htpasswd-vault ]; then
-  echo "    MISSING: /etc/nginx/.htpasswd-vault"
-  echo "    /vault/ will answer 500 until you create it:"
-  echo "        sudo htpasswd -B -c /etc/nginx/.htpasswd-vault <username>"
-  echo "        sudo chown root:www-data /etc/nginx/.htpasswd-vault"
-  echo "        sudo chmod 640 /etc/nginx/.htpasswd-vault"
-else
-  echo "    OK"
+# Documents used to live under the web root. They are now served by the API
+# from /var/lib/kira1q/vault-files/, which nginx cannot reach at all.
+#
+# This only warns. It does NOT delete anything and the rsync exclusion above
+# is kept, because if the migration has not happened yet those files are the
+# only copy — deleting them here to tidy up would destroy the CV.
+if [ -d "$WEBROOT/vault/files" ] && [ -n "$(sudo ls -A "$WEBROOT/vault/files" 2>/dev/null)" ]; then
+  echo
+  echo "==> WARNING: old documents are still under the web root"
+  echo "    $WEBROOT/vault/files"
+  echo "    These are no longer used and nginx now returns 404 for them, but"
+  echo "    they should not be sitting there. Copy them to the new location,"
+  echo "    verify a download works, and only then remove the old directory:"
+  echo "        sudo cp $WEBROOT/vault/files/* /var/lib/kira1q/vault-files/"
+  echo "        sudo chown 1000:1000 /var/lib/kira1q/vault-files/*"
+  echo "        sudo rm -rf $WEBROOT/vault/files"
+  echo
 fi
 
 echo "==> Installing nginx server block"
@@ -97,15 +100,42 @@ code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost/project-template
 echo "    /project-template.html  $code   (should be 404)"
 
 echo
-echo "==> The vault must NOT be readable without credentials:"
-# Both paths, because the whole point of the ^~ prefix in the server block is
-# that the .html regex must not be allowed to serve the page unauthenticated.
-# A 200 on either line means the gate is open — fix it before uploading a CV.
-for p in /vault/ /vault/index.html; do
-  code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost$p" || echo ERR)
-  printf '    %-22s %s   %s\n' "$p" "$code" \
-    "$([ "$code" = "401" ] && echo '(locked)' || echo '<-- EXPECTED 401')"
-done
+echo "==> The API must refuse everything private without a session:"
+# The vault PAGE is public now and that is correct — it is an empty shell.
+# What must be locked is the data behind it. A 200 on any of these means
+# something is open; fix it before uploading a CV.
+check_code() {
+  code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost$1" || echo ERR)
+  printf '    %-28s %s   %s\n' "$1" "$code" \
+    "$([ "$code" = "$2" ] && echo '(ok)' || echo "<-- EXPECTED $2")"
+}
+
+check_code /api/vault/items        401
+check_code /api/vault/items/1/file 401
+check_code /api/admin/overview     401
+check_code /vault/files/cv.pdf     404
+
+echo
+echo "==> The vault page must not name a single document:"
+# This is the property the old Basic Auth setup did NOT have: the list used to
+# be hardcoded in the HTML, so viewing source told anyone what documents
+# existed before they hit the password. It now arrives from the API after
+# authentication. Re-run this after any change to vault/index.html.
+hits=$(curl -s "http://localhost/vault/index.html" | grep -ci 'curriculum\|zeugnis\|\.pdf' || true)
+printf '    %-28s %s   %s\n' "leaked document names" "$hits" \
+  "$([ "$hits" = "0" ] && echo '(ok)' || echo '<-- EXPECTED 0')"
+
+echo
+echo "==> API container:"
+api_code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost/api/health" || echo ERR)
+if [ "$api_code" = "200" ]; then
+  echo "    /api/health              200   (up)"
+else
+  echo "    /api/health              $api_code   <-- the API is not running."
+  echo "    Start it with:  cd ~/Portfolio && docker compose up -d"
+  echo "    Until it is up, the vault and admin pages will say so and the"
+  echo "    static site will carry on working normally."
+fi
 
 IP=$(hostname -I | awk '{print $1}')
 echo

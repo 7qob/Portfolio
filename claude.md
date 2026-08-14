@@ -1,79 +1,108 @@
-# CLAUDE.md — Portfolio Scaffold
+# CLAUDE.md — kira1q.dev
 
-## Goal
-Build the **bare scaffold** of a personal portfolio website. Real page structure and real boxes, but **completely empty** — no placeholder text, no lorem ipsum, no dummy data, no fake images. Just the HTML structure, the bento grid, borders, and CSS tokens. The owner fills in content later.
+## What this is
 
-## Stack (hard constraints)
-- Static **HTML + CSS + JS only**. No framework, no build step, no bundler, no npm.
-- Must open via `file://` (no server required) and host on GitHub Pages / Cloudflare Pages.
-- One shared `style.css`. Minimal `script.js` (only if needed for mobile nav / smooth scroll).
-- No backend, no APIs, no databases.
+A personal portfolio site, plus a small private area for job applications.
+It started as an empty scaffold; it is now a real site with real content and
+a backend. This file used to describe the scaffold and was wrong on nearly
+every point — if something here contradicts the code, the code is right and
+this file should be fixed.
 
-## Files to create
+## Shape of the repo
+
 ```
-index.html       -> bento home page
-projects.html    -> subpage (empty content area)
-about.html       -> subpage (empty content area)
-impressum.html   -> subpage, legal info (school requirement)
-style.css        -> shared tokens + grid + box styles
-script.js        -> minimal, optional
-```
-
-## Design direction
-- Aesthetic: **retro, KISS, classic**. NOT soft/rounded/glassmorphism.
-- **Dark theme.** Pick any sensible dark palette; exact colors do not matter. Put them in CSS variables.
-- **1px borders** on every box. **border-radius: 0** everywhere. No box-shadows.
-- Monospace or classic font pairing fits the retro tone. Free / Google Fonts only.
-- Generous, consistent spacing via a single spacing unit variable.
-
-## CSS tokens (define as :root variables, build everything off them)
-- `--bg`, `--text`, `--border`, `--accent`
-- `--border-width: 1px`
-- `--radius: 0`
-- `--space: 8px` (spacing unit)
-- font-family variables
-
-## Home page layout (index.html)
-- **7-column × 5-row bento grid.** Use `display: grid` with **`grid-template-areas`** exactly as below. This is final — do not rearrange.
-
-```css
-grid-template-columns: repeat(7, 1fr);
-grid-template-areas:
-  "name      name      tools     tools     github    github    buttons"
-  "about     about     tools     tools     techstack techstack buttons"
-  "about     about     projects  projects  techstack techstack buttons"
-  "interests interests projects  projects  techstack techstack buttons"
-  "interests interests projects  projects  techstack techstack buttons";
+index.html          bento home page
+projects.html       project index
+project-*.html      one page per project
+about.html          about
+impressum.html      legal + Datenschutz (school requirement)
+login.html          sign-in for the vault
+admin.html          admin panel (admins only)
+vault/index.html    private document list — an empty shell, filled by the API
+vault-locked.html   retired, redirects to login.html
+style.css           all styling, one file
+script.js           shared behaviour, loaded by every page
+admin.js            admin panel only
+server/             NestJS + TypeScript API (see below)
+deploy/             nginx config and Pi deployment notes
+docs/               planning notes
 ```
 
-- 8 boxes, each a 1px-bordered cell, **empty inside** (a small static section label like `ABOUT ME` is fine, but NO body content): `name`, `about`, `tools`, `techstack`, `projects`, `interests`, `github`, `buttons`.
-- `name` = hero/name area. `buttons` = vertical link column (GitHub / email / etc. — empty bordered slots, no real links). `github` = contributions graph (see below).
-- **Nav = clickable bento boxes.** `about` -> about.html, `projects` -> projects.html. Use real `<a>`. Give clickable boxes a hover state (invert border/colors) + `cursor: pointer` so they read as interactive.
+## Stack
 
-## GitHub box
-- Static contributions graph via image, no JS/token:
-  `<img src="https://ghchart.rshah.org/USERNAME" alt="GitHub contributions">`
-- Leave `USERNAME` as-is for the owner to replace. (Note in a comment that this is a third-party service.)
+**Front end: static HTML + CSS + JS. No framework, no build step, no bundler.**
+That constraint still holds and is worth keeping — the site is ~50 KB and
+opens from disk.
 
-## Subpages (projects.html, about.html, impressum.html)
-- **No top nav bar.** Single back control: a `<a href="index.html">` styled as `<-` arrow, top-left, with padding for a tap target.
-- Empty `<main>` content area, semantic structure only.
-- impressum.html: empty labeled sections for the fields (Name, Kontakt/Email, Ort/Datum) — NO real personal data, do not invent any. Avoid a full home address.
+**Back end: NestJS + TypeScript in a Docker container**, added when the vault
+moved from one shared Basic Auth password to per-person accounts. It is the
+only part with a build step and dependencies.
 
-## Footer (shared, every page)
-- Full-width, 1px top border. Empty slots for: © year, Impressum link (-> impressum.html), GitHub link. Impressum link should be real (it points to the existing page); others empty.
+The two halves are deliberately separable. `index.html`, `projects.html`,
+`about.html`, `impressum.html` and the project pages are pure static and work
+over `file://` or on GitHub Pages with no backend at all. Only the vault,
+login and admin pages need the API, and each degrades to a plain message
+rather than a broken screen when it is absent. **Keep it that way** — do not
+introduce an API call into a page that does not need one.
 
-## Responsive
-- 7-col desktop grid collapses to 2 columns (~768px) then 1 column (mobile). Stacking order should stay sensible (name, about, projects, then the rest).
-- Mobile-first or add one/two breakpoints. Keep it simple.
+## Design rules (unchanged, still binding)
 
-## Head / quality (do per page)
-- `<html lang="de">`, `<meta viewport>`, `<title>`, empty `<meta name="description">`.
-- Semantic tags: `<header>`/`<nav>`, `<main>`, `<footer>`, `<section>`.
-- Open Graph tags present but empty (for link previews when shared with employers).
-- Visible `:focus` states, not just `:hover`.
+- Retro, KISS, classic. Not soft, not rounded, no glassmorphism.
+- Dark theme by default, light theme via the header toggle. Colours are
+  CSS variables; only the primitives are overridden for light.
+- **1px borders on every box. `border-radius: 0`. No box-shadows.** Depth
+  comes from the border and the panel/background contrast, nothing else.
+- Spacing off a single `--space` unit and `--gap`.
+- Serif type (`--font`). The type scale is sized for it.
+- Visible `:focus-visible` states everywhere, not just `:hover`.
+- Home page bento grid uses `grid-template-areas` and is height-locked to one
+  screen on desktop; boxes scroll internally rather than the page. Overflow is
+  **measured at runtime**, never assumed at author time.
 
-## Do NOT
-- Do not add placeholder/dummy text, fake projects, lorem ipsum, or stock images.
-- Do not add a message board, map, Last.fm, or Discord widgets (they need a backend).
-- Do not use a framework or any build tooling.
+## Content rules
+
+- No lorem ipsum, no invented projects, no stock images, no fake data.
+- Do not invent personal details. The Impressum's Name / Kontakt / Ort fields
+  are deliberately empty for the owner to fill in. The Datenschutz section is
+  written, because that is a factual description of the system rather than
+  personal data.
+- No widgets needing a third-party backend (message board, map, Last.fm,
+  Discord). The contributions graph is the one third-party call, it needs no
+  token, and it degrades to cached or absent without breaking the page.
+
+## The backend, in one paragraph
+
+`server/` is a NestJS service behind nginx at `/api/`, holding a SQLite
+database of accounts, sessions, login attempts, vault documents, downloads and
+an audit log. Passwords are argon2id. Sessions are opaque random tokens stored
+as SHA-256, in an `HttpOnly; Secure; SameSite=Lax` cookie. There is **no
+secret anywhere in the service** — nothing is signed, so the image can be
+public and the compose file has no credentials in it. Accounts are issued by
+an admin and the password is generated server-side and shown exactly once.
+Vault documents live in `/var/lib/kira1q/vault-files/` on the Pi, outside the
+web root, and are streamed only after a session check.
+
+## Things that will bite you
+
+- **The repo is public.** No secret, no database, no vault document may ever
+  be committed. A commit is permanent even if a later commit deletes the file.
+- **The vault page must not name its documents.** The list comes from the API
+  after authentication. It was hardcoded once, which told anyone who viewed
+  source what documents existed. Do not put it back. There is a check for this
+  in `deploy/README.md` §3.6.
+- **In the admin panel, use `textContent`, never `innerHTML`.** It displays
+  user-agent strings and usernames from failed logins — attacker-chosen text
+  the server stored verbatim, as it should.
+- **`Secure` cookies mean login does not work over plain HTTP**, including
+  `http://192.168.0.56/` on the LAN. Test through `https://kira1q.dev`.
+- **Native modules.** `better-sqlite3` and `argon2` need a compiler. They are
+  built in CI inside the Docker image and never on the Pi — and they will not
+  install on a Node version without prebuilds unless Python is present.
+- **Commits carry no AI attribution.** Author is `kiraa1q`, no
+  `Co-Authored-By` trailer, no mention of Claude anywhere.
+
+## Deployment
+
+GitHub Actions builds the arm64 image on pushes touching `server/` and
+publishes to GHCR. The Pi pulls it. The static site is rsynced separately.
+Full runbook in `deploy/README.md`.
