@@ -116,13 +116,12 @@
         <div class="note"><code>tools/sanitize.py</code> generates the public copy from the private working file, stripping <strong>LoRA names and strengths, prompts, absolute paths and seeds</strong> — the published workflow is the structure, not anyone's settings.</div>
       </section>
 
-      <!-- The <figure> self-hides until assets/comfy-graph.png exists (see
-           initFigures in script.js), so the page is never scarred by a
-           missing file. Save the workflow screenshot to that exact path. -->
+      <!-- The <figure> self-hides if its image is missing (see initFigures in
+           script.js), so the page is never scarred by a missing file. -->
       <section class="project__section" aria-labelledby="lbl-graph">
         <h2 class="section-label" id="lbl-graph">The graph</h2>
         <figure class="figure">
-          <img src="assets/comfy-graph.png" alt="The ComfyUI node graph: a Models column of five LoRA slots under one Master Strength control, feeding Stage 1 (Base, 1152×1728) and Stage 2 (Refine, latent upscale) with an rgthree Compare node between the two outputs." loading="lazy" decoding="async">
+          <img src="assets/graph.png" alt="The ComfyUI node graph: a Models column of five LoRA slots under one Master Strength control, feeding Stage 1 (Base, 1152×1728) and Stage 2 (Refine, latent upscale) with an rgthree Compare node between the two outputs." loading="lazy" decoding="async">
           <figcaption>The full workflow — Models and LoRA stack on the left, Base and Refine stages on the right, joined by the Compare node.</figcaption>
         </figure>
       </section>
