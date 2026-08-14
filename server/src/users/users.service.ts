@@ -156,6 +156,12 @@ export class UsersService {
     this.database.db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, userId);
   }
 
+  setNote(userId: number, note: string): void {
+    this.database.db
+      .prepare('UPDATE users SET note = ? WHERE id = ?')
+      .run(note === '' ? null : note, userId);
+  }
+
   markLogin(userId: number): void {
     this.database.db
       .prepare(`UPDATE users SET last_login_at = datetime('now') WHERE id = ?`)
