@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 
 import { DatabaseService } from './database.service';
+import { MaintenanceService } from './maintenance.service';
 
 /**
  * Global so feature modules can inject the connection without each one
@@ -8,7 +9,7 @@ import { DatabaseService } from './database.service';
  */
 @Global()
 @Module({
-  providers: [DatabaseService],
+  providers: [DatabaseService, MaintenanceService],
   exports: [DatabaseService],
 })
 export class DatabaseModule {}
