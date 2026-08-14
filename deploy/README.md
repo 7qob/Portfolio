@@ -126,86 +126,158 @@ header's absence is how you know you're hitting the Pi and not Pages.
 
 ## Part 3 — The Vault (private documents)
 
-`/vault/` is protected by nginx HTTP Basic Auth. The gate is on the Pi, so it
-only exists once the site is served from the Pi — over `file://` or on GitHub
-Pages the page is just a page, with nothing behind it. **Don't put real
-documents anywhere until Part 1 is done and you've verified the 401 below.**
+The vault is behind a real login: per-person accounts in a SQLite database,
+served by a small containerised API. This replaced HTTP Basic Auth, which had
+one shared password, no way to revoke it for one person, and no record of who
+opened anything.
 
-### 3.1 Create the password — you do this, not a script
+**Do Part 1 first.** Over `file://` or on GitHub Pages the vault page is an
+empty shell with no backend to ask, and it says so.
 
-```bash
-sudo htpasswd -B -c /etc/nginx/.htpasswd-vault kira
-sudo chown root:www-data /etc/nginx/.htpasswd-vault
-sudo chmod 640 /etc/nginx/.htpasswd-vault
-sudo systemctl reload nginx
-```
-
-`-B` is bcrypt — without it `htpasswd` writes an MD5 hash, which is not a
-password hash. `-c` **creates** the file: leave it off when adding a second
-user, or you will silently replace the first one.
-
-Pick the password in a password manager. It is one shared secret for everyone
-you give it to, so treat it as disposable and change it when a search ends.
-
-### 3.2 Verify the gate before trusting it
+### 3.1 Install Docker
 
 ```bash
-curl -s -o /dev/null -w '%{http_code}\n' http://localhost/vault/index.html
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER
 ```
 
-You want **401**. Check this exact path, not just `/vault/` — nginx picks
-regex locations over ordinary prefix ones, and the `~* \.html$` caching block
-would have served this page unauthenticated if the vault block weren't
-declared `^~`. `./setup-pi.sh` checks both paths for you on every run.
+Log out and back in for the group to take effect.
 
-Then with credentials:
+### 3.2 Create the directories the container mounts
+
+These live outside the web root deliberately. nginx serves `/var/www`; it has
+no access to these, so a location-block mistake cannot expose a document.
 
 ```bash
-curl -s -o /dev/null -w '%{http_code}\n' -u kira http://localhost/vault/index.html
+sudo mkdir -p /var/lib/kira1q/data /var/lib/kira1q/vault-files
+sudo chown -R 1000:1000 /var/lib/kira1q
+sudo chmod 700 /var/lib/kira1q/data /var/lib/kira1q/vault-files
 ```
 
-That should be 200.
+`1000:1000` is the `node` user inside the image. The container runs as that
+user, not root, so a bug in the file-streaming path is contained.
 
-### 3.3 Upload the documents
+### 3.3 Start the API
 
-Via WinSCP, straight into the webroot — **not** into `~/Portfolio`, and never
-into the git repo:
+```bash
+cd ~/Portfolio
+docker compose pull
+docker compose up -d
+docker compose logs -f api    # ctrl-c once you see "Listening on"
+```
+
+The image is built for arm64 by GitHub Actions and pulled from GHCR — the Pi
+never compiles anything, which is the whole reason this is a container.
+
+Check it is alive:
+
+```bash
+curl -s localhost:8080/api/health
+```
+
+### 3.4 Install the nginx changes
+
+```bash
+sudo cp deploy/nginx-kira1q.dev.conf /etc/nginx/sites-available/kira1q.dev
+sudo cp deploy/nginx-conf.d-kira1q.conf /etc/nginx/conf.d/kira1q-ratelimit.conf
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+The second file is the rate-limit zone. If you skip it, comment out the two
+`limit_req` lines in the `/api/` block or `nginx -t` will fail.
+
+### 3.5 Create your admin account
+
+This is the one operation that cannot be authenticated — accounts are issued
+from the admin panel and reaching the panel needs an account. It requires a
+shell on the Pi, which is the right bar for it.
+
+```bash
+docker compose exec api node dist/cli.js create-admin kira
+```
+
+It prints a generated password **once**. Only its argon2id hash is stored, so
+nobody — including you — can read it back. Put it in your password manager
+before closing the terminal. If you lose it:
+
+```bash
+docker compose exec api node dist/cli.js reset-password kira
+```
+
+Everything after this is done in the browser at `/admin.html`.
+
+### 3.6 Verify the gate before trusting it
+
+```bash
+curl -s -o /dev/null -w 'items:      %{http_code}\n' localhost/api/vault/items
+curl -s -o /dev/null -w 'file:       %{http_code}\n' localhost/api/vault/items/1/file
+curl -s -o /dev/null -w 'admin:      %{http_code}\n' localhost/api/admin/overview
+curl -s -o /dev/null -w 'old path:   %{http_code}\n' localhost/vault/files/cv.pdf
+curl -s              -w '\nvault page bytes above\n' localhost/vault/index.html | grep -ci 'curriculum\|zeugnis'
+```
+
+Wanted: **401, 401, 401, 404**, and **0** matches on the last one — the vault
+page must not name a single document before you have signed in. That last
+check is the one worth repeating after any change to `vault/index.html`,
+because it is the property the old setup did not have.
+
+### 3.7 Upload the documents
+
+Via WinSCP, into `/var/lib/kira1q/vault-files/` — **not** into `/var/www`,
+**not** into `~/Portfolio`, and never into the git repo:
 
 ```
-/var/www/kira1q.dev/vault/files/cv.pdf
-/var/www/kira1q.dev/vault/files/zeugnisse.pdf
+/var/lib/kira1q/vault-files/cv.pdf
+/var/lib/kira1q/vault-files/zeugnisse.pdf
 ```
 
 ```bash
-sudo chown -R www-data:www-data /var/www/kira1q.dev/vault/files
-sudo chmod 644 /var/www/kira1q.dev/vault/files/*
+sudo chown 1000:1000 /var/lib/kira1q/vault-files/*
+sudo chmod 640 /var/lib/kira1q/vault-files/*
 ```
 
-The filenames must match the `href`s in `vault/index.html`. Any row whose file
-is absent renders as "Not uploaded" instead of a broken download, so the page
-is safe to deploy before the PDFs exist — and that state is also how you tell
-a failed upload from a successful one.
+The filenames must match what the admin panel lists under **Documents**;
+`cv.pdf` and `zeugnisse.pdf` are seeded for you. A document whose file is
+absent shows as "Not uploaded" rather than a broken download, which is also
+how you tell a failed upload from a successful one.
 
-`setup-pi.sh` excludes `vault/files/` from its `rsync --delete`, so redeploying
-the site does not wipe them. If you ever sync by hand, use the same exclusion:
+If you are migrating from the old setup, delete the copies under the web root
+once the new ones work:
 
 ```bash
-sudo rsync -a --delete --exclude 'vault/files/' --exclude 'deploy/' ~/Portfolio/ /var/www/kira1q.dev/
+sudo rm -rf /var/www/kira1q.dev/vault/files
 ```
+
+### 3.8 Updating later
+
+Site (static files):
+
+```bash
+cd ~/Portfolio/deploy && ./setup-pi.sh ~/Portfolio
+```
+
+API (after CI has published a new image):
+
+```bash
+cd ~/Portfolio && docker compose pull && docker compose up -d
+```
+
+The database and the documents are bind mounts, so pulling a new image never
+touches accounts, logs or PDFs.
 
 ### What this protects against, and what it doesn't
 
 | | |
 |---|---|
-| Search engines, scrapers, someone guessing the URL | Yes — 401 before a byte of the file is sent. |
-| Cloudflare's edge cache leaking a PDF | Handled: the vault block sends `Cache-Control: no-store, private`. `.pdf` is cached by extension by default, so this line is doing real work. |
-| Someone you gave the password to keeping it | No. There is one shared password and no way to revoke it for one person. Rotate it when a search ends. |
-| Reading the password off the wire | Fine over the tunnel (HTTPS to Cloudflare's edge). **Not** fine over plain `http://192.168.0.56/` on your LAN — Basic Auth is base64, not encryption. Test with `curl` on the Pi, don't type the password into a LAN browser session. |
-| Brute force | Nothing rate-limits it. Not a real risk with a long password, but don't pick a short one. |
-
-If you later want per-person access, revocation and a log of who opened your
-grades, that's Cloudflare Access on this same tunnel — free to 50 users, and it
-would replace this block rather than sit next to it.
+| Search engines, scrapers, someone guessing the URL | Yes — 401 before a byte is sent, and the page itself names no document. |
+| Learning what documents exist without logging in | Yes, and this is new. The list used to be hardcoded in the HTML; it now comes from an endpoint that requires a session. |
+| Cloudflare's edge cache leaking a PDF | Handled: the API sends `Cache-Control: no-store, private`, and so does the nginx block in front of it. `.pdf` is cached by extension by default, so this is doing real work. |
+| Someone you gave access to keeping it | Disable their account in the admin panel. Their sessions end immediately. This is the thing one shared password could not do. |
+| Knowing who opened your grades | Every download is logged with the account, time and address, and shown in the panel. |
+| Brute force | Rate limited per address and per username, with a lockout, plus a second limit at nginx. The lockout is derived from the database, so restarting the container does not clear it. |
+| Reading a password off the wire | Fine over the tunnel (HTTPS to Cloudflare's edge). The session cookie is `Secure`, which means **login does not work over plain `http://192.168.0.56/`** — the browser will not send the cookie. Test through `https://kira1q.dev`. |
+| Someone with a shell on the Pi | No. They can read the database and reset accounts. That is inherent to self-hosting. |
+| The Pi being off | The vault and admin panel are down. The static site is too, but that was already true. |
 
 ---
 
