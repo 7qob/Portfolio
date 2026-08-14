@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Admin · kiraa1q</title>
+
+  <!-- No Open Graph, and noarchive on top of noindex. Nothing about this page
+       should ever appear in a link preview or a cache. -->
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='.5' y='.5' width='31' height='31' fill='%230e0e0e' stroke='%232a2a2a'/%3E%3Crect x='9' y='9' width='14' height='14' fill='%23ff1e2f'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+
+  <script>
+    try {
+      if (localStorage.getItem("theme") === "light") {
+        document.documentElement.classList.add("light");
+      }
+    } catch (e) {}
+  </script>
+</head>
+<body>
+
+  <header class="site-header">
+    <nav class="site-nav" aria-label="Main">
+      <a href="index.html">Home</a>
+      <a href="projects.html">Projects</a>
+      <a href="about.html">About</a>
+      <a href="vault/index.html">Vault</a>
+    </nav>
+    <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" aria-pressed="false">
+      <span data-theme-icon>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </span>
+    </button>
+  </header>
+
+  <div class="page-head">
+    <h1 class="page-head__title" id="page-title">Admin</h1>
+    <p class="page-head__lede">Who has access, who used it, and what they took.</p>
+  </div>
+
+  <main class="page-body" aria-labelledby="page-title">
+
+    <!-- Everything below is hidden until /api/auth/me confirms an admin
+         session. That is a courtesy to stop a flash of empty tables, not a
+         security control — every endpoint behind these panels is guarded on
+         the server, so revealing this markup by hand achieves nothing. -->
+    <p class="box__text" id="admin-gate">Checking your session…</p>
+
+    <div id="admin-body" hidden>
+
+      <div class="admin-tabs" role="tablist" aria-label="Admin sections">
+        <button class="admin-tab" role="tab" type="button" id="tab-overview"  aria-selected="true"  aria-controls="panel-overview"  data-panel="overview">Overview</button>
+        <button class="admin-tab" role="tab" type="button" id="tab-users"     aria-selected="false" aria-controls="panel-users"     data-panel="users" tabindex="-1">Accounts</button>
+        <button class="admin-tab" role="tab" type="button" id="tab-logins"    aria-selected="false" aria-controls="panel-logins"    data-panel="logins" tabindex="-1">Logins</button>
+        <button class="admin-tab" role="tab" type="button" id="tab-sessions"  aria-selected="false" aria-controls="panel-sessions"  data-panel="sessions" tabindex="-1">Sessions</button>
+        <button class="admin-tab" role="tab" type="button" id="tab-downloads" aria-selected="false" aria-controls="panel-downloads" data-panel="downloads" tabindex="-1">Downloads</button>
+        <button class="admin-tab" role="tab" type="button" id="tab-documents" aria-selected="false" aria-controls="panel-documents" data-panel="documents" tabindex="-1">Documents</button>
+        <button class="admin-tab" role="tab" type="button" id="tab-audit"     aria-selected="false" aria-controls="panel-audit"     data-panel="audit" tabindex="-1">Audit</button>
+      </div>
+
+      <section class="box box--static admin-panel" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" data-panel="overview">
+        <div class="admin-stats" id="overview-stats"></div>
+        <p class="admin-note" id="overview-retention"></p>
+      </section>
+
+      <section class="box box--static admin-panel" id="panel-users" role="tabpanel" aria-labelledby="tab-users" data-panel="users" hidden>
+        <h2 class="box__label">Issue a login</h2>
+
+        <form class="admin-form" id="create-user-form">
+          <div class="auth-field">
+            <label class="auth-field__label" for="new-username">Username</label>
+            <input class="auth-field__input" id="new-username" name="username" type="text" required
+                   autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="32">
+          </div>
+          <div class="auth-field">
+            <label class="auth-field__label" for="new-note">Issued to (optional)</label>
+            <input class="auth-field__input" id="new-note" name="note" type="text" maxlength="200">
+          </div>
+          <div class="auth-field">
+            <label class="auth-field__label" for="new-role">Role</label>
+            <select class="auth-field__input" id="new-role" name="role">
+              <option value="user" selected>User — vault only</option>
+              <option value="admin">Admin — vault and this panel</option>
+            </select>
+          </div>
+          <button class="auth-submit" type="submit">Create account</button>
+        </form>
+
+        <!-- The generated password lands here, once. It is not stored in
+             plaintext anywhere, so this is the only time it can be read. -->
+        <div class="admin-secret" id="new-credentials" hidden></div>
+
+        <h2 class="box__label admin-subhead">Accounts</h2>
+        <div class="admin-scroll"><table class="admin-table" id="users-table"></table></div>
+      </section>
+
+      <section class="box box--static admin-panel" id="panel-logins" role="tabpanel" aria-labelledby="tab-logins" data-panel="logins" hidden>
+        <div class="admin-scroll"><table class="admin-table" id="logins-table"></table></div>
+      </section>
+
+      <section class="box box--static admin-panel" id="panel-sessions" role="tabpanel" aria-labelledby="tab-sessions" data-panel="sessions" hidden>
+        <div class="admin-scroll"><table class="admin-table" id="sessions-table"></table></div>
+      </section>
+
+      <section class="box box--static admin-panel" id="panel-downloads" role="tabpanel" aria-labelledby="tab-downloads" data-panel="downloads" hidden>
+        <div class="admin-scroll"><table class="admin-table" id="downloads-table"></table></div>
+      </section>
+
+      <section class="box box--static admin-panel" id="panel-documents" role="tabpanel" aria-labelledby="tab-documents" data-panel="documents" hidden>
+        <p class="admin-note">Files are uploaded to the Pi by hand. What you edit here is how they are labelled and whether they are shown.</p>
+        <div class="admin-scroll"><table class="admin-table" id="documents-table"></table></div>
+      </section>
+
+      <section class="box box--static admin-panel" id="panel-audit" role="tabpanel" aria-labelledby="tab-audit" data-panel="audit" hidden>
+        <div class="admin-scroll"><table class="admin-table" id="audit-table"></table></div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <span class="site-footer__meta">&copy; <span id="year"></span> kiraa1q &middot; v1.0.0</span>
+    <a href="impressum.html">Impressum</a>
+    <a href="https://github.com/kiraa1q" target="_blank" rel="noopener">GitHub<svg class="footer-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></a>
+  </footer>
+
+  <script src="script.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
