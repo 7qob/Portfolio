@@ -26,7 +26,9 @@
     } catch (e) {}
   </script>
 </head>
-<body>
+<!-- .is-home locks the page to one screen on desktop (see the media query in
+     style.css). Only this page carries it — subpages scroll normally. -->
+<body class="is-home">
 
   <!-- The site's one navigation. Byte-identical on every page except for
        which link carries aria-current, so "where can I go" never depends on
@@ -52,11 +54,13 @@
 
     <section class="box area-name" aria-labelledby="lbl-name">
       <h1 class="hero__title" id="lbl-name">Hello I'm <span class="accent">kiraa1q</span></h1>
-      <p class="box__text">I'm a 17 year old computer science student, currently working on <span class="accent">small projects</span>.</p>
-      <p class="hero__loc">
-        <span class="hero__loc-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
-        Bern, Switzerland
-      </p>
+      <div class="box__body">
+        <p class="box__text">I'm a 17 year old computer science student, currently working on <span class="accent">small projects</span>.</p>
+        <p class="hero__loc">
+          <span class="hero__loc-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+          Bern, Switzerland
+        </p>
+      </div>
     </section>
 
     <!-- Each project card carries its own gradient border (.is-*), which is
@@ -70,17 +74,28 @@
       <div class="project-box__head">
         <span class="project-box__name project-box__name--lg">ComfyUI × Krea 2</span>
       </div>
-      <ul class="chips">
-        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/></svg>ComfyUI</li>
-        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Krea 2</li>
-      </ul>
-      <p class="box__text">A polished, custom ComfyUI node-graph workflow built around Krea 2 — a reusable pipeline tuned to get the most out of the model.</p>
+      <div class="box__body">
+        <ul class="chips">
+          <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/></svg>ComfyUI</li>
+          <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Krea 2</li>
+        </ul>
+        <p class="box__text">A polished, custom ComfyUI node-graph workflow built around Krea 2 — a reusable pipeline tuned to get the most out of the model.</p>
+      </div>
     </section>
 
     <section class="box area-github" aria-labelledby="lbl-github">
       <h2 class="box__label" id="lbl-github"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>GitHub</h2>
-      <!-- Heatmap rendered by script.js from github-contributions-api.jogruber.de (third-party service). -->
-      <div id="gh-graph" class="gh-graph" role="img" aria-label="GitHub contributions over the last year"></div>
+      <!-- Heatmap. Data: github-contributions-api.jogruber.de (third-party,
+           no token, no auth). script.js fills .gh__chart and .gh__meta.
+           The shells are in the markup rather than created wholesale by JS so
+           the box owns its height before the fetch resolves — otherwise the
+           bento visibly reflows when a slow third party finally answers. -->
+      <div class="gh" id="gh" data-gh-user="kiraa1q">
+        <div class="gh__chart" data-gh-chart>
+          <p class="gh__status" data-gh-status>Loading activity…</p>
+        </div>
+        <p class="gh__meta" data-gh-meta hidden></p>
+      </div>
     </section>
 
     <!-- Links column: 3 standalone boxes, each its own clickable element. -->
@@ -142,9 +157,11 @@
 
     <a class="box box--link area-about" href="about.html" aria-labelledby="lbl-about">
       <h2 class="box__label" id="lbl-about"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>About me</h2>
-      <p class="box__text">Most of what I build starts as something I wanted for myself — a tool, a server, a small game. Outside of code I draw, mod games, and dig deep into topics I'm curious about, cybersecurity especially.</p>
+      <div class="box__body">
+        <p class="box__text">Most of what I build starts as something I wanted for myself — a tool, a server, a small game. Outside of code I draw, mod games, and dig deep into topics I'm curious about, cybersecurity especially.</p>
 
-      <p class="box__text">I'm based in Bern, Switzerland and currently looking for a Praktikum, focused on security tooling, self-hosting, and AI. I speak German (native), English, and French, and I'm learning Mandarin.</p>
+        <p class="box__text">I'm based in Bern, Switzerland and currently looking for a Praktikum, focused on security tooling, self-hosting, and AI. I speak German (native), English, and French, and I'm learning Mandarin.</p>
+      </div>
 
       <span class="box-arrow" aria-hidden="true">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -161,13 +178,15 @@
         <span class="project-box__name">Ignite</span>
         <span class="status">WIP</span>
       </div>
-      <ul class="chips">
-        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="6.3"/><circle cx="12" cy="12" r="2.4"/><g stroke-width="2.6" stroke-linecap="butt"><path d="M12 5.7V2.5M12 18.3v3.2M5.7 12H2.5M18.3 12h3.2M7.55 7.55L5.28 5.28M16.45 16.45l2.27 2.27M16.45 7.55l2.27-2.27M7.55 16.45l-2.27 2.27"/></g></svg>Rust</li>
-        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Reverse</li>
-        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>SSE streaming</li>
-        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>Cloudflare Tunnel</li>
-      </ul>
-      <p class="box__text">A standalone reverse proxy that safely exposes any local LLM server — KoboldCpp, llama.cpp, Ollama — to the internet: token auth, per-IP rate limiting, a GPU concurrency cap, request queue, SSE streaming, and one-command Cloudflare Tunnel setup.</p>
+      <div class="box__body">
+        <ul class="chips">
+          <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="6.3"/><circle cx="12" cy="12" r="2.4"/><g stroke-width="2.6" stroke-linecap="butt"><path d="M12 5.7V2.5M12 18.3v3.2M5.7 12H2.5M18.3 12h3.2M7.55 7.55L5.28 5.28M16.45 16.45l2.27 2.27M16.45 7.55l2.27-2.27M7.55 16.45l-2.27 2.27"/></g></svg>Rust</li>
+          <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Reverse</li>
+          <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>SSE streaming</li>
+          <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>Cloudflare Tunnel</li>
+        </ul>
+        <p class="box__text">A standalone reverse proxy that safely exposes any local LLM server — KoboldCpp, llama.cpp, Ollama — to the internet: token auth, per-IP rate limiting, a GPU concurrency cap, request queue, SSE streaming, and one-command Cloudflare Tunnel setup.</p>
+      </div>
     </section>
 
     <section class="box box--link box--edge is-kobui area-kobui" aria-labelledby="lbl-kobui">
@@ -179,12 +198,14 @@
       <div class="project-box__head">
         <span class="project-box__name">Kobui</span>
       </div>
-      <ul class="chips">
-        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="10" ry="4.2"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(120 12 12)"/></svg>React</li>
-        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19"/><g stroke-width="1.8"><path d="M6 12.4h6.4M9.2 12.4V19"/><path d="M19.9 13.6a2.1 2.1 0 0 0-3.5 1.5c0 1.9 3.5 1.2 3.5 3.1a2.1 2.1 0 0 1-3.5 1.4"/></g></svg>TypeScript</li>
-        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></svg>KoboldCpp</li>
-      </ul>
-      <p class="box__text">A local-only AI chat frontend made with React for the inference engine KoboldCpp.</p>
+      <div class="box__body">
+        <ul class="chips">
+          <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="10" ry="4.2"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(120 12 12)"/></svg>React</li>
+          <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19"/><g stroke-width="1.8"><path d="M6 12.4h6.4M9.2 12.4V19"/><path d="M19.9 13.6a2.1 2.1 0 0 0-3.5 1.5c0 1.9 3.5 1.2 3.5 3.1a2.1 2.1 0 0 1-3.5 1.4"/></g></svg>TypeScript</li>
+          <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></svg>KoboldCpp</li>
+        </ul>
+        <p class="box__text">A local-only AI chat frontend made with React for the inference engine KoboldCpp.</p>
+      </div>
     </section>
 
     <!-- Stalkr was the one project with a page and a card on projects.html
@@ -199,12 +220,14 @@
       <div class="project-box__head">
         <span class="project-box__name">Stalkr</span>
       </div>
-      <ul class="chips">
-        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="10" ry="4.2"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(120 12 12)"/></svg>React</li>
-        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19"/><g stroke-width="1.8"><path d="M6 12.4h6.4M9.2 12.4V19"/><path d="M19.9 13.6a2.1 2.1 0 0 0-3.5 1.5c0 1.9 3.5 1.2 3.5 3.1a2.1 2.1 0 0 1-3.5 1.4"/></g></svg>TypeScript</li>
-        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l8.7 5v10L12 22l-8.7-5V7z"/></svg>Node.js</li>
-      </ul>
-      <p class="box__text">Real-time Minecraft server dashboard with RCON and NBT parsing, running on a Raspberry Pi 5.</p>
+      <div class="box__body">
+        <ul class="chips">
+          <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="10" ry="4.2"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(120 12 12)"/></svg>React</li>
+          <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19"/><g stroke-width="1.8"><path d="M6 12.4h6.4M9.2 12.4V19"/><path d="M19.9 13.6a2.1 2.1 0 0 0-3.5 1.5c0 1.9 3.5 1.2 3.5 3.1a2.1 2.1 0 0 1-3.5 1.4"/></g></svg>TypeScript</li>
+          <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l8.7 5v10L12 22l-8.7-5V7z"/></svg>Node.js</li>
+        </ul>
+        <p class="box__text">Real-time Minecraft server dashboard with RCON and NBT parsing, running on a Raspberry Pi 5.</p>
+      </div>
     </section>
 
   </main>

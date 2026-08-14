@@ -14,3 +14,7 @@ vault/files/
 
 # Upload artefacts
 dist-*.zip
+
+# Local editor / tooling config. launch.json points at an absolute path on one
+# machine, so it is useless to anyone else who clones this.
+.claude/

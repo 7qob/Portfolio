@@ -9,7 +9,63 @@ document.addEventListener("DOMContentLoaded", function () {
   initThemeToggle();
   initFigures();
   initVault();
+  initBoxScroll();
 });
+
+// Scroll affordances for the locked home page.
+//
+// On desktop index.html is height-locked and the boxes scroll internally
+// (see "One-screen home page" in style.css). CSS can style a scrollbar but it
+// cannot ask whether an element actually overflows, so the fade edge — the
+// thing that says "there is more text below" — needs a measurement. This is
+// that measurement, and nothing more:
+//
+//   .has-overflow  scrollHeight exceeds clientHeight: fade the bottom edge
+//   .is-end        scrolled to the bottom: drop the fade, there is no more
+//   tabindex="0"   an overflowing region is keyboard-scrollable
+//
+// Deliberately measured rather than assumed. The previous version of this
+// layout decided at author time which boxes would overflow, hid the
+// scrollbars, and was wrong on any screen the author did not own.
+//
+// Outside the desktop lock the same elements are ordinary blocks with
+// overflow visible, so scrollHeight === clientHeight, every class comes back
+// off and the tabindex with it. One code path, no viewport sniffing.
+function initBoxScroll() {
+  var regions = document.querySelectorAll(".is-home .box__body, .is-home .link-box__note");
+  if (!regions.length) return;
+
+  function update(el) {
+    var overflows = el.scrollHeight - el.clientHeight > 1;
+    var atEnd = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+
+    el.classList.toggle("has-overflow", overflows);
+    el.classList.toggle("is-end", overflows && atEnd);
+
+    if (overflows) el.setAttribute("tabindex", "0");
+    else el.removeAttribute("tabindex");
+  }
+
+  function updateAll() {
+    for (var i = 0; i < regions.length; i++) update(regions[i]);
+  }
+
+  for (var i = 0; i < regions.length; i++) {
+    (function (el) {
+      el.addEventListener("scroll", function () { update(el); }, { passive: true });
+
+      // Catches every reflow that changes the box's height — window resize,
+      // zoom, the sidebar of a split-screen window — without polling.
+      if (window.ResizeObserver) {
+        new ResizeObserver(function () { update(el); }).observe(el);
+      }
+    })(regions[i]);
+  }
+
+  updateAll();
+  // Fallback for browsers without ResizeObserver.
+  if (!window.ResizeObserver) window.addEventListener("resize", updateAll);
+}
 
 // Screenshot slots degrade gracefully. A <figure class="figure"> can be wired
 // into a page before its image file exists (e.g. it lands later via upload);
@@ -129,55 +185,300 @@ function initThemeToggle() {
 }
 
 // GitHub contribution heatmap.
-// Data from github-contributions-api.jogruber.de (third-party service, no token).
-// Fails silently: on error the box is left empty and the page keeps working.
+//
+// Data: github-contributions-api.jogruber.de — a third-party mirror of the
+// numbers GitHub renders on a profile. No token and no auth, so nothing here
+// is secret; the trade is that an outage is someone else's to fix. That is
+// what the localStorage cache is for. It degrades in three steps and never to
+// a blank hole, which is what the previous version did on any failure:
+//
+//   fresh data  ->  cached data, silently stale  ->  visible error + retry
+//
+// A repeat visit also paints from cache before the network answers at all.
+
+var GH_CACHE_KEY = "gh:contributions:v1";
+var GH_CACHE_TTL = 6 * 60 * 60 * 1000;   // 6h — the source updates daily at best
+var GH_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 function renderContributions() {
-  var box = document.getElementById("gh-graph");
-  if (!box) return;
+  var root = document.getElementById("gh");
+  if (!root) return;
 
-  var username = "kiraa1q";
-  var url = "https://github-contributions-api.jogruber.de/v4/" + username + "?y=last";
+  var user = root.getAttribute("data-gh-user") || "kiraa1q";
+  var cached = ghReadCache(user);
 
-  fetch(url)
+  // Paint the cache first so the box is never empty while the network runs.
+  if (cached) ghDraw(root, cached.days);
+  if (cached && Date.now() - cached.ts < GH_CACHE_TTL) return;
+
+  ghFetch(user)
+    .then(function (days) {
+      ghWriteCache(user, days);
+      ghDraw(root, days);
+    })
+    .catch(function (err) {
+      console.error("GitHub contributions failed to load:", err);
+      // Stale squares beat an error message. Only shout if there is nothing.
+      if (!cached) ghError(root);
+    });
+}
+
+function ghFetch(user) {
+  var url = "https://github-contributions-api.jogruber.de/v4/" +
+            encodeURIComponent(user) + "?y=last";
+
+  return fetch(url)
     .then(function (res) {
       if (!res.ok) throw new Error("HTTP " + res.status);
       return res.json();
     })
     .then(function (data) {
       var days = (data && data.contributions) || [];
-      if (!days.length) return;
-
-      var firstWeekday = new Date(days[0].date).getDay(); // 0 = Sunday
-
-      var grid = document.createElement("div");
-      grid.className = "gh-grid";
-
-      var cells = document.createElement("div");
-      cells.className = "gh-cells";
-
-      // Leading transparent cells so the first day lands on its weekday
-      // (grid fills column-by-column; row 1 = Sunday).
-      for (var i = 0; i < firstWeekday; i++) {
-        var pad = document.createElement("span");
-        pad.className = "gh-cell gh-cell--pad";
-        cells.appendChild(pad);
-      }
-
-      days.forEach(function (d) {
-        var cell = document.createElement("span");
-        cell.className = "gh-cell";
-        cell.setAttribute("data-level", d.level);
-        cell.title = d.date + ": " + d.count;
-        cells.appendChild(cell);
-      });
-
-      grid.appendChild(cells);
-      box.appendChild(grid);
-
-      // Anchor the graph's own scroll to the right so recent activity shows first.
-      box.scrollLeft = box.scrollWidth;
-    })
-    .catch(function (err) {
-      console.error("GitHub contributions failed to load:", err);
+      if (!days.length) throw new Error("no contribution data");
+      return days;
     });
+}
+
+function ghReadCache(user) {
+  try {
+    var v = JSON.parse(localStorage.getItem(GH_CACHE_KEY));
+    if (!v || v.user !== user || !v.days || !v.days.length) return null;
+    return v;
+  } catch (e) {
+    return null;   // absent, corrupt, or blocked — all mean "no cache"
+  }
+}
+
+function ghWriteCache(user, days) {
+  try {
+    localStorage.setItem(GH_CACHE_KEY, JSON.stringify({
+      user: user, ts: Date.now(), days: days
+    }));
+  } catch (e) {}   // private mode or quota; the graph works without a cache
+}
+
+// "2026-03-12" as a LOCAL midnight. Passing the bare string to Date() parses
+// it as UTC, which shifts getDay() by one in any negative-offset timezone and
+// silently rotates the whole grid by a row.
+function ghDate(s) {
+  return new Date(s + "T00:00:00");
+}
+
+function ghDayText(date, count) {
+  var d = ghDate(date);
+  var when = d.getDate() + " " + GH_MONTHS[d.getMonth()] + " " + d.getFullYear();
+  if (!count) return "No contributions on " + when;
+  return count + (count === 1 ? " contribution on " : " contributions on ") + when;
+}
+
+function ghStats(days) {
+  var total = 0, best = 0, run = 0;
+
+  for (var i = 0; i < days.length; i++) {
+    total += days[i].count;
+    if (days[i].count > 0) {
+      run++;
+      if (run > best) best = run;
+    } else {
+      run = 0;
+    }
+  }
+
+  // Current streak counts back from the most recent day. A zero on the final
+  // day alone does not break it — that day is still in progress.
+  var cur = 0;
+  var j = days.length - 1;
+  if (j >= 0 && days[j].count === 0) j--;
+  for (; j >= 0 && days[j].count > 0; j--) cur++;
+
+  return { total: total, current: cur, best: best };
+}
+
+function ghDraw(root, days) {
+  var chart = root.querySelector("[data-gh-chart]");
+  var meta = root.querySelector("[data-gh-meta]");
+  if (!chart) return;
+
+  chart.textContent = "";
+
+  // Column-major: one column per week, row 0 = Sunday. Leading blanks push
+  // the first day onto its real weekday.
+  var slots = [];
+  var lead = ghDate(days[0].date).getDay();
+  for (var i = 0; i < lead; i++) slots.push(null);
+  for (var j = 0; j < days.length; j++) slots.push(days[j]);
+
+  var weeks = Math.ceil(slots.length / 7);
+  var stats = ghStats(days);
+
+  var dayCol = document.createElement("div");
+  dayCol.className = "gh__days";
+  dayCol.setAttribute("aria-hidden", "true");
+  ["Mon", "Wed", "Fri"].forEach(function (name, k) {
+    var s = document.createElement("span");
+    s.style.gridRow = String(2 + k * 2);   // rows 2, 4, 6 of a Sunday-first week
+    s.textContent = name;
+    dayCol.appendChild(s);
+  });
+
+  var scroll = document.createElement("div");
+  scroll.className = "gh__scroll";
+
+  var inner = document.createElement("div");
+  inner.className = "gh__inner";
+
+  var months = document.createElement("div");
+  months.className = "gh__months";
+  months.setAttribute("aria-hidden", "true");
+
+  // One label per month, on the week its 1st falls in — skipped when it would
+  // collide with the previous one. At the 6px cell size there is only room for
+  // roughly eight of the twelve, and overlapping text is worse than a gap.
+  var lastMonth = -1, lastWeek = -99;
+  for (var w = 0; w < weeks; w++) {
+    var first = null;
+    for (var r = 0; r < 7 && !first; r++) first = slots[w * 7 + r];
+    if (!first) continue;
+
+    var m = ghDate(first.date).getMonth();
+    if (m === lastMonth || w - lastWeek < 3) continue;
+
+    var label = document.createElement("span");
+    label.className = "gh__month";
+    label.style.gridColumn = (w + 1) + " / span 4";
+    label.textContent = GH_MONTHS[m];
+    months.appendChild(label);
+    lastMonth = m;
+    lastWeek = w;
+  }
+
+  // role="img" with a summary label, rather than a grid of 365 focusable
+  // cells. A screen reader wants "how much activity", not a year read out one
+  // day at a time — and the real figures are in .gh__meta as plain text
+  // below, so nothing here is the only copy of anything.
+  var cells = document.createElement("div");
+  cells.className = "gh-cells";
+  cells.setAttribute("role", "img");
+  cells.setAttribute("aria-label",
+    stats.total.toLocaleString("en-US") + " contributions in the last year");
+
+  slots.forEach(function (d) {
+    var cell = document.createElement("span");
+    if (!d) {
+      cell.className = "gh-cell gh-cell--pad";
+    } else {
+      cell.className = "gh-cell";
+      cell.setAttribute("data-level", d.level);
+      cell.setAttribute("data-date", d.date);
+      cell.setAttribute("data-count", d.count);
+    }
+    cells.appendChild(cell);
+  });
+
+  inner.appendChild(months);
+  inner.appendChild(cells);
+  scroll.appendChild(inner);
+  chart.appendChild(dayCol);
+  chart.appendChild(scroll);
+
+  ghTooltip(root, cells);
+
+  if (meta) {
+    meta.textContent = "";
+
+    // Terse on purpose. This box is one bento cell — roughly 180px of usable
+    // width — so "1,234 contributions in the last year · best streak 3 days"
+    // wrapped to four lines and crushed the graph. The full sentence lives on
+    // the grid's aria-label, where it costs no layout.
+    var text = document.createElement("span");
+    text.className = "gh__stats";
+    text.textContent = stats.total.toLocaleString("en-US") + " contributions";
+    if (stats.current > 0) {
+      text.textContent += " · " + stats.current + "d streak";
+    } else if (stats.best > 0) {
+      text.textContent += " · best " + stats.best + "d";
+    }
+
+    var legend = document.createElement("span");
+    legend.className = "gh__legend";
+    legend.setAttribute("aria-hidden", "true");
+    legend.appendChild(document.createTextNode("Less"));
+    for (var l = 0; l <= 4; l++) {
+      var swatch = document.createElement("i");
+      swatch.className = "gh-cell";
+      swatch.setAttribute("data-level", l);
+      legend.appendChild(swatch);
+    }
+    legend.appendChild(document.createTextNode("More"));
+
+    meta.appendChild(text);
+    meta.appendChild(legend);
+    meta.hidden = false;
+  }
+
+  // Anchor the scroll to the right so recent activity shows first.
+  scroll.scrollLeft = scroll.scrollWidth;
+}
+
+// Hover readout. Replaces the old title attribute, which never appeared for
+// touch users and took a full second to show for anyone else.
+function ghTooltip(root, cells) {
+  var tip = root.querySelector(".gh__tip");
+  if (!tip) {
+    tip = document.createElement("span");
+    tip.className = "gh__tip";
+    root.appendChild(tip);
+  }
+  tip.hidden = true;
+
+  cells.addEventListener("mouseover", function (e) {
+    var cell = e.target.closest(".gh-cell[data-date]");
+    if (!cell) return;
+
+    tip.textContent = ghDayText(cell.getAttribute("data-date"),
+                                Number(cell.getAttribute("data-count")));
+    tip.hidden = false;
+
+    // Positioned against the box, not the scroller, so it is not clipped by
+    // the scroller's overflow — and clamped so an edge cell keeps it inside.
+    var c = cell.getBoundingClientRect();
+    var box = root.getBoundingClientRect();
+    var x = c.left - box.left + c.width / 2;
+
+    tip.style.left = Math.max(4, Math.min(x, box.width - 4)) + "px";
+    tip.style.top = (c.top - box.top) + "px";
+  });
+
+  cells.addEventListener("mouseleave", function () {
+    tip.hidden = true;
+  });
+}
+
+function ghError(root) {
+  var chart = root.querySelector("[data-gh-chart]");
+  if (!chart) return;
+
+  chart.textContent = "";
+
+  var msg = document.createElement("p");
+  msg.className = "gh__status";
+  msg.textContent = "Activity unavailable.";
+
+  var retry = document.createElement("button");
+  retry.type = "button";
+  retry.className = "gh__retry";
+  retry.textContent = "Retry";
+  retry.addEventListener("click", function () {
+    chart.textContent = "";
+    var wait = document.createElement("p");
+    wait.className = "gh__status";
+    wait.textContent = "Loading activity…";
+    chart.appendChild(wait);
+    renderContributions();
+  });
+
+  msg.appendChild(document.createTextNode(" "));
+  msg.appendChild(retry);
+  chart.appendChild(msg);
 }
