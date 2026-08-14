@@ -1,0 +1,10 @@
+node_modules
+dist
+data
+vault-files
+*.db
+*.db-wal
+*.db-shm
+.env
+.env.*
+npm-debug.log*
