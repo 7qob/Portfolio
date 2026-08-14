@@ -87,15 +87,18 @@ html {
   font-size: 112.5%;
 }
 
-/* The page scrolls like a normal document.
-   It used to be locked to the viewport (`height:100dvh; overflow:hidden`) so
-   the bento would fit on exactly one screen, with each box scrolling its own
-   overflow behind a hidden scrollbar. On a 1366×640 laptop that silently ate
-   47px of the hero, 32px of Ignite and 76px of the About box — which is the
-   paragraph saying I'm looking for a Praktikum. No scrollbar, no fade, no
-   way for the reader to know. A layout that hides content on a common screen
-   size is broken however good it looks on a big one, so the lock is gone:
-   min-height keeps the footer down on tall screens, and short screens scroll. */
+/* Subpages scroll like a normal document; the home page is locked to one
+   screen on desktop — see "One-screen home page" further down.
+
+   That lock existed once before and was removed, for a reason worth keeping
+   written down: it paired `height:100dvh; overflow:hidden` with boxes that
+   scrolled behind `scrollbar-width:none`. On a 1366×640 laptop it silently
+   ate 47px of the hero, 32px of Ignite and 76px of the About box — the
+   paragraph saying I'm looking for a Praktikum. No scrollbar, no fade, no way
+   for the reader to know there was more. The lock is back because a one-screen
+   bento is the point of the design; what is NOT back is the invisibility.
+   Every scroll region now shows a real scrollbar and a fade edge whenever it
+   actually has more to show. Clipping is fine. Silent clipping is not. */
 body {
   background: var(--bg);
   color: var(--text);
@@ -221,6 +224,23 @@ body {
 .box:hover {
   color: var(--fg-strong);
   border-color: var(--border-hover);
+}
+
+/* ---- Box body: the part of a card that is allowed to scroll ----
+   A card's identity — its label, the project name, the status badge, the
+   corner arrow — stays pinned; everything below it lives in here. That split
+   is what makes the one-screen lock readable: a box scrolled halfway down
+   still says which project it belongs to.
+
+   Inherits .box's own gap so wrapping the content changed no spacing. On its
+   own this is just a flex column — it only becomes a scroll container inside
+   the desktop lock below, so mobile is completely unaffected. */
+.box__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+  min-width: 0;
+  min-height: 0;
 }
 
 /* ===========================================================
@@ -614,37 +634,197 @@ body {
   --gh-l4: var(--accent);
 }
 
-/* The graph scrolls horizontally inside its box (the page never scrolls).
-   Scrollbar hidden for a cleaner look; JS anchors it to the recent weeks. */
-.gh-graph {
+/* The cell size is a variable rather than a literal because this box has a
+   hard vertical constraint the others don't: seven weekday rows are either
+   all visible or the graph is lying. The scroller hides its scrollbars (a
+   scrollbar across a heatmap looks like a bug), so a clipped row would be
+   exactly the silent loss the one-screen lock is supposed to avoid — the grid
+   shrinks to fit instead, under "One-screen home page" below.
+
+   --gh-months-h is the month-label strip. The weekday column pads itself by
+   the same amount, which is what keeps "Mon" level with the Monday row.
+
+   --gh-fs is its own step rather than --fs-meta (0.7rem ≈ 11px): these labels
+   sit in an 8px grid row, and the shared meta size overflowed its row and
+   collided with the row below it. */
+:root {
+  --gh-cell:     10px;
+  --gh-gap:      3px;
+  --gh-months-h: 12px;
+  --gh-fs:       9px;
+}
+
+/* Chart on top, stats + legend sharing one row underneath. .gh is also the
+   tooltip's positioning context. */
+.gh {
+  position: relative;
   flex: 1;
   min-height: 0;
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 0.75);
+}
+
+/* Weekday labels sit OUTSIDE the scroller, so they hold still while the year
+   scrolls past them. */
+.gh__chart {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: calc(var(--space) * 0.75);
+}
+
+.gh__days {
+  display: grid;
+  grid-template-rows: repeat(7, var(--gh-cell));
+  gap: var(--gh-gap);
+  padding-top: var(--gh-months-h);
+  font-size: var(--gh-fs);
+  line-height: var(--gh-cell);
+  color: var(--fg-mute);
+}
+
+/* The graph scrolls horizontally inside its box (the page never scrolls).
+   Scrollbar hidden for a cleaner look; JS anchors it to the recent weeks. */
+.gh__scroll {
+  flex: 1;
+  min-width: 0;
   overflow: auto;
   scrollbar-width: none;        /* Firefox */
   -ms-overflow-style: none;     /* old Edge / IE */
 }
 
-.gh-graph::-webkit-scrollbar {  /* Chrome / Safari / new Edge */
+.gh__scroll::-webkit-scrollbar {  /* Chrome / Safari / new Edge */
   display: none;
 }
 
-.gh-grid {
+.gh__inner {
   width: max-content;
 }
 
-/* The heatmap — small fixed squares; overflow is handled by .gh-graph scroll */
+/* Same column track as the heatmap below it, so a label lands on its week.
+   Labels span four columns and are allowed to overflow — a month name is
+   wider than one 10px cell and clipping it to the track would render "J". */
+.gh__months {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--gh-cell);
+  gap: var(--gh-gap);
+  height: var(--gh-months-h);
+  font-size: var(--gh-fs);
+  line-height: 1;
+  color: var(--fg-mute);
+}
+
+.gh__month {
+  white-space: nowrap;
+}
+
 .gh-cells {
   display: grid;
   grid-auto-flow: column;
-  grid-template-rows: repeat(7, 10px);
-  grid-auto-columns: 10px;
-  gap: 3px;
+  grid-template-rows: repeat(7, var(--gh-cell));
+  grid-auto-columns: var(--gh-cell);
+  gap: var(--gh-gap);
+}
+
+/* Stats and legend on one line: the box is height-locked, so these two earn
+   their place by sharing a row rather than taking one each.
+
+   flex:none and nowrap are load-bearing, not tidiness. This row is a sibling
+   of the chart in a height-capped column: when it was allowed to wrap it grew
+   to 66px inside a 101px box, and the chart — which cannot shrink below its
+   seven fixed grid rows — was clipped to three. The stats text ellipses
+   instead, because losing the tail of a sentence is recoverable and losing
+   four weekdays off the graph is not. */
+.gh__meta {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space);
+  min-width: 0;
+  font-size: var(--gh-fs);
+  line-height: 1.4;
+  white-space: nowrap;
+  color: var(--fg-mute);
+}
+
+.gh__stats {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gh__legend {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.gh__legend .gh-cell {
+  display: block;
+}
+
+.gh__legend > i:first-of-type {
+  margin-left: calc(var(--space) * 0.5);
+}
+
+.gh__legend > i:last-of-type {
+  margin-right: calc(var(--space) * 0.5);
+}
+
+/* Hover readout. Sits above the cell it describes and never intercepts the
+   pointer, or moving across the grid would flicker it against itself. */
+.gh__tip {
+  position: absolute;
+  z-index: 5;
+  transform: translate(-50%, calc(-100% - 4px));
+  padding: calc(var(--space) * 0.5) calc(var(--space) * 0.75);
+  border: var(--bw) solid var(--line);
+  background: var(--panel);
+  color: var(--fg-strong);
+  font-size: var(--fs-meta);
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.gh__tip[hidden] {
+  display: none;
+}
+
+.gh__status {
+  font-size: var(--fs-meta);
+  color: var(--fg-mute);
+}
+
+/* Inherits the site's button-less look: a bordered box, not a pill. */
+.gh__retry {
+  border: var(--bw) solid var(--line);
+  background: none;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: var(--fs-meta);
+  padding: 2px calc(var(--space) * 0.75);
+  cursor: pointer;
+  transition: border-color var(--motion), color var(--motion);
+}
+
+.gh__retry:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.gh__retry:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .gh-cell {
-  width: 10px;
-  height: 10px;
+  width: var(--gh-cell);
+  height: var(--gh-cell);
   border-radius: 2px;
   background: var(--gh-l0);
 }
@@ -1778,6 +1958,176 @@ code {
 }
 
 /* ===========================================================
+   One-screen home page (desktop)
+   ===========================================================
+   The bento fills exactly the space between the header and the footer, and
+   the document never scrolls. Overflow does not disappear — it moves into
+   the boxes, where it is visible and reachable.
+
+   Three things have to be true for a box to scroll instead of overflowing:
+
+     1. the row must be allowed to be shorter than its content
+        -> grid-template-rows: minmax(0, 1fr)
+     2. the box must be allowed to be shorter than its content
+        -> min-height: 0 on the grid items (grid/flex children default to
+           min-height:auto, which is a content floor and silently wins)
+     3. something inside it has to own the overflow
+        -> .box__body / .link-box__note, below
+
+   Scoped to .is-home, so subpages are untouched. Scoped to min-width:769px,
+   so the mobile breakpoints — where the grid stacks into 8 rows and a lock
+   would be unusable — keep normal document scrolling. */
+@media (min-width: 769px) {
+  body.is-home {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  /* (1) and (2). Plain 1fr resolves to minmax(auto, 1fr), whose auto floor is
+     the content's height — the row would grow and push the footer off-screen
+     instead of letting the box scroll. */
+  .is-home .bento {
+    grid-template-rows: repeat(4, minmax(0, 1fr));
+    min-height: 0;
+  }
+
+  .is-home .bento > * {
+    min-height: 0;
+  }
+
+  .is-home .link-box {
+    min-height: 0;
+  }
+
+  /* (3) The scroll regions. .box__body is the wrapper added to each card;
+     .link-box__note is the equivalent line in the links column, which has no
+     wrapper because the note is already the only thing under its label. */
+  .is-home .box__body,
+  .is-home .link-box__note {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    /* Reaching the end of a box must not start scrolling something else —
+       there is nothing else to scroll, and without this the wheel event
+       propagates to the (locked) body and simply stalls. */
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-hover) transparent;
+  }
+
+  /* A visible scrollbar is the whole point, so it is styled to belong here
+     rather than hidden like .gh__scroll's: square (--radius is 0 everywhere),
+     drawn in the same grey the borders use, on no track at all. */
+  .is-home .box__body::-webkit-scrollbar,
+  .is-home .link-box__note::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .is-home .box__body::-webkit-scrollbar-track,
+  .is-home .link-box__note::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .is-home .box__body::-webkit-scrollbar-thumb,
+  .is-home .link-box__note::-webkit-scrollbar-thumb {
+    background: var(--border-hover);
+    border-radius: var(--radius);
+  }
+
+  .is-home .box__body::-webkit-scrollbar-thumb:hover,
+  .is-home .link-box__note::-webkit-scrollbar-thumb:hover {
+    background: var(--fg-mute);
+  }
+
+  /* The second affordance: the last line fades out while there is more below.
+     .has-overflow / .is-end are set by initBoxScroll() in script.js, which
+     measures the real scrollHeight — so the fade appears only on a box that
+     genuinely has more text, and switches off once you reach the bottom. A
+     mask that was always on would fade the final line of a box that had
+     nothing left to show, which is the same lie as hiding the scrollbar. */
+  .is-home .box__body.has-overflow,
+  .is-home .link-box__note.has-overflow {
+    /* min(2.2em, 25%) — NOT a flat 2.2em. The fade has to stay a fraction of
+       the box, because on a short screen a box body can be shorter than the
+       fade itself: at 37px tall, `100% - 2.2em` computes to a negative stop,
+       the gradient starts at transparent, and the mask hides the entire
+       paragraph. A scroll hint that erases what it is hinting at is worse
+       than no hint, so it is capped to a quarter of whatever height the box
+       actually got. */
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - min(2.2em, 25%)), transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - min(2.2em, 25%)), transparent 100%);
+  }
+
+  .is-home .box__body.has-overflow.is-end,
+  .is-home .link-box__note.has-overflow.is-end {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  /* The four project cards are clickable via .stretched-link, an <a> laid
+     over the whole card. That link and this scroll region want the same
+     pixels, and the winner decides whether the wheel scrolls the text or the
+     click opens the project.
+
+     It has to be settled explicitly, because left alone it is not even
+     consistent: the fade above uses mask-image, which creates a stacking
+     context, so an OVERFLOWING body paints over the link while a
+     non-overflowing one paints under it. The card's description would be a
+     link at one window size and not at another.
+
+     Scrolling wins inside the body — a region the reader has to scroll must
+     receive the wheel, and the link is not an ancestor of it, so a wheel
+     event landing on the link scrolls nothing at all. The rest of the card
+     is untouched: the label, the project name, the status badge, the corner
+     arrow and all the space around them are still the link, which is where
+     a click is aimed anyway. Text in the body also becomes selectable,
+     which it should have been.
+
+     Only cards that actually carry a stretched link need this. .area-about
+     and the link boxes wrap their content in the anchor itself, so the body
+     is a descendant there: wheel and click both already work. */
+  .is-home .box:has(.stretched-link) .box__body {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* script.js gives an overflowing region tabindex="0" — a scroll container
+     that the page cannot scroll for you has to be reachable by keyboard, and
+     a focusable thing has to show that it has focus. */
+  .is-home .box__body:focus-visible,
+  .is-home .link-box__note:focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+/* The heatmap at rest is 7 × 10px + 6 × 3px = 88px tall, which stops fitting
+   the GitHub box once the four bento rows get short. Two steps down (68px,
+   then 48px) keep all seven weekday rows visible rather than cropping the
+   bottom of the year behind .gh__scroll's hidden scrollbar. Same viewport
+   condition as the lock, since without the lock the box sizes to its content
+   and the graph was never at risk.
+
+   The month strip and the stats row shrink with it, then go entirely at the
+   tightest step. They are the parts worth losing: the seven weekday rows are
+   the graph, and cropping those is the failure this whole ladder exists to
+   avoid. The figures survive as the grid's aria-label either way. */
+@media (min-width: 769px) and (max-height: 860px) {
+  :root { --gh-cell: 8px; --gh-gap: 2px; --gh-months-h: 12px; }
+}
+
+@media (min-width: 769px) and (max-height: 700px) {
+  :root { --gh-cell: 6px; --gh-gap: 1px; --gh-months-h: 0px; }
+
+  .gh__months,
+  .gh__meta,
+  .gh__days {
+    display: none;
+  }
+}
+
+/* ===========================================================
    Responsive
    5 cols (sketch = 7 tracks) -> 2 cols -> 1 col
    =========================================================== */
@@ -1821,9 +2171,15 @@ code {
 
   /* Keeps its own horizontal scroll (it is wider than a phone), but must
      claim a real height now that the row no longer dictates one. */
-  .gh-graph {
+  .gh__chart {
     flex: none;
     min-height: 92px;
+  }
+
+  /* Stacked, the box sizes to its content and there is no height to defend,
+     so .gh can go back to being content-sized too. */
+  .gh {
+    flex: none;
   }
 
   .bento {
