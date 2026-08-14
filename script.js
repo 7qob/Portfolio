@@ -8,8 +8,13 @@ document.addEventListener("DOMContentLoaded", function () {
   renderContributions();
   initThemeToggle();
   initFigures();
-  initVault();
   initBoxScroll();
+
+  // Backend-dependent. Each one returns immediately unless its page is the
+  // one being shown, so every page still loads exactly one script.
+  initAuth();
+  initVault();
+  initLogin();
 });
 
 // Scroll affordances for the locked home page.
@@ -87,47 +92,284 @@ function initFigures() {
   }
 }
 
-// Vault document rows (vault/index.html).
+// ---------------------------------------------------------------------------
+// Backend
 //
-// The documents live only on the Pi, under /var/www/kira1q.dev/vault/files/ —
-// never in this repo — so a row can be written before its file has been
-// uploaded. One HEAD request per row fills in the real byte count and flags
-// anything that isn't there, instead of showing a download that 404s. Same
-// principle as initFigures(): the page degrades to an honest state rather
-// than a broken one.
-//
-// Skipped on file://, where fetch() rejects for local files in every browser
-// and would therefore mark every row missing while you are just previewing.
-// The sizes are a nicety; the links work with or without this running.
-function initVault() {
-  var links = document.querySelectorAll(".doc__link[href]");
-  if (!links.length || location.protocol === "file:") return;
+// index/projects/about/impressum are pure static pages and stay that way —
+// they open over file:// and would work on GitHub Pages. Only the vault, the
+// login page and the admin panel need the API, and each of them degrades to a
+// plain message rather than a broken screen when it is not reachable.
+// ---------------------------------------------------------------------------
 
-  for (var i = 0; i < links.length; i++) {
-    checkDoc(links[i]);
+var API_BASE = "/api";
+
+// Every call carries the CSRF header the server requires on writes, and
+// same-origin credentials so the session cookie rides along. GETs do not need
+// the header, but sending it everywhere means no call site has to remember
+// which ones do.
+function api(path, options) {
+  var opts = options || {};
+  var headers = { "X-Requested-With": "fetch" };
+
+  if (opts.body) headers["Content-Type"] = "application/json";
+  if (opts.headers) {
+    for (var key in opts.headers) headers[key] = opts.headers[key];
+  }
+
+  return fetch(API_BASE + path, {
+    method: opts.method || "GET",
+    credentials: "same-origin",
+    headers: headers,
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+}
+
+// True when there is no backend to talk to — opened from disk during a
+// preview. Every backend-dependent feature checks this first so a local
+// preview does not fill up with failed requests and error states.
+function isOffline() {
+  return location.protocol === "file:";
+}
+
+// Reads the current session once per page. A 401 is the ordinary answer for a
+// visitor, not a failure, so nothing is logged for it.
+function initAuth() {
+  if (isOffline()) return;
+
+  api("/auth/me")
+    .then(function (res) {
+      return res.ok ? res.json() : null;
+    })
+    .then(function (data) {
+      if (data && data.user) showSignedIn(data.user);
+    })
+    .catch(function () {
+      // Backend down. The static pages are unaffected; nothing to say.
+    });
+}
+
+// Adds the Admin link and a sign-out control for a live session.
+//
+// Injected rather than written into all twelve pages' markup, so the nav has
+// one definition. Worth being explicit that this is presentation only: the
+// admin routes are guarded server-side, and adding this link by hand in
+// devtools gets a 403, not a panel.
+function showSignedIn(user) {
+  var nav = document.querySelector(".site-nav");
+  if (!nav) return;
+
+  if (user.role === "admin" && !nav.querySelector("[data-admin-link]")) {
+    var admin = document.createElement("a");
+    admin.href = "/admin.html";
+    admin.textContent = "Admin";
+    admin.setAttribute("data-admin-link", "");
+    if (location.pathname === "/admin.html") admin.setAttribute("aria-current", "page");
+    nav.appendChild(admin);
+  }
+
+  if (!nav.querySelector("[data-signout]")) {
+    var out = document.createElement("a");
+    out.href = "#";
+    out.className = "site-nav__signout";
+    out.textContent = "Sign out";
+    out.setAttribute("data-signout", "");
+    out.addEventListener("click", function (e) {
+      e.preventDefault();
+      api("/auth/logout", { method: "POST" })
+        .then(function () { location.href = "/index.html"; })
+        .catch(function () { location.href = "/index.html"; });
+    });
+    nav.appendChild(out);
   }
 }
 
-function checkDoc(link) {
-  var meta = link.querySelector("[data-doc-meta]");
+// Vault document rows (vault/index.html).
+//
+// The list arrives from the API, which answers only to an authenticated
+// session — the page ships empty, so an unauthenticated visitor never
+// receives the document names at all. A row whose file has not been uploaded
+// yet renders as unavailable rather than as a download that 404s, which is
+// also how a failed upload is told from a successful one.
+function initVault() {
+  var list = document.getElementById("vault-list");
+  var status = document.getElementById("vault-status");
+  if (!list) return;
 
-  // same-origin credentials so the browser replays the Basic Auth header it
-  // already holds — without it the HEAD would come back 401 and every row
-  // would be flagged missing for an authenticated visitor.
-  fetch(link.href, { method: "HEAD", credentials: "same-origin" })
+  if (isOffline()) {
+    if (status) status.textContent = "The Vault needs the live site — it cannot be opened from a local file.";
+    return;
+  }
+
+  api("/vault/items")
     .then(function (res) {
+      if (res.status === 401) {
+        location.replace("/login.html?next=" + encodeURIComponent(location.pathname));
+        throw new Error("redirecting");
+      }
       if (!res.ok) throw new Error("HTTP " + res.status);
-      var size = formatBytes(res.headers.get("Content-Length"));
-      if (meta && size) meta.textContent = meta.textContent.trim() + " · " + size;
+      return res.json();
     })
-    .catch(function () {
-      var row = link.closest(".doc");
-      if (row) row.classList.add("doc--missing");
-      if (meta) meta.textContent = "Not uploaded";
-      // An <a> with no href is not a link: not focusable, no pointer, no
-      // navigation. Cheaper and more correct than aria-disabled.
-      link.removeAttribute("href");
+    .then(function (data) {
+      var items = (data && data.items) || [];
+
+      if (!items.length) {
+        if (status) status.textContent = "No documents are published right now.";
+        return;
+      }
+
+      items.forEach(function (item) {
+        list.appendChild(vaultRow(item));
+      });
+
+      list.hidden = false;
+      if (status) status.remove();
+    })
+    .catch(function (err) {
+      if (err && err.message === "redirecting") return;
+      if (status) status.textContent = "The document list could not be loaded. Please reload.";
     });
+}
+
+function vaultRow(item) {
+  var li = document.createElement("li");
+  li.className = "doc";
+
+  // An <a> with no href is not a link — not focusable, no pointer, no
+  // navigation. Cheaper and more correct than aria-disabled on a dead row.
+  var row = document.createElement(item.available ? "a" : "span");
+  row.className = "doc__link";
+  if (item.available) row.href = API_BASE + "/vault/items/" + item.id + "/file";
+  else li.classList.add("doc--missing");
+
+  var icon = document.createElement("span");
+  icon.className = "doc__icon";
+  icon.setAttribute("aria-hidden", "true");
+  icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>';
+
+  // textContent, not innerHTML: these strings come from the database and are
+  // editable in the admin panel, so they are treated as text end to end.
+  var name = document.createElement("span");
+  name.className = "doc__name";
+  name.textContent = item.title;
+
+  var meta = document.createElement("span");
+  meta.className = "doc__meta";
+  if (!item.available) {
+    meta.textContent = "Not uploaded";
+  } else {
+    var size = formatBytes(item.sizeBytes);
+    meta.textContent = size ? "PDF · " + size : "PDF";
+  }
+
+  row.appendChild(icon);
+  row.appendChild(name);
+  row.appendChild(meta);
+
+  if (item.available) {
+    var arrow = document.createElement("span");
+    arrow.className = "doc__arrow";
+    arrow.setAttribute("aria-hidden", "true");
+    arrow.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+    row.appendChild(arrow);
+  }
+
+  li.appendChild(row);
+  return li;
+}
+
+// login.html
+function initLogin() {
+  var form = document.getElementById("login-form");
+  if (!form) return;
+
+  var error = document.getElementById("login-error");
+  var submit = document.getElementById("login-submit");
+  var next = safeNext(new URLSearchParams(location.search).get("next"));
+
+  if (isOffline()) {
+    showLoginError(error, "Signing in needs the live site — it cannot be done from a local file.");
+    if (submit) submit.disabled = true;
+    return;
+  }
+
+  // Already signed in: skip the form rather than make them prove it twice.
+  api("/auth/me").then(function (res) {
+    if (res.ok) location.replace(next);
+  }).catch(function () {});
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    var username = form.username.value.trim();
+    var password = form.password.value;
+
+    if (!username || !password) {
+      showLoginError(error, "Enter both a username and a password.");
+      return;
+    }
+
+    if (error) error.hidden = true;
+    if (submit) {
+      submit.disabled = true;
+      submit.textContent = "Signing in…";
+    }
+
+    api("/auth/login", { method: "POST", body: { username: username, password: password } })
+      .then(function (res) {
+        if (res.ok) {
+          location.replace(next);
+          return null;
+        }
+        return res.json().catch(function () { return {}; }).then(function (body) {
+          throw new Error(loginMessage(res.status, body));
+        });
+      })
+      .catch(function (err) {
+        showLoginError(error, err.message || "Something went wrong. Please try again.");
+        form.password.value = "";
+        form.password.focus();
+      })
+      .finally(function () {
+        if (submit) {
+          submit.disabled = false;
+          submit.textContent = "Sign in";
+        }
+      });
+  });
+}
+
+function loginMessage(status, body) {
+  if (status === 429) {
+    return (body && body.message) || "Too many attempts. Please wait and try again.";
+  }
+  if (status === 401) {
+    // Matches what the server says, which is deliberately the same sentence
+    // for a wrong password, an unknown user and a disabled account.
+    return "Invalid username or password.";
+  }
+  if (status === 400) return "Please check the form and try again.";
+  return "Sign-in is unavailable right now. Please try again shortly.";
+}
+
+function showLoginError(el, message) {
+  if (!el) return;
+  el.textContent = message;
+  el.hidden = false;
+}
+
+// Where to go after signing in.
+//
+// Only a same-origin absolute path is accepted. Anything else falls back to
+// the vault: without this check, /login.html?next=https://evil.example would
+// send someone straight off the site after they authenticated, with the site's
+// own login page as the referrer. "//evil.example" is the same attack with the
+// protocol left off, so a second leading slash (or backslash, which some
+// browsers normalise to one) is rejected too.
+function safeNext(raw) {
+  var fallback = "/vault/";
+  if (!raw || raw.charAt(0) !== "/") return fallback;
+  if (raw.charAt(1) === "/" || raw.charAt(1) === "\\") return fallback;
+  return raw;
 }
 
 function formatBytes(value) {
