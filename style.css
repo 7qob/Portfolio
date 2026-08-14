@@ -1305,15 +1305,119 @@ a:focus-visible,
    the about page — the whole row is the link, name on the left, type and size
    on the right.
 
-   The size is not written into the HTML. script.js reads it from the real
-   response, so the page can never claim a file is 412 KB when it is 3 MB, and
-   a document that has not been uploaded to the Pi yet gets .doc--missing
-   instead of rendering as a dead download. Same principle as .figure hiding
-   itself when its screenshot 404s. */
+   Neither the names nor the sizes are written into the HTML. The whole list
+   comes from /api/vault/items, which answers only to an authenticated
+   session, so an unauthenticated visitor receives a page with nothing in it
+   rather than a page that names the documents behind the password. Sizes are
+   read off the real files, so the page can never claim 412 KB when it is 3 MB,
+   and a document that has not been uploaded yet gets .doc--missing instead of
+   rendering as a dead download. Same principle as .figure hiding itself when
+   its screenshot 404s. */
 .doc-list {
   list-style: none;
   display: flex;
   flex-direction: column;
+}
+
+/* ---- Sign-in form (login.html) ----
+   Same vocabulary as everything else: 1px lines, square corners, no fills.
+   An input here is a bordered box that gains the accent on focus, so it reads
+   as the same family as .box and .gh__retry rather than a browser default
+   dropped into the page. */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 2);
+  margin-top: calc(var(--space) * 2);
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 0.75);
+}
+
+.auth-field__label {
+  font-size: var(--fs-caption);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-mute);
+}
+
+.auth-field__input {
+  width: 100%;
+  padding: calc(var(--space) * 1.25) calc(var(--space) * 1.5);
+  border: var(--border-width) solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-alt);
+  color: var(--fg-strong);
+  font-family: inherit;
+  font-size: var(--fs-body);
+  transition: border-color var(--motion);
+}
+
+/* :focus, not only :focus-visible. A text field that gives no sign it is
+   focused is a field people type into by accident and out of by accident. */
+.auth-field__input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.auth-field__input:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.auth-submit {
+  align-self: flex-start;
+  padding: calc(var(--space) * 1.25) calc(var(--space) * 3);
+  border: var(--border-width) solid var(--line);
+  border-radius: var(--radius);
+  background: none;
+  color: var(--fg-strong);
+  font-family: inherit;
+  font-size: var(--fs-body);
+  cursor: pointer;
+  transition: border-color var(--motion), color var(--motion);
+}
+
+.auth-submit:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.auth-submit:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.auth-submit:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Carries the accent rather than a red of its own — the palette has one
+   attention colour and a second would just be noise. */
+.auth-error {
+  border-left: 2px solid var(--accent);
+  padding-left: calc(var(--space) * 1.5);
+  color: var(--fg-strong);
+  font-size: var(--fs-body);
+}
+
+.auth-error[hidden] { display: none; }
+
+.auth-note {
+  margin-top: calc(var(--space) * 3);
+  color: var(--fg-mute);
+  font-size: var(--fs-meta);
+}
+
+/* Sign out is an action, not a destination, so it is set apart from the four
+   navigation links rather than sitting in line as a fifth one. */
+.site-nav__signout {
+  margin-left: auto;
+  color: var(--fg-mute);
 }
 
 .doc {

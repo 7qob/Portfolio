@@ -65,39 +65,23 @@
     <section class="box box--static box--narrow" aria-labelledby="lbl-docs">
       <h2 class="box__label" id="lbl-docs"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Documents</h2>
 
-      <!-- One <li> per document. To add another, copy a row and change the
-           href and the name — the TYPE label is written by hand (it is a
-           fact about the file), the SIZE is filled in by script.js from the
-           real response, so nothing here is ever a guess. -->
-      <ul class="doc-list">
+      <!-- Empty on purpose, and this is the security property, not an
+           oversight.
 
-        <li class="doc">
-          <a class="doc__link" href="files/cv.pdf">
-            <span class="doc__icon" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-            </span>
-            <span class="doc__name">Curriculum Vitae</span>
-            <span class="doc__meta" data-doc-meta>PDF</span>
-            <span class="doc__arrow" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            </span>
-          </a>
-        </li>
+           This list used to be hardcoded here. That meant the page itself
+           told anyone who viewed source that a CV and school reports exist
+           and what they are called — before they got past the password. The
+           rows are now written by script.js from /api/vault/items, which
+           answers only to an authenticated session, so an unauthenticated
+           visitor receives this page with nothing in it.
 
-        <li class="doc">
-          <a class="doc__link" href="files/zeugnisse.pdf">
-            <span class="doc__icon" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-            </span>
-            <span class="doc__name">School reports <span lang="de">(Zeugnisse)</span></span>
-            <span class="doc__meta" data-doc-meta>PDF</span>
-            <span class="doc__arrow" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            </span>
-          </a>
-        </li>
+           The documents themselves are NOT in this repo and never will be.
+           They sit outside the web root at /var/lib/kira1q/vault-files/ and
+           are streamed by the API after it checks the session — nginx cannot
+           serve them even if a location block is misconfigured. -->
+      <ul class="doc-list" id="vault-list" hidden></ul>
 
-      </ul>
+      <p class="box__text" id="vault-status">Loading documents…</p>
     </section>
 
     <p class="note">Not everything is here. If you need a document that isn't listed, <a href="mailto:matti.naef@bwdbern.ch">email me</a> and I'll send it.</p>
