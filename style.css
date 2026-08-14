@@ -1420,6 +1420,229 @@ a:focus-visible,
   color: var(--fg-mute);
 }
 
+/* ---- Admin panel (admin.html) ----
+   Dense on purpose. This is the one page that exists to be read rather than
+   looked at, so it drops the generous spacing the rest of the site uses and
+   goes for rows you can scan. Still 1px lines and square corners — it is the
+   same site, not a dashboard bolted on. */
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--space) * 0.5);
+  margin-bottom: calc(var(--space) * 2);
+  border-bottom: var(--border-width) solid var(--line);
+}
+
+.admin-tab {
+  padding: calc(var(--space) * 1.25) calc(var(--space) * 2);
+  border: var(--border-width) solid transparent;
+  border-bottom: 0;
+  background: none;
+  color: var(--fg-mute);
+  font-family: inherit;
+  font-size: var(--fs-caption);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color var(--motion), border-color var(--motion);
+}
+
+.admin-tab:hover { color: var(--fg-strong); }
+
+/* The selected tab joins the panel below it: side and top borders, and the
+   1px of background that covers the container's bottom rule. */
+.admin-tab[aria-selected="true"] {
+  border-color: var(--line);
+  background: var(--panel);
+  color: var(--fg-strong);
+  margin-bottom: calc(var(--border-width) * -1);
+}
+
+.admin-tab:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.admin-panel[hidden] { display: none; }
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--gap);
+}
+
+.admin-stat {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 0.5);
+  padding: calc(var(--space) * 2);
+  border: var(--border-width) solid var(--line);
+}
+
+.admin-stat__label {
+  font-size: var(--fs-caption);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-mute);
+}
+
+.admin-stat__value {
+  font-size: var(--fs-heading);
+  color: var(--fg-strong);
+}
+
+.admin-stat__note {
+  font-size: var(--fs-meta);
+  color: var(--fg-mute);
+}
+
+/* Tables are wider than a phone and sometimes wider than the box. They scroll
+   inside this wrapper so the page itself never scrolls sideways. */
+.admin-scroll {
+  overflow-x: auto;
+  margin-top: var(--space);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-meta);
+}
+
+.admin-table th,
+.admin-table td {
+  padding: calc(var(--space) * 1.25) calc(var(--space) * 1.5);
+  border-bottom: var(--border-width) solid var(--line-soft);
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.admin-table th {
+  border-bottom-color: var(--line);
+  color: var(--fg-mute);
+  font-weight: normal;
+  font-size: var(--fs-caption);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.admin-table tbody tr:last-child td { border-bottom: 0; }
+
+.admin-empty {
+  color: var(--fg-mute);
+  font-style: italic;
+}
+
+.admin-actions {
+  display: flex;
+  gap: calc(var(--space) * 0.75);
+}
+
+.admin-btn {
+  padding: calc(var(--space) * 0.5) calc(var(--space) * 1.25);
+  border: var(--border-width) solid var(--line);
+  border-radius: var(--radius);
+  background: none;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: var(--fs-meta);
+  cursor: pointer;
+  transition: border-color var(--motion), color var(--motion);
+}
+
+.admin-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.admin-btn:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.admin-btn--accent { color: var(--fg-strong); }
+
+.admin-input {
+  width: 100%;
+  min-width: 140px;
+  padding: calc(var(--space) * 0.5) calc(var(--space) * 0.75);
+  border: var(--border-width) solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-alt);
+  color: var(--fg-strong);
+  font-family: inherit;
+  font-size: var(--fs-meta);
+}
+
+.admin-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.admin-input--narrow { min-width: 64px; width: 72px; }
+
+.admin-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  align-items: end;
+  gap: var(--gap);
+  margin: calc(var(--space) * 2) 0;
+}
+
+.admin-subhead { margin-top: calc(var(--space) * 4); }
+
+.admin-note {
+  margin-top: calc(var(--space) * 2);
+  color: var(--fg-mute);
+  font-size: var(--fs-meta);
+}
+
+/* The generated password. Given the accent border because it is the one thing
+   on this page that cannot be looked up again — once it is gone, it is gone. */
+.admin-secret {
+  margin: calc(var(--space) * 2) 0;
+  padding: calc(var(--space) * 2);
+  border: var(--border-width) solid var(--accent);
+}
+
+.admin-secret[hidden] { display: none; }
+
+.admin-secret__title {
+  font-size: var(--fs-caption);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-mute);
+}
+
+.admin-secret__value {
+  margin: var(--space) 0;
+  font-size: var(--fs-heading);
+  color: var(--fg-strong);
+  overflow-wrap: anywhere;
+}
+
+.admin-secret__value code {
+  font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+  letter-spacing: 0.04em;
+}
+
+.admin-secret__note {
+  margin-top: var(--space);
+  color: var(--fg-mute);
+  font-size: var(--fs-meta);
+}
+
+@media (max-width: 768px) {
+  .admin-tab {
+    padding: calc(var(--space) * 1.25);
+  }
+
+  .admin-form {
+    grid-template-columns: 1fr;
+  }
+}
+
 .doc {
   border-bottom: var(--border-width) solid var(--line-soft);
 }
