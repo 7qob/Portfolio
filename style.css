@@ -80,6 +80,19 @@
   padding: 0;
 }
 
+/* `hidden` means hidden, whatever else this sheet says about the element.
+   The browser's own [hidden]{display:none} is only a class's worth of
+   specificity, so any rule here that gives such an element a display beats
+   it and the attribute silently stops working. That happened three times:
+   .figure (screenshot 404 fallback), .gh__meta (the stats line, meant to
+   stay away until the GitHub fetch answers) and .doc-list. Each was patched
+   with its own [hidden] rule; this is that patch, once, for everything —
+   including whatever gets a display added to it later. The one !important
+   in the file, and the case it exists for. */
+[hidden] {
+  display: none !important;
+}
+
 /* Same 18px as before on a default browser, but expressed relatively so a
    visitor who has raised their base font size still gets a bigger site.
    A px value here would silently override that preference. */
@@ -791,10 +804,6 @@ body {
   pointer-events: none;
 }
 
-.gh__tip[hidden] {
-  display: none;
-}
-
 .gh__status {
   font-size: var(--fs-meta);
   color: var(--fg-mute);
@@ -1405,8 +1414,6 @@ a:focus-visible,
   font-size: var(--fs-body);
 }
 
-.auth-error[hidden] { display: none; }
-
 .auth-note {
   margin-top: calc(var(--space) * 3);
   color: var(--fg-mute);
@@ -1462,8 +1469,6 @@ a:focus-visible,
   outline: 1px solid var(--accent);
   outline-offset: -2px;
 }
-
-.admin-panel[hidden] { display: none; }
 
 .admin-stats {
   display: grid;
@@ -1605,8 +1610,6 @@ a:focus-visible,
   padding: calc(var(--space) * 2);
   border: var(--border-width) solid var(--accent);
 }
-
-.admin-secret[hidden] { display: none; }
 
 .admin-secret__title {
   font-size: var(--fs-caption);
@@ -1816,6 +1819,20 @@ a:focus-visible,
   content: "+";
   flex: 0 0 auto;
   color: var(--accent);
+}
+
+/* Inside a card the box's own border already does the separating, and a
+   column of hairlines running into that bottom edge reads as a table that
+   lost its frame. The rules stay for the open, borderless column of a
+   project page, where nothing else is dividing the items. */
+.box .feature-list {
+  gap: calc(var(--space) * 0.5) calc(var(--space) * 3);
+}
+
+.box .feature-list li {
+  padding-bottom: 0;
+  border-bottom: 0;
+  gap: calc(var(--space) * 0.75);
 }
 
 /* ===========================================================
