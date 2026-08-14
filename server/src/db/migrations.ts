@@ -110,4 +110,17 @@ export const MIGRATIONS: readonly string[] = [
 
   CREATE INDEX idx_audit_created ON audit_log(created_at);
   `,
+
+  // 002 — the two documents the old hardcoded vault page listed.
+  //
+  // Not invented content: these are the exact filenames vault/index.html
+  // already pointed at and that deploy/README.md tells you to upload. Seeding
+  // them keeps the page identical across the switch instead of coming up
+  // empty and looking broken. Rows are harmless while the files are absent —
+  // the API reports them as unavailable until the PDFs actually exist.
+  `
+  INSERT INTO vault_items (slug, title, description, filename, sort_order) VALUES
+    ('cv',         'Curriculum Vitae', NULL, 'cv.pdf',         10),
+    ('zeugnisse',  'School reports',   NULL, 'zeugnisse.pdf',  20);
+  `,
 ];
