@@ -53,19 +53,31 @@
 
   <div class="page-head page-head--project is-ignite">
     <h1 class="page-head__title" id="page-title">Ignite <span class="status">WIP</span></h1>
-  </div>
-
-  <main class="page-body page-body--project" aria-labelledby="page-title">
-    <article class="project">
-
-      <p class="project__lede">A standalone reverse proxy that safely exposes any local LLM server — KoboldCpp, llama.cpp, Ollama — to the internet.</p>
-
-      <ul class="chips">
+    <ul class="chips">
         <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="6.3"/><circle cx="12" cy="12" r="2.4"/><g stroke-width="2.6" stroke-linecap="butt"><path d="M12 5.7V2.5M12 18.3v3.2M5.7 12H2.5M18.3 12h3.2M7.55 7.55L5.28 5.28M16.45 16.45l2.27 2.27M16.45 7.55l2.27-2.27M7.55 16.45l-2.27 2.27"/></g></svg>Rust</li>
         <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Reverse proxy</li>
         <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>SSE streaming</li>
         <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>Cloudflare Tunnel</li>
-      </ul>
+    </ul>
+  </div>
+
+  <main class="page-body page-body--project" aria-labelledby="page-title">
+    <article class="project reading">
+
+      <p class="project__lede">A standalone reverse proxy that safely exposes any local LLM server — KoboldCpp, llama.cpp, Ollama — to the internet.</p>
+
+      <section class="project__section" aria-labelledby="lbl-does">
+        <h2 class="section-label" id="lbl-does">What it does</h2>
+        <ul class="feature-list">
+          <li>Token auth</li>
+          <li>Per-IP rate limiting</li>
+          <li>Global GPU concurrency cap</li>
+          <li>Request queue</li>
+          <li>SSE streaming passthrough</li>
+          <li>One-command Cloudflare Tunnel setup</li>
+        </ul>
+        <div class="note note--accent">Ignite is still being built and the repository is not public yet, so this page is deliberately short — it will grow with the project rather than describe something that does not exist. The other three link straight to their source.</div>
+      </section>
 
       <dl class="datarow">
         <div class="datarow__cell">
@@ -86,34 +98,19 @@
         </div>
       </dl>
 
-      <section class="project__section" aria-labelledby="lbl-does">
-        <h2 class="section-label" id="lbl-does">What it does</h2>
-        <ul class="feature-list">
-          <li>Token auth</li>
-          <li>Per-IP rate limiting</li>
-          <li>Global GPU concurrency cap</li>
-          <li>Request queue</li>
-          <li>SSE streaming passthrough</li>
-          <li>One-command Cloudflare Tunnel setup</li>
-        </ul>
-      </section>
-
-      <div class="note note--accent">Ignite is still being built and the repository is not public yet, so this page is deliberately short — it will grow with the project rather than describe something that does not exist. The other three link straight to their source.</div>
-
-      <!-- SCREENSHOT SLOT — drop the file in assets/, then delete these two comment
-           markers to switch it on. Nothing else needs changing.
-      <figure class="figure">
-        <img src="assets/ignite-terminal.png" alt="Ignite running in a terminal" loading="lazy" decoding="async">
-        <figcaption>Ignite running in a terminal</figcaption>
-      </figure>
-      -->
-
-      <a class="more-link" href="https://github.com/kiraa1q" target="_blank" rel="noopener">
-        Other repositories
-        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-      </a>
-
     </article>
+
+    <nav class="linklist" aria-labelledby="lbl-links">
+      <h2 class="section-label" id="lbl-links">Links</h2>
+      <ul>
+        <li>
+          <a href="https://github.com/kiraa1q" target="_blank" rel="noopener">
+            <span class="linklist__label">Other repositories</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </a>
+        </li>
+      </ul>
+    </nav>
 
     <nav class="pager" aria-label="More projects">
       <a class="pager__prev" href="project-comfyui.html">

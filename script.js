@@ -77,7 +77,7 @@ function initBoxScroll() {
 // until then the <img> would render as a broken-image box. This hides any
 // figure whose image fails to load, so an empty assets/ never shows a scar.
 function initFigures() {
-  var imgs = document.querySelectorAll(".figure img, .figure-row img");
+  var imgs = document.querySelectorAll(".figure img");
   for (var i = 0; i < imgs.length; i++) {
     var img = imgs[i];
     var hide = (function (image) {

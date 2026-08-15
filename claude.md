@@ -52,12 +52,35 @@ introduce an API call into a page that does not need one.
   CSS variables; only the primitives are overridden for light.
 - **1px borders on every box. `border-radius: 0`. No box-shadows.** Depth
   comes from the border and the panel/background contrast, nothing else.
-- Spacing off a single `--space` unit and `--gap`.
+- Spacing off a single `--space` unit and `--gap`. Reading flow uses
+  `--stack-lg` / `--stack-md` / `--stack-sm`; `--gap` is for grids.
 - Serif type (`--font`). The type scale is sized for it.
 - Visible `:focus-visible` states everywhere, not just `:hover`.
 - Home page bento grid uses `grid-template-areas` and is height-locked to one
   screen on desktop; boxes scroll internally rather than the page. Overflow is
   **measured at runtime**, never assumed at author time.
+
+### Subpage rules (project pages, about, impressum, projects index)
+
+These three are what stop a subpage drifting back into the ragged, eight-
+measure column it was before.
+
+- **Two measures, never more.** Text is capped at `--measure`; only
+  screenshots and tables reach `--measure-wide`. Do not put a `max-width` on
+  an individual block — it inherits the right one already. If a page has more
+  than two right edges, something added its own.
+- **Every top-level block in an article is a band**: hairline along the top,
+  `--stack-md` of air under it, `--stack-lg` to the next band. That is
+  `.project__section`, `.figure`, `.datarow` and `.linklist`. The lede is the
+  only block above the first seam.
+- **Five type sizes, all from `--fs-*` tokens**: `--fs-name`, `--fs-subtitle`,
+  `--fs-heading`, `--fs-lede`, `--fs-body`, plus `--fs-caption` for labels. A
+  literal `rem` value in a rule is a bug.
+- Order on a project page is fixed: title and chips in the head (identity),
+  lede, the sections that explain it, screenshot, then the facts strip and the
+  links (reference). `project-template.html` carries the full catalogue.
+- `.reading` on a prose container is what supplies body line-height and inline
+  link styling. Link lists and pagers are **siblings** of it, never children.
 
 ## Content rules
 

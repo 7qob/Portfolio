@@ -72,7 +72,7 @@
         <p class="box__text">A polished, custom ComfyUI node-graph workflow built around Krea 2 — a reusable pipeline tuned to get the most out of the model.</p>
       </li>
 
-      <!-- Ignite — full row: the capability list needs the width. -->
+      <!-- Ignite — full row, so the WIP card sits level with the featured one. -->
       <li class="box box--link box--edge is-ignite is-wide" aria-labelledby="p-ignite">
         <a class="stretched-link" href="project-ignite.html" aria-label="Ignite — project page"></a>
         <span class="box-arrow" aria-hidden="true">
@@ -90,14 +90,6 @@
           <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>Cloudflare Tunnel</li>
         </ul>
         <p class="box__text">A standalone reverse proxy that safely exposes any local LLM server — KoboldCpp, llama.cpp, Ollama — to the internet.</p>
-        <ul class="feature-list">
-          <li>Token auth</li>
-          <li>Per-IP rate limiting</li>
-          <li>Global GPU concurrency cap</li>
-          <li>Request queue</li>
-          <li>SSE streaming passthrough</li>
-          <li>One-command Cloudflare Tunnel setup</li>
-        </ul>
       </li>
 
       <li class="box box--link box--edge is-kobui" aria-labelledby="p-kobui">
@@ -136,10 +128,17 @@
 
     </ul>
 
-    <a class="more-link" href="https://github.com/kiraa1q" target="_blank" rel="noopener">
-      More on GitHub
-      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-    </a>
+    <nav class="linklist" aria-labelledby="lbl-links">
+      <h2 class="section-label" id="lbl-links">Elsewhere</h2>
+      <ul>
+        <li>
+          <a href="https://github.com/kiraa1q" target="_blank" rel="noopener">
+            <span class="linklist__label">More on GitHub</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </a>
+        </li>
+      </ul>
+    </nav>
   </main>
 
   <!-- Legal + credit only. Navigation is in the header. -->
