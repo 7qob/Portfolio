@@ -30,18 +30,6 @@
 </head>
 <body>
 
-  <!--
-    Served by nginx as `error_page 401` for the /vault/ location.
-
-    It lives at the site root, NOT inside vault/, for two reasons: the
-    `^~ /vault/` auth block must not match it (that would be a redirect
-    loop), and the browser has to be able to render it while unauthorised.
-
-    nginx keeps the 401 status and the WWW-Authenticate header through the
-    internal redirect, so the credential dialog still appears first. This
-    page is only what you see if you dismiss it.
-  -->
-
   <!-- The site's one navigation. Byte-identical on every page except for
        which link carries aria-current, so "where can I go" never depends on
        "where am I". Sticky on mobile — see .site-header in style.css. -->

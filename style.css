@@ -32,16 +32,48 @@
   /* Type scale (rem-based). Sized for a serif: Times has a small x-height,
      so every step sits above what the old mono/sans pairing needed to read
      at the same apparent size. */
-  --fs-name:      1.75rem;   /* hero name, bold            */
+  --fs-name:      1.75rem;   /* hero name, page h1         */
+  --fs-subtitle:  1.5rem;    /* project name in a card     */
   --fs-heading:   1.25rem;   /* project / section titles   */
+  --fs-lede:      1.125rem;  /* the one-sentence opener    */
   --fs-body:      1rem;      /* base body text             */
   --fs-caption:   0.75rem;   /* uppercase section labels   */
   --fs-meta:      0.7rem;    /* dates / status / meta       */
+
+  /* Reading measure. Two edges on a page, not eight. Subpages used to cap text
+     at 54, 60, 66, 68, 72 and 80ch in different rules while tables, figures and
+     the facts row ran edge to edge — every block started at the same left edge
+     and stopped somewhere else, which is what made them feel cluttered. Prose
+     gets --measure; only things that genuinely need the pixels (screenshots,
+     tabular data) reach --measure-wide.
+
+     NOT in `ch`. A ch unit resolves against the font size of the element it is
+     written on, so one shared `66ch` token produced a different width on every
+     block that was not at body size — the lede, set a step larger, stopped 74px
+     further right than the paragraphs under it. That is the same ragged edge
+     this token exists to remove, just harder to see. rem resolves against the
+     root for every element, so the cap is one number everywhere. 34rem is
+     ~66 characters of Times at --fs-body. */
+  --measure:      34rem;
+  --measure-wide: 41rem;
+
+  /* A card is its own context: the bento sizes boxes by the grid, not by the
+     text, and body copy in one wants to be a touch narrower than a full
+     reading column so a wide box does not turn into a paragraph. Left in ch
+     because it has exactly one user, .box__text, always at --fs-body. */
+  --measure-card: 60ch;
 
   --border-width: var(--bw);
   --radius:       0;
   --space:        8px;
   --gap:          calc(var(--space) * 2);   /* single knob for all inter-box spacing */
+
+  /* Vertical rhythm for reading flow. --gap stays the knob for grids (.bento,
+     .project-grid); these three are for stacked bands of text. */
+  --stack-lg:     calc(var(--space) * 5);    /* 40px — between bands   */
+  --stack-md:     calc(var(--space) * 2.5);  /* 20px — inside a band   */
+  --stack-sm:     var(--space);              /*  8px — label to content */
+
   --motion:       120ms ease;               /* color / border-color transitions */
 
   /* No --shadow token, deliberately. Every box used to carry
@@ -384,15 +416,18 @@ body {
   color: var(--fg-strong);
 }
 
-/* ---- Reading text: the one place prose lives ---- */
+/* ---- Reading text: the one place prose lives ----
+   `.reading` goes on the container that holds a subpage's body copy — the
+   project <article>, the about lead, the impressum text. Everything inside it
+   is prose, so the rules below can address it once. This replaces three
+   hand-kept eight-selector lists (line-height, inline-link colour, inline-link
+   hover) that had to be edited in step and had already drifted: six of the
+   eight selectors were being overridden further down the file anyway.
+   `.box__text` and `.link-box__note` stay named explicitly because they live
+   inside home-page boxes, not inside a .reading container. */
 .box__text,
-.prose,
-.project__lede,
-.page-head__lede,
 .link-box__note,
-.steps > li,
-.note,
-.project__section > p {
+.reading {
   line-height: 1.7;
 }
 
@@ -401,17 +436,15 @@ body {
    or a .more-link, each of which sets its own colour — so an <a> in a
    paragraph fell through to the browser default and rendered blue, then
    purple once visited. Those are the only two colours on the page nobody
-   chose. Same selector list as the rule above, so the two stay in step.
-   Underline in --accent rather than colouring the text: it marks the link
-   without punching a bright word into the middle of a grey paragraph. */
+   chose. Underline in --accent rather than colouring the text: it marks the
+   link without punching a bright word into the middle of a grey paragraph.
+   Every <a> inside a .reading container is an inline prose link — the link
+   list and the pager are siblings of it, not children, precisely so this can
+   stay a one-selector rule. */
 .box__text a,
-.prose a,
-.project__lede a,
-.page-head__lede a,
 .link-box__note a,
-.steps > li a,
-.note a,
-.project__section > p a {
+.page-head__lede a,
+.reading a {
   color: var(--fg-strong);
   text-decoration: underline;
   text-decoration-color: var(--accent);
@@ -420,25 +453,36 @@ body {
 }
 
 .box__text a:hover,
-.prose a:hover,
-.project__lede a:hover,
-.page-head__lede a:hover,
-.link-box__note a:hover,
-.steps > li a:hover,
-.note a:hover,
-.project__section > p a:hover,
 .box__text a:focus-visible,
-.prose a:focus-visible,
-.note a:focus-visible,
-.project__section > p a:focus-visible {
+.link-box__note a:hover,
+.link-box__note a:focus-visible,
+.page-head__lede a:hover,
+.page-head__lede a:focus-visible,
+.reading a:hover,
+.reading a:focus-visible {
   color: var(--accent);
 }
 
 /* Body copy: descriptions, pitch, prose — muted, capped line length. */
 .box__text {
   font-size: var(--fs-body);
-  max-width: 60ch;
+  max-width: var(--measure-card);
   color: var(--text-muted);
+}
+
+/* A box holding real paragraphs rather than a card's one-line description —
+   the Datenschutz text on the Impressum is the only one. A card's 8px gap is
+   right for a label above a sentence and much too tight between paragraphs of
+   running prose, where the space between them is the only thing marking where
+   one ends. */
+.box.reading {
+  gap: var(--stack-md);
+}
+
+/* …and its paragraphs are the reading column, so they run to the box rather
+   than stopping a few characters short of it the way a card's text does. */
+.box.reading .box__text {
+  max-width: none;
 }
 
 /* Hero location line (pin icon + place). */
@@ -538,7 +582,7 @@ body {
 }
 
 /* Featured project name reads larger (matches the projects-page feature card). */
-.project-box__name--lg { font-size: 1.5rem; }
+.project-box__name--lg { font-size: var(--fs-subtitle); }
 
 .project-box__head .status { margin-left: auto; }
 
@@ -1180,12 +1224,13 @@ a:focus-visible,
   color: var(--fg-strong);
 }
 
-/* One muted line under the title: what this page holds. Wider than the
-   60ch reading measure so it stays a single line on desktop. */
+/* One muted line under the title: what this page holds. On the same measure as
+   every other piece of reading text — it used to run to 80ch, which put its
+   right edge past everything below it for no reason anyone could see. */
 .page-head__lede {
   font-size: var(--fs-body);
   line-height: 1.4;
-  max-width: 80ch;
+  max-width: var(--measure);
   color: var(--text-muted);
 }
 
@@ -1219,9 +1264,10 @@ a:focus-visible,
   opacity: 0;
 }
 
-/* Reading-width box (impressum). */
+/* Reading-width box (impressum, login, vault). The box tracks the text measure
+   rather than sitting a few characters wider than the copy inside it. */
 .box--narrow {
-  max-width: 72ch;
+  max-width: var(--measure);
 }
 
 /* ---- Theme toggle ----
@@ -1508,10 +1554,14 @@ a:focus-visible,
   margin-top: var(--space);
 }
 
+/* --fs-meta is 0.7rem, and Times at that size in a dense table was the least
+   legible text in the project — a thin-stemmed serif has none of the clarity a
+   mono keeps at small sizes. One step up costs a little width and buys the
+   whole panel back. */
 .admin-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--fs-meta);
+  font-size: var(--fs-caption);
 }
 
 .admin-table th,
@@ -1685,10 +1735,6 @@ a:focus-visible,
   min-width: 0;
 }
 
-/* The German original of a document's name, kept next to the English one so
-   the file is recognisable to a Swiss reader without a second row. */
-.doc__name [lang="de"] { color: var(--fg-mute); }
-
 .doc__meta {
   margin-left: auto;
   font-size: var(--fs-caption);
@@ -1744,32 +1790,6 @@ a:focus-visible,
   }
 }
 
-/* ---- Prose (about page) ---- */
-.prose {
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--space) * 2);
-  max-width: 60ch;
-  font-size: var(--fs-body);
-  line-height: 1.5;
-  color: var(--text-muted);
-}
-
-.prose strong {
-  color: var(--text);
-  font-weight: 700;
-}
-
-/* A write-up slot with nothing in it yet — same inset well as the impressum
-   fields, so it reads as "to be filled", not as a failed render. */
-.prose:empty {
-  display: block;
-  max-width: none;   /* the 60ch reading measure applies to text, not to a slot */
-  min-height: calc(var(--space) * 9);
-  border: var(--border-width) solid var(--line-soft);
-  background: var(--panel-alt);
-}
-
 /* ---- Project cards (projects page) ----
    Two-column bento. Cards are .box, so they match the home page exactly;
    the important ones take a full row via .is-wide. */
@@ -1797,7 +1817,7 @@ a:focus-visible,
   list-style: none;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  max-width: 72ch;
+  max-width: var(--measure);
   gap: calc(var(--space) * 1.25) calc(var(--space) * 4);
   font-size: var(--fs-body);
   line-height: 1.45;
@@ -1843,40 +1863,62 @@ a:focus-visible,
    look like it was still loading — and two of those boxes restated each
    other ("STACK: React, TypeScript" next to a React chip and a TypeScript
    chip). A short page should look deliberately short, so this is a spec
-   sheet: lede, tech row, one band of hard facts, then whatever is genuinely
-   known. Sections with nothing real to say are simply absent. */
+   sheet: lede, then whatever is genuinely known, then the hard facts and the
+   links. Sections with nothing real to say are simply absent.
+
+   THE BAND RULE. Every top-level block in the article is a band: a hairline
+   along its top, --stack-md of air under that rule, and --stack-lg between one
+   band and the next. .project__section, .figure, .datarow and .linklist all
+   obey it, so the page has one seam repeated down its length instead of four
+   different ideas about how a block begins. The lede is the single block above
+   the first seam, which is what makes it read as the opening statement.
+
+   THE RAIL. The article is capped at --measure-wide; text inside it at
+   --measure. Two right edges, and the wide one is reserved for things that
+   genuinely need pixels (screenshots, tabular data). Tech chips live in the
+   page head with the title — they are identity, not content — and the facts
+   band closes the article next to the links, because a spec is something you
+   look up after reading, not something to wade through first. */
 .page-body--project {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--space) * 6);
+  gap: var(--stack-lg);
+  max-width: var(--measure-wide);
 }
 
 .project {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: calc(var(--space) * 4);
+  align-items: stretch;
+  gap: var(--stack-lg);
 }
 
-/* The one-sentence pitch, set larger than body copy — on a page this short
-   it is the content, not an introduction to it. */
+/* Every band in the article shares one opening seam. */
+.project > .project__section,
+.project > .figure,
+.project > .datarow {
+  padding-top: var(--stack-md);
+  border-top: var(--border-width) solid var(--border);
+}
+
+/* The one-sentence pitch. Distinct from body copy by size and full text
+   colour — it does not need to compete with the h1 to do that. */
 .project__lede {
-  font-size: 1.35rem;
+  font-size: var(--fs-lede);
   line-height: 1.5;
-  max-width: 54ch;
+  max-width: var(--measure);
   color: var(--fg-strong);
 }
 
-/* Hard facts as one horizontal band between hairlines. Full width, so the
-   page has a spine instead of a ragged right edge. */
+/* Hard facts as one horizontal strip. It takes the wide measure — these are
+   short values in columns, not prose — and no heading: the <dt> captions are
+   its labels. It used to be boxed in top and bottom; under the band rule the
+   top hairline is enough, and the strip stops looking like a table that lost
+   its frame. */
 .datarow {
-  align-self: stretch;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: calc(var(--space) * 2) var(--gap);
-  padding: calc(var(--space) * 2) 0;
-  border-top: var(--border-width) solid var(--border);
-  border-bottom: var(--border-width) solid var(--border);
 }
 
 .datarow__cell {
@@ -1887,24 +1929,18 @@ a:focus-visible,
 }
 
 .datarow dd {
-  font-size: 1.05rem;
+  font-size: var(--fs-body);
   line-height: 1.4;
   color: var(--fg-strong);
 }
 
 /* A titled block (e.g. "What it does"). Only rendered where real content
-   exists — there is no empty-state version on purpose.
-   Each section opens with a hairline the full width of the article, so the
-   page reads as stacked panels instead of one undivided column — the "spec
-   sheet" rhythm the datarow already set. The label sits just under its rule,
-   like a section header on a printed sheet. */
+   exists — there is no empty-state version on purpose. The label sits just
+   under the band's rule, like a section header on a printed sheet. */
 .project__section {
-  align-self: stretch;
   display: flex;
   flex-direction: column;
-  gap: calc(var(--space) * 2.5);
-  padding-top: calc(var(--space) * 3);
-  border-top: var(--border-width) solid var(--border);
+  gap: var(--stack-md);
 }
 
 /* A section heading is a heading, not a caption. Everywhere else on the site
@@ -1912,7 +1948,7 @@ a:focus-visible,
    it takes the heading size and the full text colour. The accent tick before
    it is what makes the start of a section findable when scrolling past. */
 .project__section > .section-label,
-.about-band > .section-label {
+.linklist > .section-label {
   display: flex;
   align-items: baseline;
   gap: calc(var(--space) * 1.25);
@@ -1923,7 +1959,7 @@ a:focus-visible,
 }
 
 .project__section > .section-label::before,
-.about-band > .section-label::before {
+.linklist > .section-label::before {
   content: "";
   flex: 0 0 auto;
   width: calc(var(--space) * 2);
@@ -1934,7 +1970,7 @@ a:focus-visible,
 
 .project__section p {
   font-size: var(--fs-body);
-  max-width: 66ch;
+  max-width: var(--measure);
   color: var(--text-muted);
 }
 
@@ -1951,7 +1987,7 @@ a:focus-visible,
   display: flex;
   flex-direction: column;
   gap: calc(var(--space) * 1.5);
-  max-width: 68ch;
+  max-width: var(--measure);
 }
 
 .steps > li {
@@ -1974,21 +2010,28 @@ a:focus-visible,
 
 .steps b {
   display: block;
-  font-size: 1.05rem;
+  font-size: var(--fs-body);
   font-weight: 700;
   line-height: 1.4;
   color: var(--fg-strong);
 }
 
 /* Real tabular data (model files, ports, env keys). Wrapped in .table-wrap
-   so a wide table scrolls itself instead of the page. */
+   so a wide table scrolls itself instead of the page — and the scrollbar is
+   visible when it does. It used to be hidden on both engines, which meant a
+   table wide enough to clip gave the reader no sign that the rest of it was
+   there at all. */
 .table-wrap {
-  align-self: stretch;
   overflow-x: auto;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-hover) transparent;
 }
 
-.table-wrap::-webkit-scrollbar { display: none; }
+.table-wrap::-webkit-scrollbar { height: 6px; }
+
+.table-wrap::-webkit-scrollbar-track { background: transparent; }
+
+.table-wrap::-webkit-scrollbar-thumb { background: var(--border-hover); }
 
 .spec-table {
   width: 100%;
@@ -2017,6 +2060,26 @@ a:focus-visible,
 
 .spec-table tr:last-child td { border-bottom: 0; }
 
+/* A row-label column: the header cell is empty because the values in it are
+   the labels. Give it the same muted caption treatment the <th>s get. */
+.spec-table th[scope="row"] {
+  padding: calc(var(--space) * 1.5) calc(var(--space) * 3) calc(var(--space) * 1.5) 0;
+  border-bottom: var(--border-width) solid var(--line-soft);
+  vertical-align: top;
+  /* Column headers stay on one line; a row label is prose and may wrap, which
+     is what stops one long word setting the width of the whole column. */
+  white-space: normal;
+}
+
+/* A .safetensors filename is longer than any sensible column. Inline code is
+   nowrap everywhere else on purpose — a command should not break across lines
+   mid-flag — but in a table cell that rule pushed the text out past the right
+   edge and into a scroll the reader had to discover. */
+.spec-table code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 /* Filenames, ports, commands. The page font is a serif, so a literal has no
    letterform cue of its own to mark it — the tracking and the well are
    carrying the whole distinction. */
@@ -2031,14 +2094,15 @@ code {
   white-space: nowrap;
 }
 
-/* Short aside — a caveat, a disclosure, a "not public yet". */
+/* Short aside — a caveat, a disclosure, a "not public yet". The left rule and
+   the muted tone already say "this is an aside"; it used to be set in italic
+   as well, and two or three italic serif lines at this line-height were the
+   hardest thing to read on the site. Italic is left to the words that earn it. */
 .note {
-  align-self: stretch;
-  max-width: 68ch;
+  max-width: var(--measure);
   padding: calc(var(--space) * 0.5) 0 calc(var(--space) * 0.5) calc(var(--space) * 3);
   border-left: 2px solid var(--border);
   font-size: var(--fs-body);
-  font-style: italic;   /* a serif aside marks itself; no second border needed */
   line-height: 1.7;
   color: var(--text-muted);
 }
@@ -2047,15 +2111,19 @@ code {
 
 .note strong { color: var(--fg-strong); }
 
-/* ---- Screenshot slot ----
-   Drop an image in assets/ and uncomment the <figure> on the page. Sized by
-   the image's own aspect ratio, capped so a tall screenshot cannot push the
-   rest of the page off-screen. */
+/* ---- Screenshot ----
+   A figure is a band in its own right: it does not sit inside a titled
+   section, because the figcaption is already the caption and an <h2> above a
+   picture of the thing it names is one label too many. It takes the wide
+   measure — a screenshot needs pixels — while its caption stays on the text
+   measure, so the caption lines up with the prose it belongs to.
+   Sized by the image's own aspect ratio, capped so a tall screenshot cannot
+   push the rest of the page off-screen. If the file is missing, initFigures()
+   in script.js removes the whole figure rather than leaving a broken frame. */
 .figure {
-  align-self: stretch;
   display: flex;
   flex-direction: column;
-  gap: calc(var(--space) * 0.75);
+  gap: var(--stack-sm);
 }
 
 .figure img {
@@ -2070,19 +2138,92 @@ code {
 }
 
 .figure figcaption {
+  max-width: var(--measure);
   font-size: var(--fs-caption);
+  line-height: 1.5;
   color: var(--fg-mute);
 }
 
-/* Two or three shots side by side; collapses to one column on narrow screens. */
-.figure-row {
-  align-self: stretch;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--gap);
+/* ---- Link list ----
+   Where a page sends you next. It used to be a single bare .more-link left
+   floating after the last section with no rule and no label, which read as
+   something left over rather than part of the page. As a band it closes the
+   article the way the facts strip opens the close of it. One link still gets
+   the label: the shape of the page should not depend on how many repositories
+   a project happens to have.
+   It is a sibling of .reading, not a child, so the inline-prose link styling
+   never reaches these rows. */
+.linklist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-md);
+  max-width: var(--measure-wide);
+  padding-top: var(--stack-md);
+  border-top: var(--border-width) solid var(--border);
 }
 
-.figure-row .figure img { max-height: 40vh; }
+/* On the projects index the list closes a full-width card grid rather than a
+   reading column, so its rule has to reach the same edge the cards do. */
+.page-body > .linklist {
+  max-width: none;
+}
+
+.linklist ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.linklist li + li {
+  border-top: var(--border-width) solid var(--line-soft);
+}
+
+.linklist a {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: var(--gap);
+  padding: calc(var(--space) * 1.5) 0;
+  color: var(--text);
+  text-decoration: none;
+  transition: color var(--motion);
+}
+
+.linklist a:hover,
+.linklist a:focus-visible {
+  color: var(--accent);
+}
+
+.linklist__label {
+  font-size: var(--fs-body);
+}
+
+.linklist__note {
+  grid-column: 1 / -1;
+  font-size: var(--fs-caption);
+  line-height: 1.5;
+  color: var(--fg-mute);
+}
+
+.linklist svg {
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  transform: translate(0, 0);
+  transition: transform var(--motion);
+}
+
+.linklist a:hover svg,
+.linklist a:focus-visible svg {
+  transform: translate(2px, -2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .linklist a:hover svg,
+  .linklist a:focus-visible svg {
+    transform: none;
+  }
+}
 
 /* The masthead rule becomes the project's own gradient: the page is colour-
    matched to the card it was opened from. Drawn as a background so it needs
@@ -2097,6 +2238,16 @@ code {
 
 /* Lede on a project page carries the one-line pitch — same line as the card. */
 .page-head--project .page-head__title { display: flex; align-items: baseline; gap: var(--space); }
+
+/* Tech chips belong with the title, not in the article. They name what the
+   thing is built from — that is identity, the same job the h1 is doing — and
+   reading them as a content block meant the eye crossed a row of icons before
+   it reached the first sentence of the write-up. A little more air above the
+   gradient rule now that something sits under the heading. */
+.page-head--project {
+  gap: calc(var(--space) * 1.25);
+  padding-bottom: var(--stack-md);
+}
 
 /* ---- Pager: previous / next project ----
    The projects index is one click away in the footer, but someone reading
@@ -2155,10 +2306,23 @@ code {
    then titled sections separated by hairlines — so About and every project
    read as the same document. The only card left is the one thing that is
    genuinely a set of links. */
+/* This page's rail is wider than a project page's, and derived rather than
+   picked: the opening is prose beside a data sheet, so the page has to be
+   exactly one --measure of text plus the sheet plus the gap between them.
+   Capping it at --measure-wide instead crushed the paragraph column to about
+   forty characters. The bands below inherit the same width, so the page still
+   has one right edge for its rules and one for its text. */
 .about {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--space) * 6);
+  gap: var(--stack-lg);
+  max-width: calc(var(--measure) + 20rem + var(--stack-lg));
+}
+
+/* Same band rule as the project pages: hairline, air, next band. */
+.about > .project__section {
+  padding-top: var(--stack-md);
+  border-top: var(--border-width) solid var(--border);
 }
 
 /* The opening: prose left, at-a-glance sheet right. On a serif the two want
@@ -2174,16 +2338,16 @@ code {
 .about__lead {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--space) * 2.5);
-  max-width: 68ch;
+  gap: var(--stack-md);
+  max-width: var(--measure);
   font-size: var(--fs-body);
-  line-height: 1.75;
   color: var(--text-muted);
 }
 
-/* First paragraph is the page's real headline — "About" is only a label. */
+/* First paragraph is the page's real headline — "About" is only a label.
+   Same size as a project page's lede, because it is one. */
 .about__lead > p:first-child {
-  font-size: 1.35rem;
+  font-size: var(--fs-lede);
   line-height: 1.5;
   color: var(--fg-strong);
 }
@@ -2191,16 +2355,6 @@ code {
 .about__lead strong {
   font-weight: 700;
   color: var(--fg-strong);
-}
-
-/* Titled band, same construction as .project__section — see the heading
-   rule up there, which both share. */
-.about-band {
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--space) * 2.5);
-  padding-top: calc(var(--space) * 3);
-  border-top: var(--border-width) solid var(--border);
 }
 
 /* Contact row: the page used to end in dead space under two short lists.
@@ -2556,6 +2710,35 @@ code {
   .about__top {
     grid-template-columns: 1fr;
   }
+
+  /* ---- Subpage reading flow on a phone ----
+     Nothing in this query used to touch a project page's content at all: the
+     bands relied on their own auto-fit and overflow rules and were simply
+     desktop spacing at phone width. The measures take care of themselves (a
+     phone is narrower than 66ch), but the rhythm does not — 40px between
+     bands is a third of the screen. */
+  :root {
+    --stack-lg: calc(var(--space) * 4);
+  }
+
+  /* Four facts across a 360px screen is 90px a column. Two is readable. */
+  .datarow {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  /* 70vh of screenshot leaves nothing of the page around it. */
+  .figure img { max-height: 50vh; }
+
+  /* The step number sits above its text rather than stealing a column. */
+  .steps > li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: calc(var(--space) * 0.5);
+  }
+
+  .steps > li::before { padding-top: 0; }
+
+  /* Label and arrow stay on one row; the note wraps under both. */
+  .linklist a { padding: calc(var(--space) * 1.75) 0; }
 }
 
 @media (max-width: 480px) {

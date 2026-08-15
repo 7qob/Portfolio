@@ -53,38 +53,18 @@
 
   <div class="page-head page-head--project is-stalkr">
     <h1 class="page-head__title" id="page-title">Stalkr</h1>
-  </div>
-
-  <main class="page-body page-body--project" aria-labelledby="page-title">
-    <article class="project">
-
-      <p class="project__lede">A full-stack dashboard for a Minecraft server: live status and player list for everyone, plus an authenticated admin side for server control, live logs and configuration.</p>
-
-      <ul class="chips">
+    <ul class="chips">
         <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="10" ry="4.2"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(120 12 12)"/></svg>React</li>
         <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19"/><g stroke-width="1.8"><path d="M6 12.4h6.4M9.2 12.4V19"/><path d="M19.9 13.6a2.1 2.1 0 0 0-3.5 1.5c0 1.9 3.5 1.2 3.5 3.1a2.1 2.1 0 0 1-3.5 1.4"/></g></svg>TypeScript</li>
         <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="8"/><rect x="2" y="14" width="20" height="8"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>Express</li>
         <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l8.7 5v10L12 22l-8.7-5V7z"/></svg>Node.js</li>
-      </ul>
+    </ul>
+  </div>
 
-      <dl class="datarow">
-        <div class="datarow__cell">
-          <dt>Type</dt>
-          <dd>Full-stack dashboard</dd>
-        </div>
-        <div class="datarow__cell">
-          <dt>Frontend</dt>
-          <dd>React 19 + Vite</dd>
-        </div>
-        <div class="datarow__cell">
-          <dt>Backend</dt>
-          <dd>Express 5</dd>
-        </div>
-        <div class="datarow__cell">
-          <dt>Auth</dt>
-          <dd>JWT</dd>
-        </div>
-      </dl>
+  <main class="page-body page-body--project" aria-labelledby="page-title">
+    <article class="project reading">
+
+      <p class="project__lede">A full-stack dashboard for a Minecraft server: live status and player list for everyone, plus an authenticated admin side for server control, live logs and configuration.</p>
 
       <section class="project__section" aria-labelledby="lbl-does">
         <h2 class="section-label" id="lbl-does">What it does</h2>
@@ -112,24 +92,41 @@
             </tbody>
           </table>
         </div>
+        <div class="note"><code>server/.env</code> holds the host, RCON port and password, world path, cache path, JWT secret and admin password. Needs Node.js 20+ and npm 10+. Runs on a Raspberry Pi 5.</div>
       </section>
 
-      <div class="note"><code>server/.env</code> holds the host, RCON port and password, world path, cache path, JWT secret and admin password. Needs Node.js 20+ and npm 10+. Runs on a Raspberry Pi 5.</div>
-
-      <!-- SCREENSHOT SLOT — drop the file in assets/, then delete these two comment
-           markers to switch it on. Nothing else needs changing.
-      <figure class="figure">
-        <img src="assets/stalkr-dashboard.png" alt="The dashboard with live server status" loading="lazy" decoding="async">
-        <figcaption>The dashboard with live server status</figcaption>
-      </figure>
-      -->
-
-      <a class="more-link" href="https://github.com/kiraa1q/stalkr" target="_blank" rel="noopener">
-        kiraa1q/stalkr
-        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-      </a>
+      <dl class="datarow">
+        <div class="datarow__cell">
+          <dt>Type</dt>
+          <dd>Full-stack dashboard</dd>
+        </div>
+        <div class="datarow__cell">
+          <dt>Frontend</dt>
+          <dd>React 19 + Vite</dd>
+        </div>
+        <div class="datarow__cell">
+          <dt>Backend</dt>
+          <dd>Express 5</dd>
+        </div>
+        <div class="datarow__cell">
+          <dt>Auth</dt>
+          <dd>JWT</dd>
+        </div>
+      </dl>
 
     </article>
+
+    <nav class="linklist" aria-labelledby="lbl-links">
+      <h2 class="section-label" id="lbl-links">Links</h2>
+      <ul>
+        <li>
+          <a href="https://github.com/kiraa1q/stalkr" target="_blank" rel="noopener">
+            <span class="linklist__label">kiraa1q/stalkr</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </a>
+        </li>
+      </ul>
+    </nav>
 
     <nav class="pager" aria-label="More projects">
       <a class="pager__prev" href="project-kobui.html">

@@ -53,37 +53,17 @@
 
   <div class="page-head page-head--project is-comfy">
     <h1 class="page-head__title" id="page-title">ComfyUI &times; Krea 2 <span class="status">Featured</span></h1>
+    <ul class="chips">
+      <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/></svg>ComfyUI</li>
+      <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Krea 2</li>
+      <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.2 11.5H7.3A3.3 3.3 0 0 1 4 8.2V6.3A3.3 3.3 0 0 1 7.3 3h4.9a3.3 3.3 0 0 1 3.3 3.3v2.4"/><path d="M11.8 12.5h4.9a3.3 3.3 0 0 1 3.3 3.3v1.9a3.3 3.3 0 0 1-3.3 3.3h-4.9a3.3 3.3 0 0 1-3.3-3.3v-2.4"/><path d="M7.6 6.2h.01M16.4 17.8h.01"/></svg>Python</li>
+    </ul>
   </div>
 
   <main class="page-body page-body--project" aria-labelledby="page-title">
-    <article class="project">
+    <article class="project reading">
 
       <p class="project__lede">A ComfyUI workflow built around Krea 2 Turbo: a two-stage portrait pipeline that renders at 1152 × 1728, then refines the same seed through a 2× latent upscale.</p>
-
-      <ul class="chips">
-        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/></svg>ComfyUI</li>
-        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Krea 2</li>
-        <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.2 11.5H7.3A3.3 3.3 0 0 1 4 8.2V6.3A3.3 3.3 0 0 1 7.3 3h4.9a3.3 3.3 0 0 1 3.3 3.3v2.4"/><path d="M11.8 12.5h4.9a3.3 3.3 0 0 1 3.3 3.3v1.9a3.3 3.3 0 0 1-3.3 3.3h-4.9a3.3 3.3 0 0 1-3.3-3.3v-2.4"/><path d="M7.6 6.2h.01M16.4 17.8h.01"/></svg>Python</li>
-      </ul>
-
-      <dl class="datarow">
-        <div class="datarow__cell">
-          <dt>Type</dt>
-          <dd>Node-graph workflow</dd>
-        </div>
-        <div class="datarow__cell">
-          <dt>Nodes</dt>
-          <dd>21</dd>
-        </div>
-        <div class="datarow__cell">
-          <dt>Output</dt>
-          <dd>1152 × 1728</dd>
-        </div>
-        <div class="datarow__cell">
-          <dt>Licence</dt>
-          <dd>MIT</dd>
-        </div>
-      </dl>
 
       <section class="project__section" aria-labelledby="lbl-pipeline">
         <h2 class="section-label" id="lbl-pipeline">How the pipeline works</h2>
@@ -118,20 +98,43 @@
 
       <!-- The <figure> self-hides if its image is missing (see initFigures in
            script.js), so the page is never scarred by a missing file. -->
-      <section class="project__section" aria-labelledby="lbl-graph">
-        <h2 class="section-label" id="lbl-graph">The graph</h2>
-        <figure class="figure">
-          <img src="assets/graph.png" alt="The ComfyUI node graph: a Models column of five LoRA slots under one Master Strength control, feeding Stage 1 (Base, 1152×1728) and Stage 2 (Refine, latent upscale) with an rgthree Compare node between the two outputs." loading="lazy" decoding="async">
-          <figcaption>The full workflow — Models and LoRA stack on the left, Base and Refine stages on the right, joined by the Compare node.</figcaption>
-        </figure>
-      </section>
+      <figure class="figure">
+        <img src="assets/graph.png" alt="The ComfyUI node graph: a Models column of five LoRA slots under one Master Strength control, feeding Stage 1 (Base, 1152×1728) and Stage 2 (Refine, latent upscale) with an rgthree Compare node between the two outputs." loading="lazy" decoding="async">
+        <figcaption>The full workflow — Models and LoRA stack on the left, Base and Refine stages on the right, joined by the Compare node.</figcaption>
+      </figure>
 
-      <a class="more-link" href="https://github.com/kiraa1q/Workflows" target="_blank" rel="noopener">
-        kiraa1q/Workflows
-        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-      </a>
+      <dl class="datarow">
+        <div class="datarow__cell">
+          <dt>Type</dt>
+          <dd>Node-graph workflow</dd>
+        </div>
+        <div class="datarow__cell">
+          <dt>Nodes</dt>
+          <dd>21</dd>
+        </div>
+        <div class="datarow__cell">
+          <dt>Output</dt>
+          <dd>1152 × 1728</dd>
+        </div>
+        <div class="datarow__cell">
+          <dt>Licence</dt>
+          <dd>MIT</dd>
+        </div>
+      </dl>
 
     </article>
+
+    <nav class="linklist" aria-labelledby="lbl-links">
+      <h2 class="section-label" id="lbl-links">Links</h2>
+      <ul>
+        <li>
+          <a href="https://github.com/kiraa1q/Workflows" target="_blank" rel="noopener">
+            <span class="linklist__label">kiraa1q/Workflows</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </a>
+        </li>
+      </ul>
+    </nav>
 
     <nav class="pager" aria-label="More projects">
       <a class="pager__next" href="project-ignite.html">

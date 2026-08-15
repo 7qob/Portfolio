@@ -39,7 +39,7 @@
 
   1. THIS FILE -> project-<slug>.html
        Replace: <title>, the <h1>, the .is-SLUG class on .page-head,
-       the lede, chips, datarow, body sections, repo link.
+       the chips, the lede, body sections, datarow, links.
 
   2. style.css — ONE line in the palette block (search "Per-project
      palettes"), plus one line in the light-theme block below it:
@@ -65,20 +65,43 @@
   index.html), its palette line, and re-link the pagers on either side.
 
 -------------------------------------------------------------------------
+  THE PAGE'S SHAPE — three rules, and they are the whole design.
+
+  ORDER. Title and chips in the .page-head (they are identity, so they sit
+  with the name); then lede; then the sections that explain the thing; then
+  the screenshot; then the facts strip and the links, which are reference
+  material you look up after reading rather than wade through first.
+
+  BANDS. Every top-level block inside <article class="project reading"> —
+  .project__section, .figure, .datarow — opens with a hairline across the
+  article and is separated from the next by --stack-lg. One seam repeated
+  down the page. The .linklist is a sibling of the <article>, not a child,
+  and carries the same seam. The lede is the only block above the first one.
+
+  MEASURE. Text is capped at --measure, screenshots and tables at
+  --measure-wide. Two right edges on the page, never more. Do not add a
+  max-width to a block: it inherits the right one already.
+
+  The `reading` class on the <article> is what gives its prose the body
+  line-height and styles inline links. Keep it.
+
+-------------------------------------------------------------------------
   CONTENT BLOCKS AVAILABLE (all in style.css, all project-agnostic).
   Pick what the project actually needs and delete the rest — a page with
   three blocks is fine, an empty labelled block is not.
 
-    .project__lede    one-sentence pitch, set large
-    .chips            tech tags with icons (icons: copy from another page)
-    .datarow          hard facts in a band between hairlines
+    .project__lede    one-sentence pitch, set a step above body copy
+    .chips            tech tags with icons — goes in the .page-head
+    .datarow          hard facts as a strip; closes the article
     .project__section titled block, wraps any of the below
     .steps            numbered procedure (pipeline stages, setup)
     .feature-list     flat "what it does" list
     .spec-table       real tabular data, wrap in .table-wrap
-    .note             short aside; add .note--accent for a WIP notice
-    .figure           screenshot + caption
-    .figure-row       two or three figures side by side
+    .note             short aside; add .note--accent for a WIP notice.
+                      Always inside a section, never a bare sibling.
+    .figure           screenshot + caption, top level, no wrapping section
+                      and no heading — the figcaption is the heading
+    .linklist         where the page sends you; sibling of the <article>
     <code>            filenames, ports, commands
 =========================================================================
 -->
@@ -105,36 +128,21 @@
   <div class="page-head page-head--project is-SLUG">
     <!-- SLOT: name. Optional <span class="status">WIP</span> after it. -->
     <h1 class="page-head__title" id="page-title">PROJECT NAME</h1>
+
+    <!-- SLOT: tech chips. Copy the <svg> for a language from any other
+         project page; a chip with no icon renders fine too. These belong
+         here with the title, not in the article. -->
+    <ul class="chips">
+      <li class="chip">Language</li>
+      <li class="chip">Framework</li>
+    </ul>
   </div>
 
   <main class="page-body page-body--project" aria-labelledby="page-title">
-    <article class="project">
+    <article class="project reading">
 
       <!-- SLOT: one sentence. What it is, in plain words. -->
       <p class="project__lede">One sentence describing the project.</p>
-
-      <!-- SLOT: tech chips. Copy the <svg> for a language from any other
-           project page; a chip with no icon renders fine too. -->
-      <ul class="chips">
-        <li class="chip">Language</li>
-        <li class="chip">Framework</li>
-      </ul>
-
-      <!-- SLOT: 3-4 hard facts. More than four and the row gets thin. -->
-      <dl class="datarow">
-        <div class="datarow__cell">
-          <dt>Type</dt>
-          <dd>What kind of thing it is</dd>
-        </div>
-        <div class="datarow__cell">
-          <dt>Stack</dt>
-          <dd>Main technology</dd>
-        </div>
-        <div class="datarow__cell">
-          <dt>Status</dt>
-          <dd>Shipped / Work in progress</dd>
-        </div>
-      </dl>
 
       <!-- BLOCK: numbered procedure -->
       <section class="project__section" aria-labelledby="lbl-steps">
@@ -154,7 +162,8 @@
         </ul>
       </section>
 
-      <!-- BLOCK: tabular data -->
+      <!-- BLOCK: tabular data. The aside belongs inside the section it
+           qualifies — a .note is never a bare sibling of the article. -->
       <section class="project__section" aria-labelledby="lbl-table">
         <h2 class="section-label" id="lbl-table">What it expects</h2>
         <div class="table-wrap">
@@ -165,14 +174,16 @@
             </tbody>
           </table>
         </div>
+        <!-- BLOCK: aside. .note--accent for a WIP / caveat notice. -->
+        <div class="note">A caveat, a disclosure, or a <strong>detail</strong> worth pulling out.</div>
       </section>
 
-      <!-- BLOCK: aside. .note--accent for a WIP / caveat notice. -->
-      <div class="note">A caveat, a disclosure, or a <strong>detail</strong> worth pulling out.</div>
-
-      <!-- BLOCK: screenshot. Put the file in assets/ first, then delete
-           the surrounding comment markers. Use .figure-row to place two
-           side by side. -->
+      <!-- BLOCK: screenshot. Put the file in assets/ first, then delete the
+           surrounding comment markers. No wrapping section and no heading —
+           the figcaption is the heading. If the file is missing the figure
+           removes itself (initFigures in script.js), but do not ship the
+           markup for a screenshot that does not exist: it costs a failing
+           request on every visit to render nothing. -->
       <!--
       <figure class="figure">
         <img src="assets/SLUG-shot.png" alt="Describe what is shown" loading="lazy" decoding="async">
@@ -180,13 +191,37 @@
       </figure>
       -->
 
-      <!-- SLOT: link to the repo itself, not the profile. -->
-      <a class="more-link" href="https://github.com/kiraa1q/REPO" target="_blank" rel="noopener">
-        kiraa1q/REPO
-        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-      </a>
+      <!-- SLOT: 3-4 hard facts. More than four and the strip gets thin. -->
+      <dl class="datarow">
+        <div class="datarow__cell">
+          <dt>Type</dt>
+          <dd>What kind of thing it is</dd>
+        </div>
+        <div class="datarow__cell">
+          <dt>Stack</dt>
+          <dd>Main technology</dd>
+        </div>
+        <div class="datarow__cell">
+          <dt>Status</dt>
+          <dd>Shipped / Work in progress</dd>
+        </div>
+      </dl>
 
     </article>
+
+    <!-- SLOT: links. The repo itself, not the profile. One <li> per
+         destination; the optional .linklist__note is a short gloss. -->
+    <nav class="linklist" aria-labelledby="lbl-links">
+      <h2 class="section-label" id="lbl-links">Links</h2>
+      <ul>
+        <li>
+          <a href="https://github.com/kiraa1q/REPO" target="_blank" rel="noopener">
+            <span class="linklist__label">kiraa1q/REPO</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </a>
+        </li>
+      </ul>
+    </nav>
 
     <!-- SLOT: pager. Drop either link if this is first or last. -->
     <nav class="pager" aria-label="More projects">
