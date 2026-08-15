@@ -40,13 +40,19 @@ echo "==> Copying site (dev-only files excluded)"
 # Zeugnisse are uploaded straight to the Pi and are deliberately NOT in the
 # repo, so without this exclusion `--delete` would see them as files that no
 # longer exist in the source and wipe them on every single deploy.
+#
+# server/, docs/ and docker-compose.yml are excluded for the same reason as
+# deploy/: they are how the site is built and run, not part of what it serves.
+# The API is reached through the /api/ proxy, never as files under the root.
 sudo rsync -a --delete \
   --exclude 'project-template.html' \
   --exclude 'README.md' \
   --exclude 'CLAUDE.md' --exclude 'claude.md' \
   --exclude 'classic.html' --exclude 'classic.css' \
   --exclude 'deploy/' \
-  --exclude '.claude/' --exclude '.git/' \
+  --exclude 'server/' --exclude 'docs/' \
+  --exclude 'docker-compose.yml' \
+  --exclude '.claude/' --exclude '.git/' --exclude '.github/' \
   --exclude '*.zip' \
   --exclude 'vault/files/' \
   "$UPLOAD"/ "$WEBROOT"/
