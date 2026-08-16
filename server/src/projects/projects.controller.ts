@@ -59,7 +59,9 @@ export class ProjectsController {
       actorId: actor.id,
       actorName: actor.username,
       action: 'project.create',
-      target: dto.slug,
+      // The slug the service settled on, which is not always the one asked
+      // for — a title alone derives one, and a collision numbers it.
+      target: created.slug,
       ip: clientIp(req),
     });
 

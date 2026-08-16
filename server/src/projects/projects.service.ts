@@ -5,7 +5,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { existsSync, mkdirSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
 import { basename, join, resolve, sep } from 'node:path';
 
 import { config } from '../config';
@@ -15,6 +15,7 @@ import {
   BlockError,
   Chip,
   collectMediaIds,
+  HOME_SLOTS,
   normalizeBlocks,
   normalizeChips,
 } from './blocks';
@@ -24,6 +25,7 @@ import {
   MediaRef,
   Neighbour,
   PageProject,
+  renderHome,
   renderProjectPage,
   renderProjectsIndex,
 } from './render';
@@ -33,7 +35,9 @@ export interface ProjectRow {
   slug: string;
   title: string;
   status: string | null;
-  palette: string | null;
+  home_slot: string | null;
+  accent: string | null;
+  repo_url: string | null;
   lede: string | null;
   card_blurb: string | null;
   chips: string;
@@ -58,9 +62,30 @@ interface MediaRow {
 /**
  * The only filenames the writer will ever emit. Belt on top of the slug
  * CHECK's braces: even a row that somehow held a bad slug cannot make this
- * regex produce a path.
+ * regex produce a path. index.html joined the list when the home page's
+ * project cards started coming out of the database.
  */
-const PAGE_NAME = /^(project-[a-z0-9-]{1,48}\.html|projects\.html)$/;
+const PAGE_NAME = /^(project-[a-z0-9-]{1,48}\.html|projects\.html|index\.html)$/;
+
+/**
+ * Title -> slug, in the page-name alphabet and nothing else. The author never
+ * types this: the panel shows what it derived and lets it be corrected, and
+ * the result still has to pass the SLUG regex in the DTO.
+ */
+function slugify(title: string): string {
+  return title
+    // NFD splits an accented letter into the letter and a combining mark, so
+    // dropping every mark leaves the letter behind. Without it the mark is
+    // simply not in the alphabet below and becomes a hyphen: "Ärger" would
+    // slug to "a-rger".
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48)
+    .replace(/-+$/, '');
+}
 
 @Injectable()
 export class ProjectsService {
@@ -90,6 +115,8 @@ export class ProjectsService {
       slug: r.slug,
       title: r.title,
       status: r.status,
+      homeSlot: r.home_slot,
+      accent: r.accent,
       sortOrder: r.sort_order,
       visible: r.visible === 1,
       publishedAt: r.published_at,
@@ -105,7 +132,9 @@ export class ProjectsService {
       slug: row.slug,
       title: row.title,
       status: row.status,
-      palette: row.palette,
+      homeSlot: row.home_slot,
+      accent: row.accent,
+      repoUrl: row.repo_url,
       lede: row.lede,
       cardBlurb: row.card_blurb,
       chips: JSON.parse(row.chips) as Chip[],
@@ -127,12 +156,23 @@ export class ProjectsService {
   // Writing
   // -------------------------------------------------------------------------
 
-  create(input: { slug: string; title: string }): { id: number } {
+  /**
+   * Creating a page asks for a title and nothing else. A slug typed by hand
+   * is still honoured, but the common path derives one and disambiguates it,
+   * so "New page" twice is two pages rather than a 409.
+   */
+  create(input: { title: string; slug?: string }): { id: number; slug: string } {
+    const base = input.slug ?? slugify(input.title);
+    if (!base) {
+      throw new BadRequestException('That title has no letters or digits to make a slug from.');
+    }
+    const slug = input.slug ? base : this.freeSlug(base);
+
     try {
       const info = this.database.db
         .prepare('INSERT INTO projects (slug, title) VALUES (?, ?)')
-        .run(input.slug, input.title);
-      return { id: Number(info.lastInsertRowid) };
+        .run(slug, input.title);
+      return { id: Number(info.lastInsertRowid), slug };
     } catch (err) {
       if (err instanceof Error && err.message.includes('UNIQUE')) {
         throw new ConflictException('A project with that slug already exists.');
@@ -141,13 +181,27 @@ export class ProjectsService {
     }
   }
 
+  /** `comfyui`, then `comfyui-2`, `comfyui-3`… — never a collision. */
+  private freeSlug(base: string): string {
+    const taken = this.database.db.prepare('SELECT 1 FROM projects WHERE slug = ?');
+    if (!taken.get(base)) return base;
+
+    for (let n = 2; n < 100; n++) {
+      const candidate = `${base.slice(0, 45)}-${n}`;
+      if (!taken.get(candidate)) return candidate;
+    }
+    throw new ConflictException('Too many pages with that name already.');
+  }
+
   update(
     id: number,
     input: {
       slug?: string;
       title?: string;
       status?: string | null;
-      palette?: string | null;
+      homeSlot?: string | null;
+      accent?: string | null;
+      repoUrl?: string | null;
       lede?: string | null;
       cardBlurb?: string | null;
       chips?: unknown;
@@ -175,27 +229,72 @@ export class ProjectsService {
       throw err;
     }
 
+    const homeSlot = input.homeSlot === undefined ? row.home_slot : input.homeSlot || null;
+    const accent = input.accent === undefined ? row.accent : input.accent || null;
+    const repoUrl = input.repoUrl === undefined ? row.repo_url : input.repoUrl || null;
+
+    // One statement, one transaction: the slot swap below has to be part of
+    // the same write, or a failure halfway leaves a cell holding nobody.
+    this.database.db.transaction(() => {
+      const displaced = homeSlot === row.home_slot ? null : this.clearHomeSlot(homeSlot, row.id);
+
+      this.database.db
+        .prepare(
+          `UPDATE projects SET
+             slug = ?, title = ?, status = ?, home_slot = ?, accent = ?, repo_url = ?,
+             lede = ?, card_blurb = ?,
+             chips = ?, blocks = ?, sort_order = ?, visible = ?,
+             updated_at = datetime('now')
+           WHERE id = ?`,
+        )
+        .run(
+          input.slug ?? row.slug,
+          input.title ?? row.title,
+          input.status === undefined ? row.status : input.status,
+          homeSlot,
+          accent === null ? null : accent.toLowerCase(),
+          repoUrl,
+          input.lede === undefined ? row.lede : input.lede,
+          input.cardBlurb === undefined ? row.card_blurb : input.cardBlurb,
+          chips === undefined ? row.chips : JSON.stringify(chips),
+          blocks === undefined ? row.blocks : JSON.stringify(blocks),
+          input.sortOrder ?? row.sort_order,
+          input.visible === undefined ? row.visible : input.visible ? 1 : 0,
+          id,
+        );
+
+      // Only now that this project has moved is the cell it came from free.
+      if (displaced !== null) this.setHomeSlot(displaced, row.home_slot);
+    })();
+  }
+
+  /**
+   * Empties the cell so `keepId` can take it, and names who was in it.
+   *
+   * Assigning a cell another project already holds swaps the two rather than
+   * returning a 400 the author has to resolve by opening the other page:
+   * "put this one in Feature" only ever has one sensible reading, and the
+   * project that was there goes to the cell this one is leaving — or off the
+   * home page, if this one was not on it. The occupant is emptied before the
+   * move rather than after, because the unique index is real: two rows may
+   * not hold the same cell for even one statement.
+   */
+  private clearHomeSlot(slot: string | null, keepId: number): number | null {
+    if (!slot) return null;
+
+    const holder = this.database.db
+      .prepare('SELECT id FROM projects WHERE home_slot = ? AND id <> ?')
+      .get(slot, keepId) as { id: number } | undefined;
+    if (!holder) return null;
+
+    this.setHomeSlot(holder.id, null);
+    return holder.id;
+  }
+
+  private setHomeSlot(id: number, slot: string | null): void {
     this.database.db
-      .prepare(
-        `UPDATE projects SET
-           slug = ?, title = ?, status = ?, palette = ?, lede = ?, card_blurb = ?,
-           chips = ?, blocks = ?, sort_order = ?, visible = ?,
-           updated_at = datetime('now')
-         WHERE id = ?`,
-      )
-      .run(
-        input.slug ?? row.slug,
-        input.title ?? row.title,
-        input.status === undefined ? row.status : input.status,
-        input.palette === undefined ? row.palette : input.palette,
-        input.lede === undefined ? row.lede : input.lede,
-        input.cardBlurb === undefined ? row.card_blurb : input.cardBlurb,
-        chips === undefined ? row.chips : JSON.stringify(chips),
-        blocks === undefined ? row.blocks : JSON.stringify(blocks),
-        input.sortOrder ?? row.sort_order,
-        input.visible === undefined ? row.visible : input.visible ? 1 : 0,
-        id,
-      );
+      .prepare(`UPDATE projects SET home_slot = ?, updated_at = datetime('now') WHERE id = ?`)
+      .run(slot, id);
   }
 
   remove(id: number): ProjectRow {
@@ -283,6 +382,42 @@ export class ProjectsService {
     }
 
     this.writePage('projects.html', renderProjectsIndex(chain.map((r) => this.toPage(r))));
+
+    // The home page's cards are drawn from the same chain, so a project that
+    // is unpublished or hidden leaves the bento by the same act that takes it
+    // off the index — a cell can never link to a page that is not there.
+    const slotted = chain
+      .filter((r) => r.home_slot !== null)
+      .sort((a, b) => this.slotOrder(a.home_slot) - this.slotOrder(b.home_slot))
+      .map((r) => this.toPage(r));
+
+    try {
+      this.writePage('index.html', renderHome(this.homeTemplate(), slotted));
+    } catch (err) {
+      // The project pages are already on disk and correct; only the home page
+      // failed. Say which, rather than letting a 500 imply nothing published.
+      throw new BadRequestException(
+        `The pages are published, but the home page could not be written. ` +
+          `${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
+  /** The cells in the order they are read, not the order they were assigned. */
+  private slotOrder(slot: string | null): number {
+    const i = HOME_SLOTS.indexOf(slot as (typeof HOME_SLOTS)[number]);
+    return i === -1 ? HOME_SLOTS.length : i;
+  }
+
+  /**
+   * The base the home page is spliced into: the generated one if it exists,
+   * so a hand edit made on the Pi survives, otherwise the hand-written
+   * index.html that shipped with the site.
+   */
+  private homeTemplate(): string {
+    const generated = this.resolvePagePath('index.html');
+    const source = existsSync(generated) ? generated : resolve(config.site.homeTemplate);
+    return readFileSync(source, 'utf8');
   }
 
   private toPage(row: ProjectRow): PageProject {
@@ -290,7 +425,9 @@ export class ProjectsService {
       slug: row.slug,
       title: row.title,
       status: row.status,
-      palette: row.palette,
+      accent: row.accent,
+      homeSlot: row.home_slot,
+      repoUrl: row.repo_url,
       lede: row.lede,
       cardBlurb: row.card_blurb,
       chips: JSON.parse(row.chips) as Chip[],
