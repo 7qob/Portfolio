@@ -79,6 +79,32 @@
         <div class="note note--accent">Ignite is still being built and the repository is not public yet, so this page is deliberately short — it will grow with the project rather than describe something that does not exist. The other three link straight to their source.</div>
       </section>
 
+      <!-- Same band as every other project page. The clip has not been
+           recorded yet, and that is safe to ship: closed, nothing is
+           requested, and if the file is still missing when someone opens it,
+           initFigures() takes the whole band off the page rather than leaving
+           a section that opens onto nothing. -->
+      <details class="reveal">
+        <summary class="reveal__summary">
+          <h2 class="section-label">Walkthrough</h2>
+          <span class="reveal__hint">1 clip</span>
+          <span class="reveal__mark" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </summary>
+
+        <div class="reveal__body">
+          <div class="mediarow">
+            <img class="mediarow__media" src="assets/ignite.gif" width="480" height="270" loading="lazy" decoding="async" alt="A screen recording of Ignite in front of a local LLM server: a request arriving with its token, the queue, and a streamed reply.">
+            <div class="mediarow__text reading">
+              <h3 class="mediarow__title">The proxy, running</h3>
+              <p>Ignite in front of a local model &mdash; a request arriving with its token, the rate limiter and the concurrency cap deciding whether it runs now or queues, and the reply streaming back over SSE.</p>
+              <p>Still being built, so this is where it is rather than where it lands.</p>
+            </div>
+          </div>
+        </div>
+      </details>
+
       <dl class="datarow">
         <div class="datarow__cell">
           <dt>Type</dt>
