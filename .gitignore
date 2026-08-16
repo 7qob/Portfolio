@@ -37,6 +37,11 @@ server/tsconfig.tsbuildinfo
 # they hold password hashes and real people's IP addresses. Never commit them.
 server/data/
 server/vault-files/
+
+# Publish output from running the API locally: generated pages and uploaded
+# media land here in development (PAGES_DIR / MEDIA_DIR defaults). On the Pi
+# they are bind mounts into the web root. Generated artefacts, never source.
+server/site/
 *.db
 *.db-wal
 *.db-shm

@@ -51,6 +51,18 @@ export const config = {
     filesDir: env('VAULT_FILES_DIR', join(process.cwd(), 'vault-files')),
   },
 
+  site: {
+    /**
+     * Where Publish writes generated project pages, and where uploads land.
+     * In production these are the only two rw mounts the container has
+     * (/site/pages and /site/assets/up); everything else stays read-only.
+     * The media directory is under the nginx web root on purpose — unlike
+     * vault files, uploads here are public page assets.
+     */
+    pagesDir: env('PAGES_DIR', join(process.cwd(), 'site', 'pages')),
+    mediaDir: env('MEDIA_DIR', join(process.cwd(), 'site', 'assets', 'up')),
+  },
+
   session: {
     /**
      * __Host- is not decoration: it tells the browser to refuse the cookie

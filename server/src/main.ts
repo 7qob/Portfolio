@@ -9,7 +9,14 @@ import { AppModule } from './app.module';
 import { config } from './config';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // Body parsing is registered by hand for one reason: a project's blocks
+  // payload can pass Express's 100 kB default on a long page. 1 MB is plenty
+  // for JSON while staying far under the multipart upload cap, which multer
+  // enforces separately.
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bodyParser: false,
+  });
+  app.useBodyParser('json', { limit: '1mb' });
 
   /**
    * nginx proxies `/api/` through without stripping it, so the service owns

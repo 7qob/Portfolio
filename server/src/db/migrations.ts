@@ -123,4 +123,61 @@ export const MIGRATIONS: readonly string[] = [
     ('cv',         'Curriculum Vitae', NULL, 'cv.pdf',         10),
     ('zeugnisse',  'School reports',   NULL, 'zeugnisse.pdf',  20);
   `,
+
+  // 003 — project pages authored in the admin panel.
+  //
+  // A project row is the source of a generated static page: Publish renders
+  // the blocks JSON to /site/pages/project-<slug>.html and nothing at request
+  // time ever reads this table. The slug CHECK mirrors vault_items.filename —
+  // the slug becomes part of a filesystem path on publish, so a traversal
+  // string must be unstorable even if the application check is bypassed.
+  `
+  CREATE TABLE projects (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    slug         TEXT NOT NULL UNIQUE CHECK (
+                   slug <> ''
+                   AND slug NOT LIKE '%/%'
+                   AND slug NOT LIKE '%' || char(92) || '%'
+                   AND slug NOT LIKE '%..%'
+                 ),
+    title        TEXT NOT NULL,
+    -- Chip shown next to the title: 'WIP' | 'Featured' | NULL for none.
+    status       TEXT,
+    -- Accent palette class suffix, e.g. 'comfy' -> .is-comfy on .page-head.
+    palette      TEXT,
+    lede         TEXT,
+    -- The one-liner on the projects.html card, distinct from the lede.
+    card_blurb   TEXT,
+    chips        TEXT NOT NULL DEFAULT '[]', -- JSON [{label, icon}]
+    blocks       TEXT NOT NULL DEFAULT '[]', -- JSON array, the page body
+    sort_order   INTEGER NOT NULL DEFAULT 0,
+    visible      INTEGER NOT NULL DEFAULT 1,
+    -- Set on publish, cleared on unpublish. A row with published_at NULL has
+    -- no file on disk and appears nowhere on the public site.
+    published_at TEXT,
+    created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  -- Uploaded media. filename is content-addressed (<sha256[0:16]>.<ext>),
+  -- generated server-side — the client never chooses it — and the CHECK is
+  -- the same defence in depth as vault_items. width/height are measured in
+  -- the browser before upload and become the img/video attributes that stop
+  -- layout shift; size_bytes feeds the computed .reveal__hint.
+  CREATE TABLE media (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    filename      TEXT NOT NULL UNIQUE CHECK (
+                    filename <> ''
+                    AND filename NOT LIKE '%/%'
+                    AND filename NOT LIKE '%' || char(92) || '%'
+                    AND filename NOT LIKE '%..%'
+                  ),
+    original_name TEXT,
+    mime          TEXT NOT NULL,
+    size_bytes    INTEGER NOT NULL,
+    width         INTEGER,
+    height        INTEGER,
+    created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  `,
 ];
