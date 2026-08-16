@@ -13,7 +13,9 @@ this file should be fixed.
 ```
 index.html          bento home page
 projects.html       project index
-project-*.html      one page per project
+project-*.html      one page per project (hand-written; the admin panel can
+                    also publish generated ones — see "Project pages from
+                    the admin panel" below)
 about.html          about
 impressum.html      legal + Datenschutz (school requirement)
 login.html          sign-in for the vault
@@ -105,10 +107,50 @@ an admin and the password is generated server-side and shown exactly once.
 Vault documents live in `/var/lib/kira1q/vault-files/` on the Pi, outside the
 web root, and are streamed only after a session check.
 
+## Project pages from the admin panel
+
+The panel's **Pages** tab is a small CMS for project pages. A project is head
+fields plus a linear stack of typed blocks (`section`, `steps`, `features`,
+`table`, `figure`, `media`, `datarow`, `files`, `links`), stored as JSON in
+SQLite. **Publish** renders the whole thing server-side
+(`server/src/projects/render.ts`) into a plain static
+`project-<slug>.html` under `PAGES_DIR`, plus a regenerated `projects.html`;
+pagers are derived from `sort_order`, so neighbouring pages re-render on every
+publish and the chain never goes stale.
+
+Rules the implementation enforces — keep them enforced:
+
+- **Generated pages make zero API calls.** They are ordinary static files
+  that work over `file://`, exactly like the hand-written ones. Authoring
+  touches the API; the published page never does.
+- **The renderer emits only markup that style.css already styles.** Every
+  block maps onto the catalogue in `project-template.html`. A new block type
+  that needs a new CSS rule is a design change, not a feature.
+- **Everything the form sends is escaped before it reaches a page.** The only
+  inline markup is `[text](url)` and `` `code` ``, applied after escaping,
+  with hrefs checked against an allowlist. No raw HTML from the form, ever.
+- **Uploads are content-addressed.** The panel can upload media
+  (PNG/JPEG/WebP/GIF/MP4/JSON/PDF, magic bytes verified server-side); files
+  are stored as `<sha256[0:16]>.<ext>` under `MEDIA_DIR` and served from
+  `assets/up/`. The client never chooses a filename. Vault documents are
+  separate and still go to the Pi by hand.
+- Image/video dimensions are measured in the browser before upload and become
+  the `width`/`height` attributes; the `reveal` band's "N clips · X MB" hint
+  is computed from real sizes, never typed.
+
+The four original project pages are still the hand-written static files; the
+migration that moves them into the CMS (seed JSON, rsync excludes, nginx
+`/pages/` fallback, compose mounts) is a separate, deliberate cutover — see
+`docs/` planning notes before attempting it.
+
 ## Things that will bite you
 
 - **The repo is public.** No secret, no database, no vault document may ever
   be committed. A commit is permanent even if a later commit deletes the file.
+- **Pages authored in the panel live only in the SQLite database on the Pi.**
+  For them, `git clone` is no longer a complete backup of the site's content.
+  Export/backup tooling arrives with the migration cutover; until then, treat
+  panel-authored content as existing in exactly one place.
 - **The vault page must not name its documents.** The list comes from the API
   after authentication. It was hardcoded once, which told anyone who viewed
   source what documents existed. Do not put it back. There is a check for this
