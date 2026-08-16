@@ -35,6 +35,19 @@ sudo apt-get install -y -qq nginx
 echo "==> Creating webroot"
 sudo mkdir -p "$WEBROOT"
 
+# The two directories the API writes into, bind-mounted into the container as
+# /site/pages and /site/assets/up. They exist ONLY on the Pi — nothing in the
+# repo creates them and nothing in the repo can restore them.
+#
+# uid 1000 is the `node` user the container runs as; 755 is what lets nginx
+# (www-data) read what it wrote. Creating them here rather than letting Docker
+# do it is the whole point: a bind mount whose source is missing is created by
+# Docker as root:root, and then every publish and every upload fails EACCES.
+echo "==> Creating the API's writable directories"
+sudo mkdir -p "$WEBROOT/assets"          # rsync owns this one; just the parent
+sudo install -d -o 1000 -g 1000 -m 755 "$WEBROOT/pages"
+sudo install -d -o 1000 -g 1000 -m 755 "$WEBROOT/assets/up"
+
 echo "==> Copying site (dev-only files excluded)"
 # --exclude 'vault/files/' is a safety line, not a tidiness one. Your CV and
 # Zeugnisse are uploaded straight to the Pi and are deliberately NOT in the
@@ -44,7 +57,21 @@ echo "==> Copying site (dev-only files excluded)"
 # server/, docs/ and docker-compose.yml are excluded for the same reason as
 # deploy/: they are how the site is built and run, not part of what it serves.
 # The API is reached through the /api/ proxy, never as files under the root.
+#
+# /pages/ and /assets/up/ are the same class of exclusion as vault/files/ and
+# for the same reason, only worse: they exist on the Pi and nowhere else. They
+# are not in the repo, so `--delete` sees them as files that no longer exist in
+# the source and would wipe every published page and every upload on the next
+# deploy. Both are anchored with a leading slash — they mean these exact
+# directories at the web root, not any directory anywhere called "up".
+#
+# When the four hand-written project pages are migrated into the panel, two
+# more excludes join this list — 'project-*.html' and 'projects.html' — and
+# they must be added BEFORE the static copies are deleted from the repo, or
+# the first deploy after the deletion removes the generated ones too.
 sudo rsync -a --delete \
+  --exclude '/pages/' \
+  --exclude '/assets/up/' \
   --exclude 'project-template.html' \
   --exclude 'README.md' \
   --exclude 'CLAUDE.md' --exclude 'claude.md' \
@@ -60,6 +87,12 @@ sudo rsync -a --delete \
 sudo chown -R www-data:www-data "$WEBROOT"
 sudo find "$WEBROOT" -type d -exec chmod 755 {} \;
 sudo find "$WEBROOT" -type f -exec chmod 644 {} \;
+
+# ...and immediately hand the two writable directories back. The blanket
+# chown above is recursive and does not care that it just took the API's own
+# output away from it; without this, re-running setup-pi.sh silently breaks
+# publishing until the next time someone reads a container log.
+sudo chown -R 1000:1000 "$WEBROOT/pages" "$WEBROOT/assets/up"
 
 # Documents used to live under the web root. They are now served by the API
 # from /var/lib/kira1q/vault-files/, which nginx cannot reach at all.
@@ -142,6 +175,26 @@ else
   echo "    Until it is up, the vault and admin pages will say so and the"
   echo "    static site will carry on working normally."
 fi
+
+echo
+echo "==> The panel must be able to write, and nginx must be able to read:"
+# Anything other than uid 1000 here means Publish and Upload will fail with
+# EACCES inside the container, and the panel will show it as a 500.
+for d in pages assets/up; do
+  if [ -d "$WEBROOT/$d" ]; then
+    uid=$(stat -c '%u' "$WEBROOT/$d")
+    printf '    %-28s %s   %s\n' "$d" "$(stat -c '%U:%G %a' "$WEBROOT/$d")" \
+      "$([ "$uid" = "1000" ] && echo '(ok)' || echo '<-- EXPECTED uid 1000')"
+  else
+    printf '    %-28s %s\n' "$d" "MISSING   <-- publishing will fail"
+  fi
+done
+
+# Generated pages answer on their real URL only. A 200 here would mean every
+# project page has a second address.
+code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost/pages/" || echo ERR)
+printf '    %-28s %s   %s\n' "/pages/ served directly" "$code" \
+  "$([ "$code" = "404" ] && echo '(ok)' || echo '<-- EXPECTED 404')"
 
 IP=$(hostname -I | awk '{print $1}')
 echo

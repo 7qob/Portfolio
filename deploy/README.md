@@ -31,11 +31,18 @@ Re-upload via WinSCP into `~/Portfolio`, then:
 cd ~/Portfolio/deploy && ./setup-pi.sh ~/Portfolio
 ```
 
-Or skip the script and sync straight into the webroot:
+Or skip the script and sync straight into the webroot — but copy the exclude
+list exactly. `/pages/` and `/assets/up/` are what the admin panel writes into;
+they are not in the repo, so `--delete` without those two lines wipes every
+published project page and every upload:
 
 ```bash
-sudo rsync -a --delete --exclude 'project-template.html' --exclude 'README.md' --exclude 'deploy/' ~/Portfolio/ /var/www/kira1q.dev/
+sudo rsync -a --delete --exclude '/pages/' --exclude '/assets/up/' --exclude 'vault/files/' --exclude 'project-template.html' --exclude 'README.md' --exclude 'deploy/' ~/Portfolio/ /var/www/kira1q.dev/
 ```
+
+Prefer the script. It carries the full list, and it also hands `pages/` and
+`assets/up/` back to uid 1000 after the recursive `chown` — which a bare rsync
+does not do, and which publishing needs.
 
 ---
 
@@ -156,6 +163,21 @@ sudo chmod 700 /var/lib/kira1q/data /var/lib/kira1q/vault-files
 
 `1000:1000` is the `node` user inside the image. The container runs as that
 user, not root, so a bug in the file-streaming path is contained.
+
+The panel's two writable directories are the exception to "outside the web
+root" — they hold public pages and public images, so they belong under
+`/var/www` where nginx can serve them:
+
+```bash
+sudo install -d -o 1000 -g 1000 -m 755 /var/www/kira1q.dev/pages
+sudo install -d -o 1000 -g 1000 -m 755 /var/www/kira1q.dev/assets/up
+```
+
+`755`, not `700`: uid 1000 writes them and `www-data` has to read them.
+Create them **before** the first `docker compose up -d`. A bind mount whose
+source directory does not exist is created by Docker as `root:root`, and the
+container — running as uid 1000 — then fails every publish and every upload
+with `EACCES`. `setup-pi.sh` does this for you.
 
 ### 3.3 Start the API
 
