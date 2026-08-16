@@ -433,7 +433,7 @@ body {
 
 /* Inline links inside that same body copy. Nothing on the site linked from
    within a sentence until now — every other link is a whole box, a nav item
-   or a .more-link, each of which sets its own colour — so an <a> in a
+   or a .linklist row, each of which sets its own colour — so an <a> in a
    paragraph fell through to the browser default and rendered blue, then
    purple once visited. Those are the only two colours on the page nobody
    chose. Underline in --accent rather than colouring the text: it marks the
@@ -596,53 +596,6 @@ body {
 
 .stretched-link:focus-visible {
   outline-offset: -2px;   /* keep the focus ring inside the clipped box */
-}
-
-/* Muted "More on GitHub ->" pinned to the bottom; sits above the
-   stretched link so it stays independently clickable. */
-.more-link {
-  position: relative;
-  z-index: 1;
-  margin-top: auto;
-  align-self: flex-start;
-  display: inline-flex;
-  align-items: center;
-  gap: calc(var(--space) * 0.5);
-  font-size: var(--fs-caption);
-  color: var(--fg-mute);
-  text-decoration: none;
-  transition: color var(--motion);
-}
-
-.more-link svg {
-  width: 13px;
-  height: 13px;
-  fill: none;
-  stroke: currentColor;
-  transition: transform var(--motion);
-}
-
-.more-link:hover,
-.more-link:focus-visible {
-  color: var(--text);
-  outline: none;
-}
-
-.more-link:hover svg,
-.more-link:focus-visible svg {
-  transform: translate(2px, -2px);   /* external -> up-right, matching site */
-}
-
-.more-link:focus-visible {
-  outline: 1px solid var(--accent);
-  outline-offset: 2px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .more-link:hover svg,
-  .more-link:focus-visible svg {
-    transform: none;
-  }
 }
 
 /* ===========================================================
@@ -1243,13 +1196,6 @@ a:focus-visible,
   grid-auto-rows: min-content;   /* rows hug their content — boxes never get squashed */
   align-content: start;
   gap: var(--gap);
-}
-
-/* In the bento the "More on GitHub" link is bottom-pinned; on a subpage it
-   sits in normal flow, and only its own text should be clickable. */
-.page-body .more-link {
-  margin-top: 0;
-  justify-self: start;
 }
 
 /* ---- Static content box: a .box that is not a link ----
@@ -2445,7 +2391,7 @@ code {
 }
 
 /* Small inline arrow beside a link's text. Static on purpose: the site's
-   arrow-nudge belongs to the primary affordances (.box-arrow, .more-link,
+   arrow-nudge belongs to the primary affordances (.box-arrow, .linklist,
    .doc__arrow), and having a fourth animated arrow system for a 13px glyph
    in the footer was upkeep with nothing to show for it. */
 .footer-arrow {
