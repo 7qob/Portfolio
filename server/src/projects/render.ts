@@ -11,18 +11,11 @@
  * and `code`, applied AFTER escaping, with the href checked against SAFE_HREF
  * — so no raw HTML from the form ever reaches a visitor, and neither does a
  * javascript: link. "An admin typed it" is not the same as "it is well-formed".
+ * The one style attribute this file emits is re-checked here against the hex
+ * regex rather than trusted from the record, for the same reason.
  */
 
-import {
-  Block,
-  Chip,
-  DatarowBlock,
-  FigureBlock,
-  FilesBlock,
-  LinksBlock,
-  MediaBlock,
-  SAFE_HREF,
-} from './blocks';
+import { ACCENT_HEX, Block, Chip, MediaBlock, SAFE_HREF, TextBlock } from './blocks';
 
 export interface MediaRef {
   filename: string;
@@ -40,7 +33,9 @@ export interface PageProject {
   slug: string;
   title: string;
   status: string | null;
-  palette: string | null;
+  accent: string | null;
+  homeSlot: string | null;
+  repoUrl: string | null;
   lede: string | null;
   cardBlurb: string | null;
   chips: Chip[];
@@ -60,10 +55,9 @@ export interface RenderOptions {
   assetPrefix?: string;
 }
 
-/** The four palettes style.css defines. A new one needs a CSS line first. */
-export const PALETTES: ReadonlySet<string> = new Set(['comfy', 'ignite', 'kobui', 'stalkr']);
-
-export const STATUSES: ReadonlySet<string> = new Set(['WIP', 'Featured']);
+/** The markers renderHome() writes between, and nothing outside them. */
+export const HOME_START = '<!-- projects:start -->';
+export const HOME_END = '<!-- projects:end -->';
 
 // ---------------------------------------------------------------------------
 // Escaping and the two inline forms
@@ -109,17 +103,31 @@ function formatBytes(bytes: number): string {
   return (u > 0 && value < 10 ? value.toFixed(1) : String(Math.round(value))) + ' ' + units[u];
 }
 
+/**
+ * Markup is built at its own natural indentation and placed by whatever
+ * contains it. Without this every fragment would have to know how deeply it
+ * was going to be nested, which is how the per-type renderers ended up with
+ * their indentation baked in and drifting.
+ */
+function indent(html: string, pad: string): string {
+  return html
+    .split('\n')
+    .map((line) => (line ? pad + line : line))
+    .join('\n');
+}
+
 // ---------------------------------------------------------------------------
 // SVG catalogue. Server-side constants copied verbatim from the hand-written
 // pages — never author input. Chip icons are addressed by name from the form.
 // ---------------------------------------------------------------------------
 
 const SVG_ATTRS =
-  'xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+  'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
 
+/** Attribute order follows the hand-written pages: xmlns, size, then the rest. */
 function svg(paths: string, size?: number): string {
   const dims = size ? ` width="${size}" height="${size}"` : '';
-  return `<svg ${SVG_ATTRS}${dims}>${paths}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg"${dims} ${SVG_ATTRS}>${paths}</svg>`;
 }
 
 /** Chip icons, keyed by the name the admin form offers. */
@@ -151,11 +159,6 @@ const ICON_MOON =
 
 const ICON_EXTERNAL = svg('<line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/>', 13);
 
-const ICON_DOWNLOAD = svg(
-  '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
-  13,
-);
-
 const ICON_CHEVRON =
   '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
 
@@ -166,23 +169,24 @@ const ICON_STAR = svg('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 2
 
 const ICON_FOLDER = svg('<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>', 14);
 
+/** Written relative to the frame that holds it; indent() places it. */
 const CLIP_CONTROLS = `<button class="clip-btn clip-btn--play" type="button" data-clip-toggle aria-label="Pause clip">
-                <span data-clip-icon="pause">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="9" y1="4" x2="9" y2="20"/><line x1="15" y1="4" x2="15" y2="20"/></svg>
-                </span>
-                <span data-clip-icon="play" hidden>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 4 20 12 6 20"/></svg>
-                </span>
-              </button>
-              <button class="clip-btn clip-btn--full" type="button" data-clip-fullscreen aria-label="Fullscreen">
-                <span data-clip-icon="enter">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 3 3 3 3 9"/><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><polyline points="15 21 21 21 21 15"/></svg>
-                </span>
-                <span data-clip-icon="exit" hidden>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 9 9 9 9 3"/><polyline points="21 9 15 9 15 3"/><polyline points="3 15 9 15 9 21"/><polyline points="21 15 15 15 15 21"/></svg>
-                </span>
-              </button>
-              <div class="clip-track" data-clip-track aria-hidden="true"><span class="clip-track__fill" data-clip-fill></span></div>`;
+  <span data-clip-icon="pause">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="9" y1="4" x2="9" y2="20"/><line x1="15" y1="4" x2="15" y2="20"/></svg>
+  </span>
+  <span data-clip-icon="play" hidden>
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 4 20 12 6 20"/></svg>
+  </span>
+</button>
+<button class="clip-btn clip-btn--full" type="button" data-clip-fullscreen aria-label="Fullscreen">
+  <span data-clip-icon="enter">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 3 3 3 3 9"/><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><polyline points="15 21 21 21 21 15"/></svg>
+  </span>
+  <span data-clip-icon="exit" hidden>
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 9 9 9 9 3"/><polyline points="21 9 15 9 15 3"/><polyline points="3 15 9 15 9 21"/><polyline points="21 15 15 15 15 21"/></svg>
+  </span>
+</button>
+<div class="clip-track" data-clip-track aria-hidden="true"><span class="clip-track__fill" data-clip-fill></span></div>`;
 
 // ---------------------------------------------------------------------------
 // Page shell — byte-for-byte the same head, header and footer as the
@@ -259,29 +263,88 @@ function footer(p: string): string {
 `;
 }
 
-function chipList(chips: Chip[]): string {
+function chipList(chips: Chip[], pad: string): string {
   if (!chips.length) return '';
   const items = chips
     .map((c) => {
       const paths = c.icon ? CHIP_ICONS[c.icon] : undefined;
-      const icon = paths ? svg(paths) : '';
-      return `      <li class="chip">${icon}${esc(c.label)}</li>`;
+      // .chip svg sizes these to 14px anyway; the attributes are there so the
+      // chip row does not jump while the stylesheet is still loading.
+      const icon = paths ? svg(paths, 14) : '';
+      return `  <li class="chip">${icon}${esc(c.label)}</li>`;
     })
     .join('\n');
-  return `    <ul class="chips">\n${items}\n    </ul>\n`;
+  return indent(`<ul class="chips">\n${items}\n</ul>`, pad) + '\n';
+}
+
+/**
+ * The project's colour, as a class and an inline custom property.
+ *
+ * `.is-custom` derives the shade and the tint from `--edge-brand` with
+ * color-mix, once, for both themes — which is what replaced four hand-written
+ * palettes of three hex values each. The value is re-tested here rather than
+ * trusted: the DTO checked what arrived over HTTP, this checks what is about
+ * to be interpolated into a style attribute on a public page, and those are
+ * different moments with a database in between.
+ */
+function accentAttrs(accent: string | null): { cls: string; style: string } {
+  if (!accent || !ACCENT_HEX.test(accent)) return { cls: '', style: '' };
+  return { cls: ' is-custom', style: ` style="--edge-brand:${accent.toLowerCase()}"` };
 }
 
 // ---------------------------------------------------------------------------
-// The blocks
+// The two bands
 // ---------------------------------------------------------------------------
 
-function sectionLabel(id: string, heading: string): string {
-  return `<h2 class="section-label" id="${id}">${esc(heading)}</h2>`;
+/**
+ * Every top-level block on a project page is a band: a hairline along the top,
+ * a heading, and its content. `collapsible` picks which of the two shells that
+ * band wears — an ordinary <section>, or the <details> that keeps everything
+ * inside it (bytes included) behind one click.
+ */
+function band(opts: {
+  id: string;
+  heading: string;
+  inner: string;
+  collapsible: boolean;
+  hint?: string;
+  bodyClass?: string;
+}): string {
+  if (!opts.collapsible) {
+    return `      <section class="project__section" aria-labelledby="${opts.id}">
+        <h2 class="section-label" id="${opts.id}">${esc(opts.heading)}</h2>
+${indent(opts.inner, '        ')}
+      </section>
+`;
+  }
+
+  const hint = opts.hint ? `\n          <span class="reveal__hint">${opts.hint}</span>` : '';
+
+  return `      <details class="reveal">
+        <summary class="reveal__summary">
+          <h2 class="section-label">${esc(opts.heading)}</h2>${hint}
+          <span class="reveal__mark" aria-hidden="true">
+            ${ICON_CHEVRON}
+          </span>
+        </summary>
+
+        <div class="reveal__body${opts.bodyClass ?? ''}">
+${indent(opts.inner, '          ')}
+        </div>
+      </details>
+`;
 }
 
-function renderNote(n: { text: string; accent: boolean } | null): string {
-  if (!n) return '';
-  return `        <div class="note${n.accent ? ' note--accent' : ''}">${inline(n.text)}</div>\n`;
+function renderTextBand(b: TextBlock, id: string): string {
+  return band({
+    id,
+    heading: b.heading,
+    inner: b.body.map((par) => `<p>${inline(par)}</p>`).join('\n'),
+    collapsible: b.collapsible,
+    // A folded text band is prose with no .mediarow__text of its own to carry
+    // the reading class, so it takes it directly.
+    bodyClass: ' reading',
+  });
 }
 
 function mediaSrc(m: MediaRef, p: string): string {
@@ -292,185 +355,79 @@ function dims(m: MediaRef): string {
   return m.width && m.height ? ` width="${m.width}" height="${m.height}"` : '';
 }
 
-function renderFigure(b: FigureBlock, media: MediaLookup, p: string): string {
-  const m = media(b.mediaId);
-  return `      <!-- The <figure> self-hides if its image is missing (see initFigures in
-           script.js), so the page is never scarred by a missing file. -->
-      <figure class="figure">
-        <img src="${mediaSrc(m, p)}" alt="${esc(b.alt)}"${dims(m)} loading="lazy" decoding="async">
-        <figcaption>${inline(b.caption)}</figcaption>
-      </figure>
-`;
-}
-
-function renderMediaBand(b: MediaBlock, media: MediaLookup, p: string): string {
+function renderMediaBand(b: MediaBlock, id: string, media: MediaLookup, p: string): string {
   const totalBytes = b.rows.reduce((sum, r) => sum + media(r.mediaId).sizeBytes, 0);
   const n = b.rows.length;
-  const hint = `${n} clip${n === 1 ? '' : 's'} &middot; ${formatBytes(totalBytes)}`;
 
   const rows = b.rows
     .map((row) => {
       const m = media(row.mediaId);
-      const text = `            <div class="mediarow__text reading">
-              <h3 class="mediarow__title">${esc(row.title)}</h3>
-${row.body.map((par) => `              <p>${inline(par)}</p>`).join('\n')}
-            </div>`;
+      const wide = row.layout === 'below' ? ' mediarow--wide' : '';
+      const text = `  <div class="mediarow__text reading">
+    <h3 class="mediarow__title">${esc(row.title)}</h3>
+${row.body.map((par) => `    <p>${inline(par)}</p>`).join('\n')}
+  </div>`;
 
       if (m.mime === 'video/mp4') {
-        // The MP4 shape (project-comfyui.html): a frame wrapping the video,
-        // the two clip buttons and the progress track — initClipToggles()
-        // drives these off the data-clip-* attributes, unchanged.
-        return `          <div class="mediarow${row.wide ? ' mediarow--wide' : ''}">
-            <div class="mediarow__frame">
-              <video class="mediarow__media" src="${mediaSrc(m, p)}"${dims(m)} autoplay loop muted playsinline preload="none" aria-label="${esc(row.alt)}"></video>
-              ${CLIP_CONTROLS}
-            </div>
+        // The MP4 shape: a frame wrapping the video, the two clip buttons and
+        // the progress track — initClipToggles() drives these off the
+        // data-clip-* attributes, unchanged.
+        const frame = `<video class="mediarow__media" src="${mediaSrc(m, p)}"${dims(m)} autoplay loop muted playsinline preload="none" aria-label="${esc(row.alt)}"></video>
+${CLIP_CONTROLS}`;
+        return `<div class="mediarow${wide}">
+  <div class="mediarow__frame">
+${indent(frame, '    ')}
+  </div>
 ${text}
-          </div>`;
+</div>`;
       }
 
-      // The GIF/image shape (about.html): a bare lazy <img> as a direct child
-      // of the row. Inside the closed <details> it has no layout box, so
-      // nothing is downloaded until the band is opened.
-      return `          <div class="mediarow${row.wide ? ' mediarow--wide' : ''}">
-            <img class="mediarow__media" src="${mediaSrc(m, p)}"${dims(m)} loading="lazy" decoding="async" alt="${esc(row.alt)}">
+      // The image/GIF shape: a bare lazy <img> as a direct child of the row.
+      // Inside a closed <details> it has no layout box, so nothing is
+      // downloaded until the band is opened.
+      return `<div class="mediarow${wide}">
+  <img class="mediarow__media" src="${mediaSrc(m, p)}"${dims(m)} loading="lazy" decoding="async" alt="${esc(row.alt)}">
 ${text}
-          </div>`;
+</div>`;
     })
     .join('\n\n');
 
-  return `      <!-- Closed on purpose: inside a closed <details> a lazy image has no
-           layout box, so nothing below is fetched until the reader asks. -->
-      <details class="reveal">
-        <summary class="reveal__summary">
-          <h2 class="section-label">${esc(b.heading)}</h2>
-          <span class="reveal__hint">${hint}</span>
-          <span class="reveal__mark" aria-hidden="true">
-            ${ICON_CHEVRON}
-          </span>
-        </summary>
-
-        <div class="reveal__body">
-${rows}
-        </div>
-      </details>
-`;
+  return band({
+    id,
+    heading: b.heading,
+    inner: rows,
+    collapsible: b.collapsible,
+    // Computed from the real files on disk, never typed by the author —
+    // someone on mobile data is entitled to know before they tap.
+    hint: `${n} clip${n === 1 ? '' : 's'} &middot; ${formatBytes(totalBytes)}`,
+  });
 }
 
-function renderDatarow(b: DatarowBlock): string {
-  const cells = b.cells
-    .map(
-      (c) => `        <div class="datarow__cell">
-          <dt>${esc(c.key)}</dt>
-          <dd>${inline(c.value)}</dd>
-        </div>`,
-    )
-    .join('\n');
-  return `      <dl class="datarow">\n${cells}\n      </dl>\n`;
+function renderBlock(b: Block, index: number, media: MediaLookup, p: string): string {
+  const id = `lbl-b${index}`;
+  return b.type === 'text' ? renderTextBand(b, id) : renderMediaBand(b, id, media, p);
 }
 
-function renderLinklist(
-  b: FilesBlock | LinksBlock,
-  id: string,
-  media: MediaLookup,
-  p: string,
-): string {
-  const rows: { href: string; attrs: string; icon: string; label: string; note: string | null }[] =
-    b.type === 'files'
-      ? b.items.map((it) => {
-          const m = media(it.mediaId);
-          return {
-            href: mediaSrc(m, p),
-            // download names the saved file after the original upload, not
-            // the content hash the server stores it under.
-            attrs: ` download="${esc(m.originalName ?? m.filename)}"`,
-            icon: ICON_DOWNLOAD,
-            label: it.label,
-            note: it.note,
-          };
-        })
-      : b.items.map((it) => ({
-          href: esc(it.href),
-          attrs: /^https?:\/\//i.test(it.href) ? ' target="_blank" rel="noopener"' : '',
-          icon: ICON_EXTERNAL,
-          label: it.label,
-          note: it.note,
-        }));
-
-  const items = rows
-    .map((it) => {
-      const noteSpan = it.note
-        ? `\n            <span class="linklist__note">${esc(it.note)}</span>`
-        : '';
-      return `        <li>
-          <a href="${it.href}"${it.attrs}>
-            <span class="linklist__label">${esc(it.label)}</span>
-            ${it.icon}${noteSpan}
-          </a>
-        </li>`;
-    })
-    .join('\n');
-
-  return `    <nav class="linklist" aria-labelledby="${id}">
-      ${sectionLabel(id, b.heading)}
+/**
+ * The repository, as the last thing before the pager. A .linklist with one
+ * item rather than a new block type: the shape of the page should not depend
+ * on how many links a project happens to have, and this needs no new CSS.
+ */
+function repoLink(url: string): string {
+  const label = url.replace(/^https:\/\//i, '').replace(/\/+$/, '');
+  return `    <nav class="linklist" aria-labelledby="lbl-repo">
+      <h2 class="section-label" id="lbl-repo">Source</h2>
       <ul>
-${items}
+        <li>
+          <a href="${esc(url)}" target="_blank" rel="noopener">
+            <span class="linklist__label">${esc(label)}</span>
+            ${ICON_EXTERNAL}
+            <span class="linklist__note">The repository this page describes.</span>
+          </a>
+        </li>
       </ul>
     </nav>
 `;
-}
-
-function renderBodyBlock(b: Block, index: number, media: MediaLookup, p: string): string {
-  const id = `lbl-b${index}`;
-  switch (b.type) {
-    case 'section':
-      return `      <section class="project__section" aria-labelledby="${id}">
-        ${sectionLabel(id, b.heading)}
-${b.body.map((par) => `        <p>${inline(par)}</p>`).join('\n')}
-${renderNote(b.note)}      </section>
-`;
-    case 'steps':
-      return `      <section class="project__section" aria-labelledby="${id}">
-        ${sectionLabel(id, b.heading)}
-        <ol class="steps">
-${b.items
-  .map((it) => {
-    const lead = it.lead ? `<b>${esc(it.lead)} — </b>` : '';
-    return `          <li><span>${lead}${inline(it.text)}</span></li>`;
-  })
-  .join('\n')}
-        </ol>
-      </section>
-`;
-    case 'features':
-      return `      <section class="project__section" aria-labelledby="${id}">
-        ${sectionLabel(id, b.heading)}
-        <ul class="feature-list">
-${b.items.map((it) => `          <li>${inline(it)}</li>`).join('\n')}
-        </ul>
-      </section>
-`;
-    case 'table':
-      return `      <section class="project__section" aria-labelledby="${id}">
-        ${sectionLabel(id, b.heading)}
-        <div class="table-wrap">
-          <table class="spec-table">
-            <thead><tr>${b.columns.map((c) => `<th>${esc(c)}</th>`).join('')}</tr></thead>
-            <tbody>
-${b.rows.map((row) => `            <tr>${row.map((c) => `<td>${inline(c)}</td>`).join('')}</tr>`).join('\n')}
-            </tbody>
-          </table>
-        </div>
-      </section>
-`;
-    case 'figure':
-      return renderFigure(b, media, p);
-    case 'media':
-      return renderMediaBand(b, media, p);
-    default:
-      // datarow/files/links are placed by renderProjectPage, not here.
-      return '';
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -486,32 +443,17 @@ export function renderProjectPage(
 ): string {
   const p = opts.assetPrefix ?? '';
 
-  // The fixed order from project-template.html, enforced by code instead of
-  // by discipline: body blocks in author order, datarow last in the article,
-  // then files and links as siblings, then the pager.
-  const body = project.blocks.filter(
-    (b) => b.type !== 'datarow' && b.type !== 'files' && b.type !== 'links',
-  );
-  const datarows = project.blocks.filter((b): b is DatarowBlock => b.type === 'datarow');
-  // Downloads before links regardless of author order — the fixed shape the
-  // panel promises is "facts strip, downloads, links, pager".
-  const tails = [
-    ...project.blocks.filter((b): b is FilesBlock => b.type === 'files'),
-    ...project.blocks.filter((b): b is LinksBlock => b.type === 'links'),
-  ];
+  const status = project.status ? ` <span class="status">${esc(project.status)}</span>` : '';
 
-  const status = project.status
-    ? ` <span class="status">${esc(project.status)}</span>`
-    : '';
-  const palette = project.palette && PALETTES.has(project.palette) ? ` is-${project.palette}` : '';
+  const accent = accentAttrs(project.accent);
 
   let html = head(project.title, 'article', p);
   html += '\n';
   html += header(p);
   html += `
-  <div class="page-head page-head--project${palette}">
+  <div class="page-head page-head--project${accent.cls}"${accent.style}>
     <h1 class="page-head__title" id="page-title">${esc(project.title)}${status}</h1>
-${chipList(project.chips)}  </div>
+${chipList(project.chips, '    ')}  </div>
 
   <main class="page-body page-body--project" aria-labelledby="page-title">
     <article class="project reading">
@@ -521,13 +463,15 @@ ${chipList(project.chips)}  </div>
     html += `      <p class="project__lede">${inline(project.lede)}</p>\n\n`;
   }
 
-  html += body.map((b, i) => renderBodyBlock(b, i, media, p)).join('\n');
-  html += datarows.map((b) => '\n' + renderDatarow(b)).join('');
+  html += project.blocks.map((b, i) => renderBlock(b, i, media, p)).join('\n');
   html += `
     </article>
 
 `;
-  html += tails.map((b, i) => renderLinklist(b, `lbl-t${i}`, media, p)).join('\n');
+
+  // The fixed tail, enforced by code rather than by discipline: the bands the
+  // author wrote, then the repository, then the pager.
+  if (project.repoUrl) html += repoLink(project.repoUrl);
 
   if (prev || next) {
     const prevLink = prev
@@ -555,34 +499,61 @@ ${prevLink}${nextLink}    </nav>
   return html;
 }
 
+/**
+ * The card a project wears on both index pages. Same parts everywhere — the
+ * stretched link, the arrow, the label, the name, the chips, the blurb — so a
+ * project is recognisably the same object on the bento and on projects.html.
+ */
+function projectCard(
+  proj: PageProject,
+  opts: { tag: 'li' | 'section'; extraClass: string; large: boolean; wrapBody: boolean; p: string },
+): string {
+  const id = `p-${esc(proj.slug)}`;
+  const accent = accentAttrs(proj.accent);
+  const featured = proj.status === 'Featured';
+  const label = featured ? `${ICON_STAR}Featured` : `${ICON_FOLDER}Project`;
+  const wip = proj.status === 'WIP' ? `\n        <span class="status">WIP</span>` : '';
+  const blurb = proj.cardBlurb ?? proj.lede ?? '';
+  const nameClass = `project-box__name${opts.large ? ' project-box__name--lg' : ''}`;
+
+  // On the bento the label is the labelling element (it holds the id and the
+  // card's name is a plain span); on projects.html the name is the heading.
+  const bento = opts.tag === 'section';
+  const labelId = bento ? ` id="${id}"` : '';
+  const name = bento
+    ? `        <span class="${nameClass}">${esc(proj.title)}</span>`
+    : `        <h2 class="${nameClass}" id="${id}">${esc(proj.title)}</h2>`;
+
+  const body = `${chipList(proj.chips, '        ')}        <p class="box__text">${inline(blurb)}</p>`;
+
+  return `      <${opts.tag} class="box box--link box--edge${accent.cls}${opts.extraClass}"${accent.style} aria-labelledby="${id}">
+        <a class="stretched-link" href="${opts.p}project-${esc(proj.slug)}.html" aria-label="${esc(proj.title)} — project page"></a>
+        <span class="box-arrow" aria-hidden="true">
+          ${ICON_BOX_ARROW}
+        </span>
+        <h2 class="box__label"${labelId}>${label}</h2>
+        <div class="project-box__head">
+${name}${wip}
+        </div>
+${opts.wrapBody ? `        <div class="box__body">\n${indent(body, '  ')}\n        </div>` : body}
+      </${opts.tag}>`;
+}
+
 export function renderProjectsIndex(projects: PageProject[], opts: RenderOptions = {}): string {
   const p = opts.assetPrefix ?? '';
 
   const cards = projects
-    .map((proj) => {
-      const palette = proj.palette && PALETTES.has(proj.palette) ? ` is-${proj.palette}` : '';
-      // Featured and WIP cards take a full row so they sit level; the plain
-      // ones share it — the same split the hand-written grid used.
-      const wide = proj.status ? ' is-wide' : '';
-      const featured = proj.status === 'Featured';
-      const label = featured
-        ? `${ICON_STAR}Featured`
-        : `${ICON_FOLDER}Project`;
-      const wip = proj.status === 'WIP' ? `\n          <span class="status">WIP</span>` : '';
-      const blurb = proj.cardBlurb ?? proj.lede ?? '';
-
-      return `      <li class="box box--link box--edge${palette}${wide}" aria-labelledby="p-${esc(proj.slug)}">
-        <a class="stretched-link" href="${p}project-${esc(proj.slug)}.html" aria-label="${esc(proj.title)} — project page"></a>
-        <span class="box-arrow" aria-hidden="true">
-          ${ICON_BOX_ARROW}
-        </span>
-        <span class="box__label">${label}</span>
-        <div class="project-box__head">
-          <h2 class="project-box__name${featured ? ' project-box__name--lg' : ''}" id="p-${esc(proj.slug)}">${esc(proj.title)}</h2>${wip}
-        </div>
-${chipList(proj.chips)}        <p class="box__text">${inline(blurb)}</p>
-      </li>`;
-    })
+    .map((proj) =>
+      projectCard(proj, {
+        tag: 'li',
+        // Featured and WIP cards take a full row so they sit level; the plain
+        // ones share it — the same split the hand-written grid used.
+        extraClass: proj.status ? ' is-wide' : '',
+        large: proj.status === 'Featured',
+        wrapBody: false,
+        p,
+      }),
+    )
     .join('\n\n');
 
   let html = head('Projects', 'website', p);
@@ -618,4 +589,51 @@ ${cards}
 `;
   html += footer(p);
   return html;
+}
+
+/**
+ * The home page, which is hand-written everywhere except its project cards.
+ *
+ * Two edits and no others: the region between the two markers becomes one
+ * card per slotted project, and the bento's data-projects count becomes the
+ * number of them — that attribute is what selects the grid's area map, so
+ * three projects reflow into a full grid instead of leaving a hole. The hero,
+ * the about card, the contribution graph and the link stack are never read,
+ * never parsed and never touched. Publishing is a splice, not a re-render.
+ */
+export function renderHome(template: string, projects: PageProject[], opts: RenderOptions = {}): string {
+  const p = opts.assetPrefix ?? '';
+
+  const start = template.indexOf(HOME_START);
+  const end = template.indexOf(HOME_END);
+  if (start === -1 || end === -1 || end < start) {
+    throw new Error(
+      `The home template has no ${HOME_START} / ${HOME_END} pair, so there is ` +
+        'nowhere to write the project cards.',
+    );
+  }
+
+  const cards = projects
+    .map((proj) =>
+      projectCard(proj, {
+        tag: 'section',
+        extraClass: ` area-${proj.homeSlot ?? ''}`,
+        large: proj.homeSlot === 'feature',
+        wrapBody: true,
+        p,
+      }),
+    )
+    .join('\n\n');
+
+  const before = template.slice(0, start + HOME_START.length);
+  const after = template.slice(end);
+  const html = cards ? `${before}\n\n${cards}\n\n    ${after}` : `${before}\n    ${after}`;
+
+  // Anchored on the opening tag, so the count cannot be rewritten anywhere
+  // else a similar attribute might appear. A replacer function, because a
+  // string replacement would read $& and friends out of the card markup.
+  return html.replace(
+    /(<main class="bento"[^>]*\bdata-projects=")\d+(")/,
+    (_match, head: string, tail: string) => `${head}${projects.length}${tail}`,
+  );
 }
