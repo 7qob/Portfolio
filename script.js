@@ -10,8 +10,11 @@ document.addEventListener("DOMContentLoaded", function () {
   initFigures();
   initBoxScroll();
 
-  // Backend-dependent. Each one returns immediately unless its page is the
-  // one being shown, so every page still loads exactly one script.
+  // Backend-dependent, and not all in the same way. initVault() and
+  // initLogin() return immediately unless their page is the one being shown.
+  // initAuth() runs on every page on purpose: the signed-in nav it injects
+  // belongs everywhere, which is the one API call a static page does make.
+  // All three are no-ops when isOffline(), so a backend-less host stays quiet.
   initAuth();
   initVault();
   initLogin();
@@ -124,11 +127,19 @@ function api(path, options) {
   });
 }
 
-// True when there is no backend to talk to — opened from disk during a
-// preview. Every backend-dependent feature checks this first so a local
-// preview does not fill up with failed requests and error states.
+// True when there is no backend to talk to. Every backend-dependent feature
+// checks this first so a preview does not fill up with failed requests and
+// error states.
+//
+// Two cases, not one. `file:` is the obvious one — opened from disk. GitHub
+// Pages is the other, and it was missing: the static half of this site is
+// meant to work there with no backend at all, but Pages serves no /api/, so
+// initAuth() fired a request on every page that could only ever 404. It is
+// checked by hostname rather than by trying and catching, because a request
+// that is known to fail should not be sent.
 function isOffline() {
-  return location.protocol === "file:";
+  return location.protocol === "file:" ||
+         /(^|\.)github\.io$/.test(location.hostname);
 }
 
 // Reads the current session once per page. A 401 is the ordinary answer for a
