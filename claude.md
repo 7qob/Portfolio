@@ -90,9 +90,10 @@ measure column it was before.
 
 - No lorem ipsum, no invented projects, no stock images, no fake data.
 - Do not invent personal details. The Impressum's Name / Kontakt / Ort fields
-  are deliberately empty for the owner to fill in. The Datenschutz section is
-  written, because that is a factual description of the system rather than
-  personal data.
+  are filled in by the owner and by nobody else: a name, a contact address and
+  a place, and deliberately no street, postcode or phone number. The
+  Datenschutz section is written, because that is a factual description of the
+  system rather than personal data.
 - No widgets needing a third-party backend (message board, map, Last.fm,
   Discord). The contributions graph is the one third-party call, it needs no
   token, and it degrades to cached or absent without breaking the page.

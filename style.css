@@ -1354,8 +1354,9 @@ a:focus-visible,
 }
 /* .field__label styling comes from the shared caption rule. */
 
-/* Deliberately empty — the owner fills these in. The inset well gives the
-   blank a shape, so it reads as a slot to fill, not as a broken render. */
+/* One fact per inset well — name, contact address, place. The well is what
+   holds the shape while a field is still blank, so a half-filled Impressum
+   reads as slots waiting for an answer rather than as a broken render. */
 .field__value {
   display: flex;
   align-items: center;
@@ -1369,9 +1370,8 @@ a:focus-visible,
 }
 
 /* ---- Vault: private document list ----
-   Downloadable files as hairline-separated rows, the same rhythm as .spec on
-   the about page — the whole row is the link, name on the left, type and size
-   on the right.
+   Downloadable files as hairline-separated rows — the whole row is the link,
+   name on the left, type and size on the right.
 
    Neither the names nor the sizes are written into the HTML. The whole list
    comes from /api/vault/items, which answers only to an authenticated
@@ -1479,11 +1479,30 @@ a:focus-visible,
   font-size: var(--fs-meta);
 }
 
-/* Sign out is an action, not a destination, so it is set apart from the four
-   navigation links rather than sitting in line as a fifth one. */
-.site-nav__signout {
-  margin-left: auto;
-  color: var(--fg-mute);
+/* Sign out is an action, not a destination, so it is not a fifth nav link:
+   it is an .icon-btn sitting immediately left of the theme toggle, in the
+   bar's right-hand pair of controls. Injected by script.js only when a
+   session is live, which is why there is no markup for it in any page.
+
+   The header's own gap is sized for nav-to-controls, not icon-to-icon, so
+   this cancels it exactly — the two boxes end up edge to edge and their tap
+   padding becomes the space between the icons, which is how the pair reads
+   as one group. Exactly, not more: a deeper pull would slide the two hit
+   areas over each other and hand half the door's target to the toggle. The
+   nav's margin-right:auto still does the pushing, so nothing else moves, and
+   the toggle keeps the .icon-btn right-edge offset that lands the pair on
+   the layout spine. */
+.site-header__signout {
+  margin-right: calc(var(--space) * -2);   /* == .site-header's gap */
+}
+
+/* The toggle's icon is sized through its [data-theme-icon] wrapper because
+   script.js swaps it; this one is written once and never replaced, so the
+   svg is styled directly and matches at 16px. */
+.site-header__signout svg {
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
 /* ---- Admin panel (admin.html) ----
@@ -2878,11 +2897,11 @@ code {
    read as the same document. The only card left is the one thing that is
    genuinely a set of links. */
 /* This page's rail is wider than a project page's, and derived rather than
-   picked: the opening is prose beside a data sheet, so the page has to be
-   exactly one --measure of text plus the sheet plus the gap between them.
-   Capping it at --measure-wide instead crushed the paragraph column to about
-   forty characters. The bands below inherit the same width, so the page still
-   has one right edge for its rules and one for its text. */
+   picked: a .mediarow is a fixed 20rem of picture plus the words beside it, so
+   the page has to be exactly one --measure of text plus that rail plus the gap
+   between them. Capping it at --measure-wide instead crushed the paragraph
+   column to about forty characters. The bands all inherit the same width, so
+   the page still has one right edge for its rules and one for its text. */
 .about {
   display: flex;
   flex-direction: column;
@@ -2897,16 +2916,10 @@ code {
   border-top: var(--border-width) solid var(--border);
 }
 
-/* The opening: prose left, at-a-glance sheet right. On a serif the two want
-   different measures, so this is a real two-track grid rather than the old
-   1.5fr/1fr split that let the paragraph run to whatever was left over. */
-.about__top {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 20rem);
-  gap: calc(var(--space) * 3) calc(var(--space) * 5);
-  align-items: start;
-}
-
+/* The opening. It used to be a two-track grid — prose left, an "At a glance"
+   sheet right — repeating four facts the first two paragraphs already state.
+   The sheet is gone and with it the grid: the lede is one column of text on
+   the reading measure, like the lede of every project page. */
 .about__lead {
   display: flex;
   flex-direction: column;
@@ -2938,43 +2951,9 @@ code {
   gap: var(--gap);
 }
 
-/* ---- Data-sheet rows: label left, value right, hairline between ---- */
-.spec {
-  display: flex;
-  flex-direction: column;
-}
-
-.spec__row {
-  display: flex;
-  align-items: baseline;
-  gap: calc(var(--space) * 2);
-  padding: calc(var(--space) * 1.25) 0;
-  border-bottom: var(--border-width) solid var(--line-soft);
-}
-
-.spec__row:first-child { padding-top: 0; }
-
-.spec__row:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
-}
-
-.spec__key {
-  flex: 0 0 auto;
-  font-size: var(--fs-caption);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--fg-mute);
-}
-
-.spec__val {
-  margin-left: auto;
-  min-width: 0;
-  text-align: right;
-  font-size: var(--fs-body);
-  line-height: 1.4;
-  color: var(--text);
-}
+/* The .spec data-sheet rows that lived here (label left, value right, hairline
+   between) went with the "At a glance" box — About was the only page that ever
+   used them, and .datarow is the site's remaining way to show hard facts. */
 
 /* ===========================================================
    Footer (shared) — legal + credit, nothing else
@@ -3234,9 +3213,17 @@ code {
     margin-right: calc(var(--space) * -1.25);   /* see the desktop rule */
   }
 
-  .icon-btn [data-theme-icon] {
+  .icon-btn [data-theme-icon],
+  .site-header__signout svg {
     width: 18px;
     height: 18px;
+  }
+
+  /* Same value as the desktop rule, restated: .icon-btn's tap-target margin
+     above is the same specificity and further down the file, so it wins by
+     order and the door drifts away from the toggle without this. */
+  .site-header__signout {
+    margin-right: calc(var(--space) * -2);
   }
 
   /* Keeps its own horizontal scroll (it is wider than a phone), but must
@@ -3283,10 +3270,6 @@ code {
   }
 
   .pager__next { text-align: left; }
-
-  .about__top {
-    grid-template-columns: 1fr;
-  }
 
   /* ---- Subpage reading flow on a phone ----
      Nothing in this query used to touch a project page's content at all: the
@@ -3342,4 +3325,18 @@ code {
      row; shrink the horizontal padding rather than the type or the 44px
      height, both of which are doing real work. */
   .site-nav a { padding: 0 calc(var(--space) * 0.5); }
+
+  /* Signed in there is a second control in the bar, and at this width the
+     four links plus two 40px targets do not fit one row — measured, not
+     guessed: they overflow a 375px screen by about 40px. The bar takes the
+     second row back rather than paying for the fit by squashing the links
+     into each other or pulling the toggle off the layout's right edge.
+     Scoped to .has-signout (set by script.js) so a signed-out visitor —
+     which is nearly everyone — keeps the single-row bar unchanged. */
+  .site-header.has-signout {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .site-header.has-signout .site-nav { flex: 1 0 100%; }
 }

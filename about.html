@@ -53,38 +53,15 @@
   <main class="page-body" aria-labelledby="page-title">
     <div class="about">
 
-      <!-- Opening: the prose people came for, at reading size, with the same
-           facts as a scannable sheet beside it. -->
-      <div class="about__top">
-        <div class="about__lead reading">
-          <p>I'm a 17 year old computer science student in Bern, Switzerland. Most of what I build starts as something I wanted for myself — a tool, a server, a small game.</p>
-          <p>That is where everything on this site came from: a reverse proxy so my own LLM server can be reached from outside without being left open (Ignite), a chat frontend that never leaves my machine (Kobui), a dashboard for the Minecraft server on my Raspberry Pi (Stalkr), and a ComfyUI workflow I kept tuning until it was worth reusing.</p>
-          <p>Outside of code I draw, mod games, and dig deep into topics I'm curious about, cybersecurity especially.</p>
-          <p>Right now I'm looking for a <strong>Praktikum</strong>, focused on security tooling, self-hosting, and AI.</p>
-        </div>
-
-        <!-- Data sheet: the same facts as the prose, scannable in two seconds. -->
-        <section class="box box--static" aria-labelledby="lbl-glance">
-          <h2 class="box__label" id="lbl-glance"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>At a glance</h2>
-          <dl class="spec">
-            <div class="spec__row">
-              <dt class="spec__key">Location</dt>
-              <dd class="spec__val">Bern, Switzerland</dd>
-            </div>
-            <div class="spec__row">
-              <dt class="spec__key">Studying</dt>
-              <dd class="spec__val">Computer science</dd>
-            </div>
-            <div class="spec__row">
-              <dt class="spec__key">Looking for</dt>
-              <dd class="spec__val">Praktikum</dd>
-            </div>
-            <div class="spec__row">
-              <dt class="spec__key">Focus</dt>
-              <dd class="spec__val">Security tooling, self-hosting, AI</dd>
-            </div>
-          </dl>
-        </section>
+      <!-- The lede, and the only block above the first seam. It used to be
+           prose beside an "At a glance" sheet that repeated the same four
+           facts in a box — the box is gone, and the page opens with the one
+           thing someone came here to read. -->
+      <div class="about__lead reading">
+        <p>My name is Matti Näf. I'm 17, a computer science student in Bern, Switzerland, and in my third year at the IMS — the Informatikmittelschule.</p>
+        <p>Most of what I have built so far is something I wanted for myself first: whatever I was curious about at the time, or whatever made my own day a little easier. That is where everything under <a href="projects.html">projects</a> came from — a reverse proxy so my own LLM server can be reached from outside without being left open (Ignite), a chat frontend that never leaves my machine (Kobui), a dashboard for the Minecraft server on my Raspberry Pi (Stalkr), and a ComfyUI workflow I kept tuning until it was worth reusing.</p>
+        <p>The subjects I like most are computer science, English, German, sports and chemistry. Outside school I'm either with my friends — meeting up, or sitting in a voice chat for an evening — or working on my own things and putting them online.</p>
+        <p>What I would really like to do professionally is <strong>machine learning, security tooling and design</strong>. Right now I'm looking for a <strong>Praktikum</strong> in that direction.</p>
       </div>
 
       <!-- Closed on purpose, and it is not a styling choice. These four clips
@@ -138,24 +115,64 @@
         </div>
       </details>
 
-      <section class="project__section" aria-labelledby="lbl-interests">
-        <h2 class="section-label" id="lbl-interests">Interests</h2>
-        <ul class="chips">
-          <li class="chip">Cybersecurity</li>
-          <li class="chip">Self-hosting / homelab</li>
-          <li class="chip">Artificial Intelligence</li>
-          <li class="chip">Modding games</li>
-          <li class="chip">Drawing</li>
-          <li class="chip">Research</li>
-          <li class="chip">Anime/Manga</li>
-        </ul>
+      <section class="project__section" aria-labelledby="lbl-building">
+        <h2 class="section-label" id="lbl-building">Building things</h2>
+        <p>When I was young I spent most of my time on Lego. Making a whole thing out of a pile of identical blocks stimulated some part of my brain, and it never really switched off — to this day I like building things out of parts that were never meant for each other, which is more or less the description of a homelab.</p>
       </section>
 
-      <!-- Four languages as a full-width band rather than a four-row card:
-           the level is the interesting part, and this puts it under the
-           language instead of pushing it to a far right edge. -->
+      <section class="project__section" aria-labelledby="lbl-flow">
+        <h2 class="section-label" id="lbl-flow">Flow</h2>
+        <p>When something has my interest, I can give it the entire day. Once I'm captured by it there is only the one thing left in the room, and music is what gets me there fastest: as soon as my own songs are playing it's like a closed-off space with a single task inside it. Together with being able to work for hours straight, that combination feels a bit like cheating.</p>
+      </section>
+
+      <section class="project__section" aria-labelledby="lbl-sports">
+        <h2 class="section-label" id="lbl-sports">Sports</h2>
+        <p>I've always done sport and I still do. It makes me feel free and light — running as fast as I can is a feeling I don't think I'll ever lose. The competitive side of me grew up in that environment before it turned up anywhere else.</p>
+      </section>
+
+      <!-- Two photographs rather than two more paragraphs: this is the one
+           part of the page that is easier to show than to describe. Same
+           .mediarow the setup clips use, so the picture keeps to the fixed
+           left rail and the words land on one reading measure beside it. -->
+      <section class="project__section" aria-labelledby="lbl-outdoors">
+        <h2 class="section-label" id="lbl-outdoors">Skiing and hiking</h2>
+        <p>Both are occasional rather than weekly — I get to them when the season and the weekend agree — but they are the two I like doing most.</p>
+
+        <div class="mediarow">
+          <img class="mediarow__media" src="assets/skiing.jpg" width="2252" height="3003" loading="lazy" decoding="async" alt="Me in ski gear — black jacket, black helmet and orange mirrored goggles — sitting on a carved wooden horse outside a mountain restaurant, with snow, wooden chalets and full benches behind.">
+          <div class="mediarow__text reading">
+            <h3 class="mediarow__title">Skiing</h3>
+            <p>The winter half. This is a stop outside a mountain restaurant with the helmet and goggles still on and the boots still buckled, which is roughly how every lunch up there looks.</p>
+          </div>
+        </div>
+
+        <div class="mediarow">
+          <img class="mediarow__media" src="assets/hiking.jpg" width="1200" height="1600" loading="lazy" decoding="async" alt="Me sitting on a steep alpine meadow in a cap, t-shirt, shorts and hiking boots, with a rock ridge, pine trees and a bright cloudy sky behind.">
+          <div class="mediarow__text reading">
+            <h3 class="mediarow__title">Hiking</h3>
+            <p>The summer half. A few hours uphill, and then sitting down on the slope once the ridge is in view — the walking is the point, the view is what you get for it.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="project__section" aria-labelledby="lbl-games">
+        <h2 class="section-label" id="lbl-games">Games</h2>
+        <p>Playing games is a way of expressing myself online. A lot of my time in them goes into creating characters and profiles rather than into the game itself. The genres are all over the place — some competitive, some technical, and some just stupidly bad — and so far I've had as much fun with friends as alone.</p>
+        <p>Where there is a target to shoot at, aim decides it, and mine is probably why I like competitive games as much as I do. Winning against other people on raw technique makes me feel unstoppable. It's pure dopamine.</p>
+      </section>
+
+      <section class="project__section" aria-labelledby="lbl-anime">
+        <h2 class="section-label" id="lbl-anime">Anime</h2>
+        <p>I watch anime because it doesn't have to resemble real life. It reads more like an alternate universe, and in some of them I can picture myself living.</p>
+      </section>
+
+      <!-- The levels as a full-width band rather than a card: the level is the
+           interesting part, and this puts it under the language instead of
+           pushing it to a far right edge. The prose above it is what the
+           levels cannot say — which of them is going anywhere. -->
       <section class="project__section" aria-labelledby="lbl-langs">
         <h2 class="section-label" id="lbl-langs">Languages</h2>
+        <p>Learning languages has been a passive thing for me so far. I took an Italian course for two years and have forgotten most of it since, for the simple reason that I never used it afterwards. Lately it has been Mandarin — far enough to express myself, and maybe one day to talk to native speakers. Without books or a structured plan I haven't got as far with it as I would have liked, but Chinese is the one that really interests me.</p>
         <dl class="datarow">
           <div class="datarow__cell">
             <dt>German</dt>
@@ -168,6 +185,10 @@
           <div class="datarow__cell">
             <dt>French</dt>
             <dd>Spoken</dd>
+          </div>
+          <div class="datarow__cell">
+            <dt>Italian</dt>
+            <dd>Two years, mostly gone</dd>
           </div>
           <div class="datarow__cell">
             <dt>Mandarin</dt>
