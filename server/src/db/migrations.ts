@@ -180,4 +180,53 @@ export const MIGRATIONS: readonly string[] = [
     created_at    TEXT NOT NULL DEFAULT (datetime('now'))
   );
   `,
+
+  // 004 — a project can sit on the home page, carry its own colour and link
+  // its repository; the block catalogue shrinks to text and media.
+  //
+  // The CHECKs are the same defence in depth as the slug's: home_slot ends up
+  // in a CSS class name and accent ends up inside a style attribute on a
+  // public page, so neither may hold anything but the shapes below even if
+  // the application check is somehow bypassed. GLOB is case-sensitive, which
+  // is why the service lowercases the hex before it stores it.
+  `
+  ALTER TABLE projects ADD COLUMN home_slot TEXT CHECK (
+    home_slot IS NULL OR home_slot IN ('feature', 'tall', 'smallA', 'smallB')
+  );
+
+  ALTER TABLE projects ADD COLUMN repo_url TEXT CHECK (
+    repo_url IS NULL OR repo_url LIKE 'https://github.com/%'
+  );
+
+  ALTER TABLE projects ADD COLUMN accent TEXT CHECK (
+    accent IS NULL OR accent GLOB '#[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
+  );
+
+  -- One project per cell, enforced by the database rather than by the two
+  -- places that write it. Partial, so any number of projects may be off the
+  -- home page at once.
+  CREATE UNIQUE INDEX idx_projects_home_slot
+    ON projects(home_slot) WHERE home_slot IS NOT NULL;
+
+  -- The named palettes are gone: one hex in accent replaces three hand-picked
+  -- ones per project in style.css, which is what made adding a project a
+  -- stylesheet edit.
+  ALTER TABLE projects DROP COLUMN palette;
+
+  -- section | steps | features | table | figure | datarow | files | links no
+  -- longer normalise, and a stored draft holding one would 400 the editor
+  -- every time it opened — unfixably, since the only way to fix it is the
+  -- editor. Empty the body instead: the head fields survive, the bands are
+  -- retyped. Both spacings are matched because the JSON may have been written
+  -- by hand rather than by JSON.stringify.
+  UPDATE projects SET blocks = '[]'
+   WHERE blocks LIKE '%"type": "section"%'  OR blocks LIKE '%"type":"section"%'
+      OR blocks LIKE '%"type": "steps"%'    OR blocks LIKE '%"type":"steps"%'
+      OR blocks LIKE '%"type": "features"%' OR blocks LIKE '%"type":"features"%'
+      OR blocks LIKE '%"type": "table"%'    OR blocks LIKE '%"type":"table"%'
+      OR blocks LIKE '%"type": "figure"%'   OR blocks LIKE '%"type":"figure"%'
+      OR blocks LIKE '%"type": "datarow"%'  OR blocks LIKE '%"type":"datarow"%'
+      OR blocks LIKE '%"type": "files"%'    OR blocks LIKE '%"type":"files"%'
+      OR blocks LIKE '%"type": "links"%'    OR blocks LIKE '%"type":"links"%';
+  `,
 ];
