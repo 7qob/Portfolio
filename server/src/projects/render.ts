@@ -15,7 +15,7 @@
  * regex rather than trusted from the record, for the same reason.
  */
 
-import { ACCENT_HEX, Block, Chip, MediaBlock, SAFE_HREF, TextBlock } from './blocks';
+import { ACCENT_HEX, Block, Chip, HOME_SLOTS, MediaBlock, SAFE_HREF, TextBlock } from './blocks';
 
 export interface MediaRef {
   filename: string;
@@ -613,12 +613,19 @@ export function renderHome(template: string, projects: PageProject[], opts: Rend
     );
   }
 
+  // The cells are filled in canonical order rather than by name, and the
+  // caller hands them over already sorted that way. A project that holds
+  // smallB while smallA is empty therefore lands in smallA: the count-keyed
+  // area maps in style.css fill the grid for N projects, and they can do that
+  // only if the N cells in use are the first N. Which cell a project holds is
+  // still its own — it is what orders them here — it just closes up rather
+  // than leaving a hole in the bento.
   const cards = projects
-    .map((proj) =>
+    .map((proj, i) =>
       projectCard(proj, {
         tag: 'section',
-        extraClass: ` area-${proj.homeSlot ?? ''}`,
-        large: proj.homeSlot === 'feature',
+        extraClass: ` area-${HOME_SLOTS[i] ?? 'feature'}`,
+        large: i === 0,
         wrapBody: true,
         p,
       }),

@@ -65,10 +65,18 @@ echo "==> Copying site (dev-only files excluded)"
 # deploy. Both are anchored with a leading slash — they mean these exact
 # directories at the web root, not any directory anywhere called "up".
 #
-# When the four hand-written project pages are migrated into the panel, two
-# more excludes join this list — 'project-*.html' and 'projects.html' — and
-# they must be added BEFORE the static copies are deleted from the repo, or
-# the first deploy after the deletion removes the generated ones too.
+# index.html and projects.html are NOT excluded, and that is deliberate. Both
+# now have a generated counterpart under /pages/, and nginx serves that one
+# first for those two URLs — so the copies landing here are the template the
+# renderer splices into and the fallback for a Pi that has never published.
+# Overwriting them is how the template is updated. The generated pages are
+# safe because they are under /pages/, which is excluded above.
+#
+# The four hand-written project-*.html files are copied for the same reason:
+# they are unlinked from every index and pager, but they are still on disk and
+# still answer, so old links keep working. When they are finally deleted from
+# the repo, add --exclude 'project-*.html' BEFORE deleting them, or the first
+# deploy after the deletion takes the generated ones with it.
 sudo rsync -a --delete \
   --exclude '/pages/' \
   --exclude '/assets/up/' \

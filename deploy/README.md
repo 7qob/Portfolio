@@ -44,6 +44,18 @@ Prefer the script. It carries the full list, and it also hands `pages/` and
 `assets/up/` back to uid 1000 after the recursive `chown` — which a bare rsync
 does not do, and which publishing needs.
 
+`index.html` and `projects.html` are deliberately **not** excluded. They are
+rsynced as before, but they are no longer the pages visitors get once anything
+has been published: nginx serves `/pages/index.html` and `/pages/projects.html`
+first for those two URLs (the `location = /` blocks in the server config), and
+the rsynced copies are the template the renderer splices project cards into
+plus the fallback for a Pi that has never published. Overwriting them is
+therefore how you update the template, which is what you want — the generated
+copies live in `pages/`, which `--delete` still cannot touch.
+
+The compose file mounts the rsynced `index.html` into the container read-only
+as `HOME_TEMPLATE`. If you moved the webroot, move that mount with it.
+
 ---
 
 ## Part 2 — Cloudflare Tunnel (this moves the domain)
