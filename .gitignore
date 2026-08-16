@@ -1,13 +1,20 @@
 # Private vault documents — CV, Zeugnisse, anything else personal.
 #
-# These are uploaded straight to the Pi at /var/www/kira1q.dev/vault/files/
-# and must never enter git history. A commit is permanent: deleting the file
-# in a later commit does not remove it from the repository, and if this ever
-# gets pushed to a public GitHub remote, the whole history goes with it.
+# These are uploaded straight to the Pi at /var/lib/kira1q/vault-files/, which
+# is deliberately outside the web root: nginx serves /var/www and has no access
+# to it, so a location-block mistake cannot expose a document.
+#
+# They must never enter git history either. A commit is permanent — deleting
+# the file in a later commit does not remove it from the repository — and this
+# remote is public, so the whole history goes with it.
+#
+# vault/files/ below is the retired location under the web root, from the Basic
+# Auth setup. The entry stays so a leftover copy still cannot be committed.
 vault/files/
 
-# Basic Auth password files. The real one lives on the Pi at
-# /etc/nginx/.htpasswd-vault; this only catches a stray local copy.
+# Basic Auth password files. Retired along with the shared-password setup —
+# there is no .htpasswd on the Pi any more. The entries stay for the same
+# reason as above: an old local copy must not become a commit.
 .htpasswd
 .htpasswd*
 *.htpasswd
