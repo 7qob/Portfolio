@@ -614,26 +614,79 @@ body {
      on a tall screen but can never be shorter than what it holds. */
   grid-template-rows: repeat(4, 1fr);
   gap: var(--gap);
-  /* Ignite is the only card with a paragraph rather than a sentence, so it
-     is the only one that earns two rows. Kobui and Stalkr are one-liners and
-     sit side by side under Comfy. Fitting the fourth project in without
-     adding a fifth row is what keeps the whole bento on one screen. */
-  grid-template-areas:
-    "name   name   comfy  comfy  comfy  comfy  buttons"
-    "about  about  comfy  comfy  comfy  comfy  buttons"
-    "about  about  kobui  kobui  ignite ignite buttons"
-    "github github stalkr stalkr ignite ignite buttons";
   flex: 1;
+}
+
+/* ---- Five maps, one per project count ----
+   The four project cells used to be named after the four projects, which is
+   why adding a fifth project meant editing this file: the map, the .area-*
+   class and the card markup all had to be written by hand. The cells are
+   named after their shape instead — feature is the wide one, tall is the two
+   row column, smallA and smallB are the one-liners — and index.html carries
+   data-projects, written by Publish, saying how many are placed.
+
+   Every count gets its own map because a hole is worse than a rearrangement:
+   the whole point of the bento is that it is one screen with nothing loose in
+   it. The non-project boxes take the space back as the projects give it up,
+   so the grid is full at four, at one and at none.
+
+   Publish fills the cells in this order — feature, tall, smallA, smallB — and
+   compacts them, so the Nth map never has to cope with a gap in the middle. */
+.bento[data-projects="4"] {
+  grid-template-areas:
+    "name   name   feature feature feature feature buttons"
+    "about  about  feature feature feature feature buttons"
+    "about  about  smallA  smallA  tall    tall    buttons"
+    "github github smallB  smallB  tall    tall    buttons";
+}
+
+/* Three: smallA takes the row smallB is not using. */
+.bento[data-projects="3"] {
+  grid-template-areas:
+    "name   name   feature feature feature feature buttons"
+    "about  about  feature feature feature feature buttons"
+    "about  about  smallA  smallA  tall    tall    buttons"
+    "github github smallA  smallA  tall    tall    buttons";
+}
+
+/* Two: the project band splits down the middle, both full height. */
+.bento[data-projects="2"] {
+  grid-template-areas:
+    "name   name   feature feature tall tall buttons"
+    "about  about  feature feature tall tall buttons"
+    "about  about  feature feature tall tall buttons"
+    "github github feature feature tall tall buttons";
+}
+
+/* One: it takes the whole band, which is the right amount of room for the
+   only project on the page. */
+.bento[data-projects="1"] {
+  grid-template-areas:
+    "name   name   feature feature feature feature buttons"
+    "about  about  feature feature feature feature buttons"
+    "about  about  feature feature feature feature buttons"
+    "github github feature feature feature feature buttons";
+}
+
+/* None — a fresh install, or everything unpublished at once. The three boxes
+   that are left spread across the width rather than leaving four columns of
+   nothing next to them. */
+.bento[data-projects="0"] {
+  grid-template-areas:
+    "name   name   name   name   name   name   buttons"
+    "about  about  about  about  about  about  buttons"
+    "about  about  about  about  about  about  buttons"
+    "github github github github github github buttons";
 }
 
 .area-name      { grid-area: name; }
 .area-github    { grid-area: github; }
 .area-buttons   { grid-area: buttons; }
 .area-about     { grid-area: about; }
-.area-comfy     { grid-area: comfy; }
-.area-ignite    { grid-area: ignite; }
-.area-kobui     { grid-area: kobui; }
-.area-stalkr    { grid-area: stalkr; }
+.area-feature   { grid-area: feature; }
+.area-tall      { grid-area: tall; }
+.area-smallA    { grid-area: smallA; }
+.area-smallB    { grid-area: smallB; }
 
 /* ---- GitHub contribution heatmap (data: third-party service) ---- */
 /* Levels are derived from --accent, so the heatmap follows the accent. */
@@ -933,30 +986,42 @@ body {
   .box--edge { transition: none; }
 }
 
-/* ---- Per-project palettes ----
-   One class per project. Used on the bento card, the projects-page card and
-   the project page's own header, so a project keeps the same signature colour
-   everywhere it appears. */
-/* --edge-2 is the project's actual brand colour and carries the middle of the
-   corner segment; --edge-1 and --edge-3 are a darker and a lighter version of
-   it, so the accent stays one hue and just gains depth.
-                  shade ........ BRAND ........ tint                        */
-.is-ignite  { --edge-1: #b23000; --edge-2: #ff4d00; --edge-3: #ffae00; }  /* lava   */
-.is-comfy   { --edge-1: #8a9a00; --edge-2: #eafb2e; --edge-3: #f7ffa8; }  /* lemon  */
-.is-kobui   { --edge-1: #2b5236; --edge-2: #4e8c5a; --edge-3: #86c795; }  /* green  */
-.is-stalkr  { --edge-1: #23611c; --edge-2: #52c23a; --edge-3: #b6e83a; }  /* grass  */
+/* ---- Per-project accent, from one hex ----
+   The four .is-comfy / .is-ignite / .is-kobui / .is-stalkr palettes were
+   three hand-picked hex values each, which is why adding a project meant
+   editing the stylesheet. A page now carries one custom property inline —
+   --edge-brand, a validated #rrggbb — and the shade and tint are derived
+   here with color-mix, so the rim still gains depth across the corner
+   without anyone choosing three colours.
 
-/* Light theme: the same four hues, shifted down in lightness. The dark-theme
-   hot stops (#ffae00, #b6e83a, #35e0ff) sit at roughly 1.4:1 on white — a 1px
-   rim in those colours simply disappears. These clear 3:1, so the card still
-   has a visible edge and the project is still recognisable by its colour. */
-:root.light .is-ignite  { --edge-1: #7a2000; --edge-2: #d63800; --edge-3: #e07800; }
-/* Comfy's lemon is the hard case — #eafb2e is ~1.2:1 on white and simply is
-   not visible as a 1px line, so light mode uses the olive end of the same
-   hue. It reads as the darker cousin of the brand colour, not a new one. */
-:root.light .is-comfy   { --edge-1: #4d5600; --edge-2: #7d8c00; --edge-3: #a8bd00; }
-:root.light .is-kobui   { --edge-1: #1f3d27; --edge-2: #3a6b44; --edge-3: #55996a; }
-:root.light .is-stalkr  { --edge-1: #1a4a15; --edge-2: #2f8f22; --edge-3: #6d9c00; }
+   Light theme keeps its own derivation rather than reusing the dark one:
+   a bright brand hue sits near 1.2:1 on white and a 1px rim in it simply
+   vanishes, which is the exact problem the old per-palette light
+   overrides existed to solve. Mixing toward black restores the contrast
+   while keeping the hue recognisably the project's. */
+/* The default the three stops resolve to when a page has no accent of its
+   own — a draft that never got one, or one of the hand-written pages that
+   predate them. It has to exist: the stops feed color-mix(), an undefined one
+   makes the whole gradient invalid, and .box--edge's real border is
+   transparent, so the card would lose its edge entirely rather than fall back
+   to grey. Derived from --accent, which each theme sets for itself. */
+:root {
+  --edge-1: color-mix(in srgb, var(--accent) 62%, #000);
+  --edge-2: var(--accent);
+  --edge-3: color-mix(in srgb, var(--accent) 62%, #fff);
+}
+
+.is-custom {
+  --edge-2: var(--edge-brand, var(--accent));
+  --edge-1: color-mix(in srgb, var(--edge-brand, var(--accent)) 62%, #000);
+  --edge-3: color-mix(in srgb, var(--edge-brand, var(--accent)) 62%, #fff);
+}
+
+:root.light .is-custom {
+  --edge-2: color-mix(in srgb, var(--edge-brand, var(--accent)) 72%, #000);
+  --edge-1: color-mix(in srgb, var(--edge-brand, var(--accent)) 45%, #000);
+  --edge-3: color-mix(in srgb, var(--edge-brand, var(--accent)) 88%, #000);
+}
 
 /* The inner wash is darker-than-panel in light mode instead of lighter, so
    it needs less of itself: a grey shading a white card reads at roughly half
@@ -965,8 +1030,9 @@ body {
 :root.light .link-box,
 :root.light .pager a { --glow-strength: 15%; }
 
-/* Comfy's olive is the loudest of the four on white — the strength that
-   makes lava read as a warm corner makes olive read as a stain. */
+/* An accent card washes its own hue across the face, and on white that reads
+   at roughly twice the strength it does on near-black: at 15% a yellow-green
+   brand turns the corner into a stain rather than a warm edge. */
 :root.light .box--edge { --glow-strength: 6%; }
 
 /* ===========================================================
@@ -2868,20 +2934,20 @@ code {
     flex: none;
   }
 
+  /* Every box is the full width down here, so the map was already one column
+     wearing two — and the order it spelled out is the order the markup is
+     in. Dropping it is what stops the count variants above from needing four
+     phone-sized copies of themselves: there is nothing left to vary. The
+     grid-area reset is explicit rather than leaning on an unmatched area name
+     falling back to auto placement. */
   .bento {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     grid-template-rows: none;                  /* let stacked boxes size to content */
     grid-auto-rows: minmax(110px, auto);
-    grid-template-areas:
-      "name    name"
-      "comfy   comfy"
-      "kobui   kobui"
-      "ignite  ignite"
-      "stalkr  stalkr"
-      "about   about"
-      "github  github"
-      "buttons buttons";
+    grid-template-areas: none;
   }
+
+  .bento > * { grid-area: auto; }
 
   /* Let the link boxes keep a tappable height instead of being crushed
      into the short auto-row; the stack grows to fit them. */
@@ -2946,21 +3012,10 @@ code {
 }
 
 @media (max-width: 480px) {
-  .bento {
-    grid-template-columns: 1fr;
-    grid-template-rows: none;
-    grid-template-areas:
-      "name"
-      "comfy"
-      "kobui"
-      "ignite"
-      "stalkr"
-      "about"
-      "github"
-      "buttons";
-  }
+  /* The bento rule that used to be here restated the 768px one column for
+     one column. The query above already stacks; there is nothing left to say.
 
-  /* At this width the four nav items plus their padding no longer fit on one
+     At this width the four nav items plus their padding no longer fit on one
      row; shrink the horizontal padding rather than the type or the 44px
      height, both of which are doing real work. */
   .site-nav a { padding: 0 calc(var(--space) * 0.5); }

@@ -79,8 +79,10 @@ measure column it was before.
   `--fs-heading`, `--fs-lede`, `--fs-body`, plus `--fs-caption` for labels. A
   literal `rem` value in a rule is a bug.
 - Order on a project page is fixed: title and chips in the head (identity),
-  lede, the sections that explain it, screenshot, then the facts strip and the
-  links (reference). `project-template.html` carries the full catalogue.
+  lede, the bands that explain it, then the repository link (reference), then
+  the pager. `project-template.html` carries the full CSS catalogue; a
+  generated page uses the part of it that survived the rebuild —
+  `.project__section`, `.reveal`, `.mediarow` and `.linklist`.
 - `.reading` on a prose container is what supplies body line-height and inline
   link styling. Link lists and pagers are **siblings** of it, never children.
 
@@ -109,23 +111,55 @@ web root, and are streamed only after a session check.
 
 ## Project pages from the admin panel
 
-The panel's **Pages** tab is a small CMS for project pages. A project is head
-fields plus a linear stack of typed blocks (`section`, `steps`, `features`,
-`table`, `figure`, `media`, `datarow`, `files`, `links`), stored as JSON in
-SQLite. **Publish** renders the whole thing server-side
-(`server/src/projects/render.ts`) into a plain static
-`project-<slug>.html` under `PAGES_DIR`, plus a regenerated `projects.html`;
-pagers are derived from `sort_order`, so neighbouring pages re-render on every
-publish and the chain never goes stale.
+The panel's **Projects** section is a small CMS for project pages. A project is
+head fields plus a linear stack of blocks, stored as JSON in SQLite. There are
+**two block types and there is no third**: `text` (a heading and paragraphs)
+and `media` (a heading and rows of image/GIF/MP4, each with its own words).
+Both carry `collapsible`, which wraps the band in the site's closed
+`<details>`. `section`, `steps`, `features`, `table`, `figure`, `datarow`,
+`files` and `links` were removed in the rebuild — a project page is a
+description, some words and some pictures.
+
+**Publish** writes **three** things server-side (`server/src/projects/
+render.ts`): `project-<slug>.html` per published project, a regenerated
+`projects.html`, and `index.html` — the home page. Pagers are derived from
+`sort_order`, so neighbouring pages re-render on every publish and the chain
+never goes stale.
+
+The home page is a **splice, not a render**. `renderHome()` reads the template,
+replaces the region between `<!-- projects:start -->` and
+`<!-- projects:end -->` with one card per placed project, and rewrites the
+`data-projects="N"` count on `<main class="bento">` — which is what picks the
+grid's area map, so the bento stays full at four projects and at one.
+Everything else in `index.html` is hand-written and never parsed. Its base is
+`PAGES_DIR/index.html` if one exists, else `HOME_TEMPLATE`.
+
+A project's colour is **one `#rrggbb` in the `accent` column**, emitted as
+`class="… is-custom" style="--edge-brand:…"`. The four `.is-comfy` /
+`.is-ignite` / `.is-kobui` / `.is-stalkr` palettes are gone; `.is-custom`
+derives the shade and tint with `color-mix`, per theme. Adding a project is no
+longer a stylesheet edit, and that is the whole point — do not reintroduce a
+named palette.
+
+Which cell of the bento a project holds is `home_slot`
+(`feature` | `tall` | `smallA` | `smallB`), unique among non-NULL values by
+index. Assigning an occupied cell **swaps** the two projects. The cards are
+compacted into the first N cells when fewer than four are placed, so the grid
+never renders a hole.
 
 Rules the implementation enforces — keep them enforced:
 
 - **Generated pages make zero API calls.** They are ordinary static files
   that work over `file://`, exactly like the hand-written ones. Authoring
   touches the API; the published page never does.
-- **The renderer emits only markup that style.css already styles.** Every
-  block maps onto the catalogue in `project-template.html`. A new block type
-  that needs a new CSS rule is a design change, not a feature.
+- **The renderer emits only markup that style.css already styles.** A new
+  block type that needs a new CSS rule is a design change, not a feature. The
+  target output is `docs/preview-project-sample.html`, which is the spec: the
+  renderer reproduces it tag for tag, and if the two disagree one of them is
+  wrong.
+- **The one style attribute is a regex-validated hex.** `accent` is checked in
+  the DTO on the way in and again in the renderer on the way out, because
+  there is a database between those two moments.
 - **Everything the form sends is escaped before it reaches a page.** The only
   inline markup is `[text](url)` and `` `code` ``, applied after escaping,
   with hrefs checked against an allowlist. No raw HTML from the form, ever.
@@ -140,19 +174,27 @@ Rules the implementation enforces — keep them enforced:
   the `width`/`height` attributes; the `reveal` band's "N clips · X MB" hint
   is computed from real sizes, never typed.
 
-The four original project pages are still the hand-written static files; the
-migration that moves them into the CMS (seed JSON, rsync excludes, nginx
-`/pages/` fallback, compose mounts) is a separate, deliberate cutover — see
-`docs/` planning notes before attempting it.
+The four original `project-*.html` files are still on disk and still answer
+their URLs, but nothing links to them any more: the home page's cards, the
+projects index and the pagers all come from the database. They are kept so old
+links do not break, and they are the one place the pre-rebuild markup can
+still be read. They carry no accent — the palette classes they name no longer
+exist — so they wear the site accent.
+
+`index.html` and `projects.html` are rsynced as before, but nginx serves the
+generated copies first for those two URLs (`location = /` in
+`deploy/nginx-kira1q.dev.conf`); the rsynced ones are the template and the
+never-published fallback.
 
 ## Things that will bite you
 
 - **The repo is public.** No secret, no database, no vault document may ever
   be committed. A commit is permanent even if a later commit deletes the file.
-- **Pages authored in the panel live only in the SQLite database on the Pi.**
-  For them, `git clone` is no longer a complete backup of the site's content.
-  Export/backup tooling arrives with the migration cutover; until then, treat
-  panel-authored content as existing in exactly one place.
+- **Pages authored in the panel live only in the SQLite database on the Pi** —
+  and so do the home page's project cards, since the rebuild. For them,
+  `git clone` is no longer a complete backup of the site's content. Treat
+  panel-authored content as existing in exactly one place; the file under
+  `PAGES_DIR` is output, not a copy of the source.
 - **The vault page must not name its documents.** The list comes from the API
   after authentication. It was hardcoded once, which told anyone who viewed
   source what documents existed. Do not put it back. There is a check for this
