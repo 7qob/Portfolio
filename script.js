@@ -114,7 +114,12 @@ function api(path, options) {
   var opts = options || {};
   var headers = { "X-Requested-With": "fetch" };
 
-  if (opts.body) headers["Content-Type"] = "application/json";
+  // A FormData body goes through untouched, and without a Content-Type —
+  // the browser has to write the multipart boundary itself. Everything else
+  // is JSON, exactly as before.
+  var isForm = typeof FormData !== "undefined" && opts.body instanceof FormData;
+
+  if (opts.body && !isForm) headers["Content-Type"] = "application/json";
   if (opts.headers) {
     for (var key in opts.headers) headers[key] = opts.headers[key];
   }
@@ -123,7 +128,7 @@ function api(path, options) {
     method: opts.method || "GET",
     credentials: "same-origin",
     headers: headers,
-    body: opts.body ? JSON.stringify(opts.body) : undefined
+    body: opts.body ? (isForm ? opts.body : JSON.stringify(opts.body)) : undefined
   });
 }
 
