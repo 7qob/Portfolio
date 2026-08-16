@@ -38,7 +38,7 @@
 
   <div class="page-head">
     <h1 class="page-head__title" id="page-title">Admin</h1>
-    <p class="page-head__lede">Who has access, who used it, and what they took.</p>
+    <p class="page-head__lede">Write the site, and see who has been in it.</p>
   </div>
 
   <main class="page-body" aria-labelledby="page-title">
@@ -51,124 +51,183 @@
 
     <div id="admin-body" hidden>
 
-      <div class="admin-tabs" role="tablist" aria-label="Admin sections">
-        <button class="admin-tab" role="tab" type="button" id="tab-overview"  aria-selected="true"  aria-controls="panel-overview"  data-panel="overview">Overview</button>
-        <button class="admin-tab" role="tab" type="button" id="tab-users"     aria-selected="false" aria-controls="panel-users"     data-panel="users" tabindex="-1">Accounts</button>
-        <button class="admin-tab" role="tab" type="button" id="tab-logins"    aria-selected="false" aria-controls="panel-logins"    data-panel="logins" tabindex="-1">Logins</button>
-        <button class="admin-tab" role="tab" type="button" id="tab-sessions"  aria-selected="false" aria-controls="panel-sessions"  data-panel="sessions" tabindex="-1">Sessions</button>
-        <button class="admin-tab" role="tab" type="button" id="tab-downloads" aria-selected="false" aria-controls="panel-downloads" data-panel="downloads" tabindex="-1">Downloads</button>
-        <button class="admin-tab" role="tab" type="button" id="tab-documents" aria-selected="false" aria-controls="panel-documents" data-panel="documents" tabindex="-1">Documents</button>
-        <button class="admin-tab" role="tab" type="button" id="tab-projects"  aria-selected="false" aria-controls="panel-projects"  data-panel="projects" tabindex="-1">Pages</button>
-        <button class="admin-tab" role="tab" type="button" id="tab-audit"     aria-selected="false" aria-controls="panel-audit"     data-panel="audit" tabindex="-1">Audit</button>
+      <!-- Four sections, not eight tabs. Six of the eight were tables nobody
+           opens on purpose; they are one click deeper now, under Access. -->
+      <div class="admin-tabs" role="tablist" aria-label="Admin sections" id="admin-sections">
+        <button class="admin-tab" role="tab" type="button" id="tab-projects" aria-selected="true"  aria-controls="panel-projects" data-panel="projects">Projects<small>write and publish pages</small></button>
+        <button class="admin-tab" role="tab" type="button" id="tab-home"     aria-selected="false" aria-controls="panel-home"     data-panel="home" tabindex="-1">Home page<small>what sits where</small></button>
+        <button class="admin-tab" role="tab" type="button" id="tab-files"    aria-selected="false" aria-controls="panel-files"    data-panel="files" tabindex="-1">Files<small>uploads and documents</small></button>
+        <button class="admin-tab" role="tab" type="button" id="tab-access"   aria-selected="false" aria-controls="panel-access"   data-panel="access" tabindex="-1">Access<small>accounts and telemetry</small></button>
       </div>
 
-      <section class="box box--static admin-panel" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" data-panel="overview">
-        <div class="admin-stats" id="overview-stats"></div>
-        <p class="admin-note" id="overview-retention"></p>
-      </section>
+      <!-- ===================================================================
+           PROJECTS — the page list, and the editor in its place.
 
-      <section class="box box--static admin-panel" id="panel-users" role="tabpanel" aria-labelledby="tab-users" data-panel="users" hidden>
-        <h2 class="box__label">Issue a login</h2>
+           Everything inside the editor is built by admin.js with textContent.
+           Nothing typed into this form is ever parsed as markup by this page,
+           and the server escapes it all over again before it renders.
+           =================================================================== -->
+      <section class="admin-panel" id="panel-projects" role="tabpanel" aria-labelledby="tab-projects" data-panel="projects">
 
-        <form class="admin-form" id="create-user-form">
-          <div class="auth-field">
-            <label class="auth-field__label" for="new-username">Username</label>
-            <input class="auth-field__input" id="new-username" name="username" type="text" required
-                   autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="32">
-          </div>
-          <div class="auth-field">
-            <label class="auth-field__label" for="new-note">Issued to (optional)</label>
-            <input class="auth-field__input" id="new-note" name="note" type="text" maxlength="200">
-          </div>
-          <div class="auth-field">
-            <label class="auth-field__label" for="new-role">Role</label>
-            <select class="auth-field__input" id="new-role" name="role">
-              <option value="user" selected>User — vault only</option>
-              <option value="admin">Admin — vault and this panel</option>
-            </select>
-          </div>
-          <button class="auth-submit" type="submit">Create account</button>
-        </form>
+        <div class="pe" id="projects-list">
+          <p class="pe-annot">A page is a title, a description, and some bands. Publish writes
+            <code>project-&lt;slug&gt;.html</code>, the projects index and the home page, all three
+            as plain static files that call no API.</p>
 
-        <!-- The generated password lands here, once. It is not stored in
-             plaintext anywhere, so this is the only time it can be read. -->
-        <div class="admin-secret" id="new-credentials" hidden></div>
+          <section class="pe-card">
+            <span class="pe-card__label">New page</span>
+            <form class="admin-form" id="create-project-form">
+              <label class="pe-field pe-field--wide">
+                <span class="pe-field__label">Title</span>
+                <input class="admin-input pe-input--title" id="new-project-title" name="title" type="text" required maxlength="120">
+                <span class="pe-field__hint">The slug is derived from this and stays editable until the page is published.</span>
+              </label>
+              <div class="pe-field">
+                <button class="admin-btn admin-btn--accent" type="submit">Create and open</button>
+              </div>
+            </form>
+          </section>
 
-        <h2 class="box__label admin-subhead">Accounts</h2>
-        <div class="admin-scroll"><table class="admin-table" id="users-table"></table></div>
-      </section>
-
-      <section class="box box--static admin-panel" id="panel-logins" role="tabpanel" aria-labelledby="tab-logins" data-panel="logins" hidden>
-        <div class="admin-scroll"><table class="admin-table" id="logins-table"></table></div>
-      </section>
-
-      <section class="box box--static admin-panel" id="panel-sessions" role="tabpanel" aria-labelledby="tab-sessions" data-panel="sessions" hidden>
-        <div class="admin-scroll"><table class="admin-table" id="sessions-table"></table></div>
-      </section>
-
-      <section class="box box--static admin-panel" id="panel-downloads" role="tabpanel" aria-labelledby="tab-downloads" data-panel="downloads" hidden>
-        <div class="admin-scroll"><table class="admin-table" id="downloads-table"></table></div>
-      </section>
-
-      <section class="box box--static admin-panel" id="panel-documents" role="tabpanel" aria-labelledby="tab-documents" data-panel="documents" hidden>
-        <h2 class="box__label">New document</h2>
-
-        <form class="admin-form" id="create-document-form">
-          <div class="auth-field">
-            <label class="auth-field__label" for="new-document-slug">Slug (stored as &lt;slug&gt;.pdf)</label>
-            <input class="auth-field__input" id="new-document-slug" name="slug" type="text" required
-                   autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="48"
-                   pattern="[a-z0-9][a-z0-9\-]*[a-z0-9]|[a-z0-9]">
-          </div>
-          <div class="auth-field">
-            <label class="auth-field__label" for="new-document-title">Title (what the vault list shows)</label>
-            <input class="auth-field__input" id="new-document-title" name="title" type="text" required maxlength="120">
-          </div>
-          <button class="auth-submit" type="submit">Create document</button>
-        </form>
-
-        <h2 class="box__label admin-subhead">Documents</h2>
-        <p class="admin-note">Upload the PDF straight from its row — choosing a file replaces what is there. Only real PDFs are accepted, and the stored name comes from the slug, never from the upload.</p>
-        <div class="admin-scroll"><table class="admin-table" id="documents-table"></table></div>
-      </section>
-
-      <!-- Project pages, authored here and published as plain static HTML.
-           The list and the editor share the panel; admin.js swaps between
-           them. Everything inside is built with textContent — nothing typed
-           into this form is ever parsed as markup by this page. -->
-      <section class="box box--static admin-panel" id="panel-projects" role="tabpanel" aria-labelledby="tab-projects" data-panel="projects" hidden>
-
-        <div id="projects-list">
-          <h2 class="box__label">New project page</h2>
-
-          <form class="admin-form" id="create-project-form">
-            <div class="auth-field">
-              <label class="auth-field__label" for="new-project-slug">Slug (becomes project-&lt;slug&gt;.html)</label>
-              <input class="auth-field__input" id="new-project-slug" name="slug" type="text" required
-                     autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="48"
-                     pattern="[a-z0-9][a-z0-9\-]*[a-z0-9]|[a-z0-9]">
-            </div>
-            <div class="auth-field">
-              <label class="auth-field__label" for="new-project-title">Title</label>
-              <input class="auth-field__input" id="new-project-title" name="title" type="text" required maxlength="120">
-            </div>
-            <button class="auth-submit" type="submit">Create draft</button>
-          </form>
-
-          <h2 class="box__label admin-subhead">Pages</h2>
-          <div class="admin-scroll"><table class="admin-table" id="projects-table"></table></div>
-
-          <h2 class="box__label admin-subhead">Uploads</h2>
-          <p class="admin-note">Files are stored under a content-hash name, so re-uploading the same file never duplicates it. An upload still used by a page cannot be deleted.</p>
-          <div class="admin-scroll"><table class="admin-table" id="media-table"></table></div>
+          <section class="pe-card">
+            <span class="pe-card__label">Pages</span>
+            <div class="admin-scroll"><table class="admin-table" id="projects-table"></table></div>
+          </section>
         </div>
 
         <div id="project-editor" hidden></div>
 
       </section>
 
-      <section class="box box--static admin-panel" id="panel-audit" role="tabpanel" aria-labelledby="tab-audit" data-panel="audit" hidden>
-        <div class="admin-scroll"><table class="admin-table" id="audit-table"></table></div>
+      <!-- ===================================================================
+           HOME PAGE — where a project sits on the bento, and the order the
+           index and the pagers follow. Built by admin.js.
+           =================================================================== -->
+      <section class="admin-panel" id="panel-home" role="tabpanel" aria-labelledby="tab-home" data-panel="home" hidden>
+        <div class="pe" id="home-editor"></div>
+      </section>
+
+      <!-- ===================================================================
+           FILES — two stores, deliberately separate. Uploads are public and
+           content-addressed; vault documents sit outside the web root and are
+           streamed only after a session check.
+           =================================================================== -->
+      <section class="admin-panel" id="panel-files" role="tabpanel" aria-labelledby="tab-files" data-panel="files" hidden>
+        <div class="pe">
+
+          <section class="pe-card">
+            <span class="pe-card__label">Uploads · public</span>
+            <div class="pe-drop">
+              <label class="pe-check">
+                <input type="file" id="media-upload" multiple accept="image/png,image/jpeg,image/webp,image/gif,video/mp4">
+              </label>
+              <span class="pe-field__hint">Stored under their own content hash, so re-uploading the same file never
+                duplicates it. The name you dropped is kept only as a label.</span>
+            </div>
+            <div class="admin-scroll"><table class="admin-table" id="media-table"></table></div>
+            <p class="pe-field__hint">A file still used by a page cannot be deleted — the page would render a hole.</p>
+          </section>
+
+          <section class="pe-card">
+            <span class="pe-card__label">Vault documents · private</span>
+
+            <form class="admin-form" id="create-document-form">
+              <label class="pe-field">
+                <span class="pe-field__label">Slug</span>
+                <input class="admin-input" id="new-document-slug" name="slug" type="text" required
+                       autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="48"
+                       pattern="[a-z0-9][a-z0-9\-]*[a-z0-9]|[a-z0-9]">
+                <span class="pe-field__hint">Stored as <code>&lt;slug&gt;.pdf</code>.</span>
+              </label>
+              <label class="pe-field">
+                <span class="pe-field__label">Title</span>
+                <input class="admin-input" id="new-document-title" name="title" type="text" required maxlength="120">
+                <span class="pe-field__hint">What the vault list shows.</span>
+              </label>
+              <div class="pe-field">
+                <button class="admin-btn admin-btn--accent" type="submit">Create document</button>
+              </div>
+            </form>
+
+            <p class="pe-field__hint">Upload the PDF straight from its row — choosing a file replaces what is there.
+              Only real PDFs are accepted, and the stored name comes from the slug, never from the upload.</p>
+            <div class="admin-scroll"><table class="admin-table" id="documents-table"></table></div>
+          </section>
+
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           ACCESS — what used to be Overview, Accounts, Logins, Sessions,
+           Downloads and Audit. The last four are behind a nested strip
+           because none of them is something you open on purpose.
+           =================================================================== -->
+      <section class="admin-panel" id="panel-access" role="tabpanel" aria-labelledby="tab-access" data-panel="access" hidden>
+        <div class="pe">
+
+          <section class="pe-card">
+            <span class="pe-card__label">Right now</span>
+            <div class="admin-stats" id="overview-stats"></div>
+            <p class="admin-note" id="overview-retention"></p>
+          </section>
+
+          <section class="pe-card">
+            <span class="pe-card__label">Accounts</span>
+
+            <form class="admin-form" id="create-user-form">
+              <label class="pe-field">
+                <span class="pe-field__label">Username</span>
+                <input class="admin-input" id="new-username" name="username" type="text" required
+                       autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="32">
+              </label>
+              <label class="pe-field">
+                <span class="pe-field__label">Issued to</span>
+                <input class="admin-input" id="new-note" name="note" type="text" maxlength="200">
+                <span class="pe-field__hint">Optional — which company this login went to.</span>
+              </label>
+              <label class="pe-field">
+                <span class="pe-field__label">Role</span>
+                <select class="admin-input" id="new-role" name="role">
+                  <option value="user" selected>User — vault only</option>
+                  <option value="admin">Admin — vault and this panel</option>
+                </select>
+              </label>
+              <div class="pe-field">
+                <button class="admin-btn admin-btn--accent" type="submit">Issue a login</button>
+              </div>
+            </form>
+
+            <!-- The generated password lands here, once. It is not stored in
+                 plaintext anywhere, so this is the only time it can be read. -->
+            <div class="admin-secret" id="new-credentials" hidden></div>
+
+            <div class="admin-scroll"><table class="admin-table" id="users-table"></table></div>
+          </section>
+
+          <section class="pe-card">
+            <span class="pe-card__label">Telemetry</span>
+
+            <div class="admin-tabs" role="tablist" aria-label="Telemetry" id="telemetry-tabs">
+              <button class="admin-tab" role="tab" type="button" id="tab-logins"    aria-selected="true"  aria-controls="panel-logins"    data-panel="logins">Logins</button>
+              <button class="admin-tab" role="tab" type="button" id="tab-sessions"  aria-selected="false" aria-controls="panel-sessions"  data-panel="sessions" tabindex="-1">Sessions</button>
+              <button class="admin-tab" role="tab" type="button" id="tab-downloads" aria-selected="false" aria-controls="panel-downloads" data-panel="downloads" tabindex="-1">Downloads</button>
+              <button class="admin-tab" role="tab" type="button" id="tab-audit"     aria-selected="false" aria-controls="panel-audit"     data-panel="audit" tabindex="-1">Audit</button>
+            </div>
+
+            <div id="panel-logins" role="tabpanel" aria-labelledby="tab-logins" data-panel="logins">
+              <div class="admin-scroll"><table class="admin-table" id="logins-table"></table></div>
+            </div>
+            <div id="panel-sessions" role="tabpanel" aria-labelledby="tab-sessions" data-panel="sessions" hidden>
+              <div class="admin-scroll"><table class="admin-table" id="sessions-table"></table></div>
+            </div>
+            <div id="panel-downloads" role="tabpanel" aria-labelledby="tab-downloads" data-panel="downloads" hidden>
+              <div class="admin-scroll"><table class="admin-table" id="downloads-table"></table></div>
+            </div>
+            <div id="panel-audit" role="tabpanel" aria-labelledby="tab-audit" data-panel="audit" hidden>
+              <div class="admin-scroll"><table class="admin-table" id="audit-table"></table></div>
+            </div>
+          </section>
+
+        </div>
       </section>
 
     </div>

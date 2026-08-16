@@ -1699,6 +1699,318 @@ a:focus-visible,
   font-size: var(--fs-meta);
 }
 
+/* ---- The page editor ----
+   Everything below is namespaced .pe-*, and it is the one place in the panel
+   that is not a table. The form is laid out in the order the page renders —
+   identity at the top, bands in the middle, the repo link at the bottom —
+   so what is filled in top to bottom is what a reader sees top to bottom.
+   Same house rules as everywhere else: 1px borders, radius 0, no shadow,
+   tokens only, no literal rem font sizes. */
+.pe { max-width: 52rem; margin: 0 auto; }
+
+/* Sticky action bar. The four things you do to a page, always reachable,
+   so a long page never means scrolling back up to save. */
+.pe-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) * 0.75);
+  padding: var(--space) 0;
+  margin-bottom: var(--stack-md);
+  background: var(--bg);
+  border-bottom: var(--bw) solid var(--line);
+}
+
+.pe-bar__spacer { flex: 1; }
+.pe-bar__state { color: var(--fg-mute); font-size: var(--fs-meta); }
+.pe-bar__state[data-dirty="1"] { color: var(--accent); }
+
+/* ---- a card. One per region of the page, in page order. ---- */
+.pe-card {
+  border: var(--bw) solid var(--line);
+  background: var(--panel);
+  padding: calc(var(--space) * 2);
+  margin-bottom: var(--gap);
+}
+
+.pe-card__label,
+.pe-band__kind {
+  display: block;
+  margin-bottom: var(--stack-sm);
+  color: var(--fg-mute);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pe-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--gap);
+}
+
+.pe-field { display: block; }
+.pe-field--wide { grid-column: 1 / -1; }
+
+.pe-field__label {
+  display: block;
+  margin-bottom: calc(var(--space) * 0.5);
+  color: var(--fg-mute);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pe-field__hint {
+  display: block;
+  margin-top: calc(var(--space) * 0.5);
+  color: var(--fg-mute);
+  font-size: var(--fs-meta);
+}
+
+/* The title is the biggest thing on the page it makes, so it is the
+   biggest thing in the form. */
+.pe-input--title {
+  font-size: var(--fs-subtitle);
+  padding: calc(var(--space) * 0.75) var(--space);
+}
+
+textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
+
+.pe-check {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) * 0.75);
+  color: var(--fg);
+  font-size: var(--fs-meta);
+  cursor: pointer;
+}
+
+.pe-check input { accent-color: var(--accent); }
+
+/* ---- the home-page slot picker: the bento, in miniature ---- */
+.pe-slots {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 3.25rem);
+  gap: calc(var(--space) * 0.5);
+  grid-template-areas:
+    "feature feature feature tall"
+    "smallA  smallA  smallB  tall";
+  max-width: 26rem;
+}
+
+.pe-slots--lg { grid-template-rows: repeat(2, 5rem); max-width: 34rem; }
+
+.pe-slot {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: calc(var(--space) * 0.5);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-alt);
+  color: var(--fg-mute);
+  font-family: inherit;
+  font-size: var(--fs-meta);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--motion), color var(--motion);
+}
+
+.pe-slot:hover { border-color: var(--border-hover); color: var(--fg); }
+.pe-slot:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+
+/* Held by another project — clicking offers a swap rather than an error. */
+.pe-slot[data-taken] { color: var(--fg); border-style: dashed; }
+
+.pe-slot[aria-pressed="true"] {
+  border-color: var(--accent);
+  border-style: solid;
+  color: var(--fg-strong);
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel-alt));
+}
+
+.pe-slot__name { color: var(--fg-mute); font-size: var(--fs-meta); }
+.pe-slot--feature { grid-area: feature; }
+.pe-slot--tall    { grid-area: tall; }
+.pe-slot--smallA  { grid-area: smallA; }
+.pe-slot--smallB  { grid-area: smallB; }
+
+/* A cell in the Home editor wears the project's own accent, so the map
+   reads as the bento it controls rather than as four grey boxes. */
+.pe-slot__dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border: var(--bw) solid var(--line);
+  background: var(--edge-brand, var(--line));
+  vertical-align: baseline;
+  margin-right: calc(var(--space) * 0.5);
+}
+
+/* ---- band cards ---- */
+.pe-band { border-left: 2px solid var(--line); }
+.pe-band--folded { border-left-color: var(--accent); }
+
+.pe-band__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space);
+  flex-wrap: wrap;
+  margin-bottom: var(--stack-md);
+  padding-bottom: var(--space);
+  border-bottom: var(--bw) solid var(--line-soft);
+}
+
+.pe-band__head .admin-input { flex: 1; min-width: 12rem; }
+
+/* ---- a media row: the same two shapes the page renders ---- */
+.pe-row {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  gap: var(--gap);
+  padding: var(--stack-sm) 0;
+  border-top: var(--bw) solid var(--line-soft);
+}
+
+.pe-row--below { grid-template-columns: minmax(0, 1fr); }
+
+.pe-thumb {
+  display: block;
+  width: 100%;
+  border: var(--bw) solid var(--line);
+  background: var(--panel-alt);
+  object-fit: cover;
+  aspect-ratio: 16 / 9;
+}
+
+.pe-row__meta {
+  margin-top: calc(var(--space) * 0.5);
+  color: var(--fg-mute);
+  font-size: var(--fs-meta);
+  word-break: break-all;
+}
+
+.pe-row__fields { display: grid; gap: calc(var(--space) * 0.75); }
+
+.pe-radios {
+  display: flex;
+  gap: var(--gap);
+  align-items: center;
+  color: var(--fg-mute);
+  font-size: var(--fs-meta);
+}
+
+.pe-adders {
+  display: flex;
+  gap: calc(var(--space) * 0.75);
+  flex-wrap: wrap;
+  margin: var(--stack-md) 0 var(--gap);
+}
+
+.pe-adders .admin-btn { font-size: var(--fs-body); padding: var(--space) calc(var(--space) * 2); }
+
+.pe-drop {
+  margin-top: var(--stack-sm);
+  padding: calc(var(--space) * 1.5);
+  border: var(--bw) dashed var(--line);
+  color: var(--fg-mute);
+  font-size: var(--fs-meta);
+  text-align: center;
+}
+
+.pe-annot {
+  margin: 0 0 var(--gap);
+  padding: var(--space) calc(var(--space) * 1.5);
+  border-left: 2px solid var(--accent);
+  color: var(--fg-mute);
+  font-size: var(--fs-meta);
+}
+
+/* Inline link styling lives on .reading, which this column is not. */
+.pe-annot a,
+.site-footer a { color: var(--accent); }
+
+.pe-hidden { display: none; }
+
+/* ---- colour picker ----
+   Square everywhere, 1px borders, no rounding — the OS colour dialog is
+   none of those things, which is why this is built rather than borrowed.
+   Saturation/value square on the left, hue strip on the right, hex field
+   and the colours already in use underneath. */
+.pe-color { display: flex; gap: var(--gap); align-items: flex-start; flex-wrap: wrap; }
+
+.pe-color__sv {
+  position: relative;
+  width: 9rem;
+  height: 6rem;
+  border: var(--bw) solid var(--line);
+  cursor: crosshair;
+  touch-action: none;
+  background-image:
+    linear-gradient(to top, #000, transparent),
+    linear-gradient(to right, #fff, transparent);
+  background-color: var(--pick-hue, #ff1e2f);
+}
+
+.pe-color__hue {
+  position: relative;
+  width: 1.25rem;
+  height: 6rem;
+  border: var(--bw) solid var(--line);
+  cursor: crosshair;
+  touch-action: none;
+  background-image: linear-gradient(to bottom,
+    #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
+}
+
+/* Two nested borders so the handle stays visible on a light patch and on
+   a dark one without either colour being chosen for it. */
+.pe-color__knob {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -5px 0 0 -5px;
+  border: 1px solid #000;
+  outline: 1px solid #fff;
+  pointer-events: none;
+}
+
+.pe-color__knob--hue { left: 0; width: 100%; height: 5px; margin: -3px 0 0 0; }
+
+.pe-color__side { display: grid; gap: calc(var(--space) * 0.75); }
+
+.pe-color__hex {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-transform: lowercase;
+  max-width: 9rem;
+}
+
+.pe-color__presets { display: flex; gap: calc(var(--space) * 0.5); flex-wrap: wrap; }
+
+.pe-color__preset {
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.pe-color__preset:hover { border-color: var(--fg-strong); }
+.pe-color__preset:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+
+/* The point of the picker: the actual card rim, live. */
+.pe-color__demo { width: 12rem; padding: var(--space) calc(var(--space) * 1.25); }
+.pe-color__demo .project-box__name { font-size: var(--fs-body); }
+
+/* ---- section nav ---- */
+.admin-tab small { display: block; font-size: var(--fs-meta); color: var(--fg-mute); text-transform: none; letter-spacing: 0; }
+
 @media (max-width: 768px) {
   .admin-tab {
     padding: calc(var(--space) * 1.25);
@@ -1706,6 +2018,12 @@ a:focus-visible,
 
   .admin-form {
     grid-template-columns: 1fr;
+  }
+
+  /* The thumbnail rail is 11rem of a 360px screen; below that the row is
+     the picture and the words stacked, like the band it makes. */
+  .pe-row {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -2937,10 +3255,15 @@ code {
   /* Every box is the full width down here, so the map was already one column
      wearing two — and the order it spelled out is the order the markup is
      in. Dropping it is what stops the count variants above from needing four
-     phone-sized copies of themselves: there is nothing left to vary. The
-     grid-area reset is explicit rather than leaning on an unmatched area name
-     falling back to auto placement. */
-  .bento {
+     phone-sized copies of themselves: there is nothing left to vary.
+
+     [data-projects] is carried, not decoration: the five maps above are
+     attribute-qualified and outrank a bare .bento even from inside a media
+     query. Without it this rule loses and the phone gets the seven-column
+     desktop grid. The grid-area reset is explicit for the same reason — and
+     because leaning on an unmatched area name falling back to auto placement
+     is a rule nobody should have to know. */
+  .bento[data-projects] {
     grid-template-columns: 1fr;
     grid-template-rows: none;                  /* let stacked boxes size to content */
     grid-auto-rows: minmax(110px, auto);
