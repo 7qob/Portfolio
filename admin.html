@@ -58,6 +58,7 @@
         <button class="admin-tab" role="tab" type="button" id="tab-sessions"  aria-selected="false" aria-controls="panel-sessions"  data-panel="sessions" tabindex="-1">Sessions</button>
         <button class="admin-tab" role="tab" type="button" id="tab-downloads" aria-selected="false" aria-controls="panel-downloads" data-panel="downloads" tabindex="-1">Downloads</button>
         <button class="admin-tab" role="tab" type="button" id="tab-documents" aria-selected="false" aria-controls="panel-documents" data-panel="documents" tabindex="-1">Documents</button>
+        <button class="admin-tab" role="tab" type="button" id="tab-projects"  aria-selected="false" aria-controls="panel-projects"  data-panel="projects" tabindex="-1">Pages</button>
         <button class="admin-tab" role="tab" type="button" id="tab-audit"     aria-selected="false" aria-controls="panel-audit"     data-panel="audit" tabindex="-1">Audit</button>
       </div>
 
@@ -112,6 +113,41 @@
       <section class="box box--static admin-panel" id="panel-documents" role="tabpanel" aria-labelledby="tab-documents" data-panel="documents" hidden>
         <p class="admin-note">Files are uploaded to the Pi by hand. What you edit here is how they are labelled and whether they are shown.</p>
         <div class="admin-scroll"><table class="admin-table" id="documents-table"></table></div>
+      </section>
+
+      <!-- Project pages, authored here and published as plain static HTML.
+           The list and the editor share the panel; admin.js swaps between
+           them. Everything inside is built with textContent — nothing typed
+           into this form is ever parsed as markup by this page. -->
+      <section class="box box--static admin-panel" id="panel-projects" role="tabpanel" aria-labelledby="tab-projects" data-panel="projects" hidden>
+
+        <div id="projects-list">
+          <h2 class="box__label">New project page</h2>
+
+          <form class="admin-form" id="create-project-form">
+            <div class="auth-field">
+              <label class="auth-field__label" for="new-project-slug">Slug (becomes project-&lt;slug&gt;.html)</label>
+              <input class="auth-field__input" id="new-project-slug" name="slug" type="text" required
+                     autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="48"
+                     pattern="[a-z0-9][a-z0-9-]*[a-z0-9]|[a-z0-9]">
+            </div>
+            <div class="auth-field">
+              <label class="auth-field__label" for="new-project-title">Title</label>
+              <input class="auth-field__input" id="new-project-title" name="title" type="text" required maxlength="120">
+            </div>
+            <button class="auth-submit" type="submit">Create draft</button>
+          </form>
+
+          <h2 class="box__label admin-subhead">Pages</h2>
+          <div class="admin-scroll"><table class="admin-table" id="projects-table"></table></div>
+
+          <h2 class="box__label admin-subhead">Uploads</h2>
+          <p class="admin-note">Files are stored under a content-hash name, so re-uploading the same file never duplicates it. An upload still used by a page cannot be deleted.</p>
+          <div class="admin-scroll"><table class="admin-table" id="media-table"></table></div>
+        </div>
+
+        <div id="project-editor" hidden></div>
+
       </section>
 
       <section class="box box--static admin-panel" id="panel-audit" role="tabpanel" aria-labelledby="tab-audit" data-panel="audit" hidden>
