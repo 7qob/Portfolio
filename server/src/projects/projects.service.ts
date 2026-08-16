@@ -340,6 +340,11 @@ export class ProjectsService {
     this.renderAllPublished();
   }
 
+  /** Rewrite what is already published — placement and order changes. */
+  renderPublished(): void {
+    this.renderAllPublished();
+  }
+
   /** The preview the editor opens in a new tab — absolute asset paths. */
   preview(id: number): string {
     const row = this.findById(id);

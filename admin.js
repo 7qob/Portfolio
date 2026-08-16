@@ -1,12 +1,14 @@
 // Admin panel. Loaded only by admin.html, so the home page never carries it.
 //
-// Relies on api() and isOffline() from script.js, which is loaded first.
+// Relies on api(), isOffline() and formatBytes() from script.js, loaded first.
 //
 // One rule runs through the whole file: every value from the API is written
 // with textContent, never innerHTML. Half of what is shown here — user-agent
 // strings, usernames from failed logins — is text an attacker chose and the
 // server stored verbatim, exactly as it should. This is the page where that
-// stops being inert, so it is treated as text end to end.
+// stops being inert, so it is treated as text end to end. In the page editor
+// it matters twice over: what is typed there round-trips through the API and
+// then becomes a PUBLIC page, and the server escapes it all over again.
 
 document.addEventListener("DOMContentLoaded", function () {
   var gate = document.getElementById("admin-gate");
@@ -37,8 +39,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
       gate.remove();
       body.hidden = false;
-      initTabs();
-      loadPanel("overview");
+      initTabs(document.getElementById("admin-sections"), guardSectionSwitch);
+      initTabs(document.getElementById("telemetry-tabs"), null);
+      loadPanel("projects");
     })
     .catch(function (err) {
       if (err && err.message === "redirecting") return;
@@ -47,16 +50,19 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // ---------------------------------------------------------------------------
-// Tabs
+// Tabs. Two strips: the four sections, and the telemetry tables nested inside
+// Access. Each strip only ever touches its own tabs and its own panels.
 // ---------------------------------------------------------------------------
 
 var loaded = {};
 
-function initTabs() {
-  var tabs = [].slice.call(document.querySelectorAll(".admin-tab"));
+function initTabs(strip, guard) {
+  if (!strip) return;
+  var tabs = [].slice.call(strip.querySelectorAll(".admin-tab"));
 
   tabs.forEach(function (tab) {
     tab.addEventListener("click", function () {
+      if (guard && !guard()) return;
       selectTab(tabs, tab);
     });
 
@@ -73,6 +79,7 @@ function initTabs() {
 
       if (next) {
         e.preventDefault();
+        if (guard && !guard()) return;
         selectTab(tabs, next);
         next.focus();
       }
@@ -100,13 +107,13 @@ function loadPanel(name) {
   loaded[name] = true;
 
   var loaders = {
-    overview: loadOverview,
-    users: loadUsers,
+    projects: loadProjects,
+    home: loadHomePage,
+    files: loadFiles,
+    access: loadAccess,
     logins: loadLogins,
     sessions: loadSessions,
     downloads: loadDownloads,
-    documents: loadDocuments,
-    projects: loadProjects,
     audit: loadAudit
   };
 
@@ -202,9 +209,25 @@ function fail(table, error) {
   });
 }
 
+// One shape for "the server said no": read the body, use its message.
+function ok(res, fallback) {
+  if (res.ok) return res.status === 204 ? null : res.json().catch(function () { return null; });
+  return res.json().then(
+    function (b) { throw new Error(b.message || fallback); },
+    function () { throw new Error(fallback); }
+  );
+}
+
 // ---------------------------------------------------------------------------
-// Panels
+// Access — the overview, the accounts, and the four tables nobody opens on
+// purpose.
 // ---------------------------------------------------------------------------
+
+function loadAccess() {
+  loadOverview();
+  loadUsers();
+  loadPanel("logins");
+}
 
 function loadOverview() {
   var host = document.getElementById("overview-stats");
@@ -270,7 +293,7 @@ function loadUsers() {
               body: { disabled: !u.disabled_at }
             }).then(function (res) {
               if (!res.ok) return res.json().then(function (b) { alert(b.message || "Failed."); });
-              reload("users");
+              reload("access");
             });
           }));
 
@@ -282,7 +305,7 @@ function loadUsers() {
               .then(function (b) {
                 if (b.password) showSecret(out, b.username, b.password, "Password reset");
                 else alert(b.message || "Failed.");
-                reload("users");
+                reload("access");
               });
           }));
 
@@ -311,16 +334,11 @@ function createUser(form, out) {
   if (!body.username) return;
 
   api("/admin/users", { method: "POST", body: body })
-    .then(function (res) {
-      return res.json().then(function (b) {
-        if (!res.ok) throw new Error(b.message || "Could not create the account.");
-        return b;
-      });
-    })
+    .then(function (res) { return ok(res, "Could not create the account."); })
     .then(function (created) {
       showSecret(out, created.username, created.password, "Account created");
       form.reset();
-      reload("users");
+      reload("access");
     })
     .catch(function (err) {
       alert(err.message);
@@ -422,6 +440,81 @@ function loadDownloads() {
     .catch(function (e) { fail(table, e); });
 }
 
+function loadAudit() {
+  var table = document.getElementById("audit-table");
+
+  api("/admin/audit?limit=100")
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      renderTable(table, ["When", "Who", "Action", "Target", "Detail", "Address"], d.rows, function (a) {
+        return [when(a.created_at), a.actor_name, a.action, a.target, a.detail, a.ip];
+      });
+    })
+    .catch(function (e) { fail(table, e); });
+}
+
+// ---------------------------------------------------------------------------
+// Files — two stores, deliberately separate.
+// ---------------------------------------------------------------------------
+
+function loadFiles() {
+  var picker = document.getElementById("media-upload");
+
+  if (picker && !picker.dataset.bound) {
+    picker.dataset.bound = "1";
+    picker.addEventListener("change", function () {
+      if (!picker.files.length) return;
+      picker.disabled = true;
+
+      var queue = [].slice.call(picker.files).reduce(function (chain, file) {
+        return chain.then(function () { return uploadMedia(file); });
+      }, Promise.resolve());
+
+      queue
+        .catch(function (err) { alert(err.message); })
+        .then(function () {
+          picker.disabled = false;
+          picker.value = "";
+          loadMediaTable();
+        });
+    });
+  }
+
+  loadMediaTable();
+  loadDocuments();
+}
+
+function loadMediaTable() {
+  var table = document.getElementById("media-table");
+
+  api("/admin/media")
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      renderTable(
+        table,
+        ["Preview", "Name", "Type", "Size", "Dimensions", ""],
+        d.rows,
+        function (m) {
+          return [
+            mediaThumb(m, "5rem"),
+            m.original_name || m.filename,
+            m.mime,
+            formatBytes(m.size_bytes),
+            m.width && m.height ? m.width + " × " + m.height : "—",
+            button("Delete", "", function () {
+              if (!confirm("Delete " + m.filename + "? Pages that still use it will refuse this.")) return;
+              api("/admin/media/" + m.id, { method: "DELETE" })
+                .then(function (res) { return ok(res, "Failed."); })
+                .then(function () { loadMediaTable(); })
+                .catch(function (err) { alert(err.message); });
+            })
+          ];
+        }
+      );
+    })
+    .catch(function (e) { fail(table, e); });
+}
+
 function loadDocuments() {
   var table = document.getElementById("documents-table");
   var form = document.getElementById("create-document-form");
@@ -434,15 +527,10 @@ function loadDocuments() {
       if (!body.slug || !body.title) return;
 
       api("/admin/vault-items", { method: "POST", body: body })
-        .then(function (res) {
-          return res.json().then(function (b) {
-            if (!res.ok) throw new Error(b.message || "Could not create the document.");
-            return b;
-          });
-        })
+        .then(function (res) { return ok(res, "Could not create the document."); })
         .then(function () {
           form.reset();
-          reload("documents");
+          loadDocuments();
         })
         .catch(function (err) { alert(err.message); });
     });
@@ -476,10 +564,10 @@ function loadDocuments() {
               visible: shown.checked,
               sortOrder: Number(orderInput.value)
             }
-          }).then(function (res) {
-            if (!res.ok) return res.json().then(function (b) { alert(b.message || "Failed."); });
-            reload("documents");
-          });
+          })
+            .then(function (res) { return ok(res, "Failed."); })
+            .then(function () { loadDocuments(); })
+            .catch(function (err) { alert(err.message); });
         }));
 
         // Choosing a file uploads it immediately, replacing what is on disk.
@@ -496,10 +584,8 @@ function loadDocuments() {
           fd.append("file", pdfInput.files[0]);
 
           api("/admin/vault-items/" + item.id + "/file", { method: "POST", body: fd })
-            .then(function (res) {
-              if (!res.ok) return res.json().then(function (b) { throw new Error(b.message || "Upload failed."); });
-              reload("documents");
-            })
+            .then(function (res) { return ok(res, "Upload failed."); })
+            .then(function () { loadDocuments(); })
             .catch(function (err) {
               alert(err.message);
               pdfInput.disabled = false;
@@ -511,10 +597,9 @@ function loadDocuments() {
         actions.appendChild(button("Delete", "", function () {
           if (!confirm("Delete " + item.title + "? The file comes off the Pi with it; past downloads stay in the log.")) return;
           api("/admin/vault-items/" + item.id, { method: "DELETE" })
-            .then(function (res) {
-              if (!res.ok) return res.json().then(function (b) { alert(b.message || "Failed."); });
-              reload("documents");
-            });
+            .then(function (res) { return ok(res, "Failed."); })
+            .then(function () { loadDocuments(); })
+            .catch(function (err) { alert(err.message); });
         }));
 
         return [
@@ -530,51 +615,22 @@ function loadDocuments() {
     .catch(function (e) { fail(table, e); });
 }
 
-function loadAudit() {
-  var table = document.getElementById("audit-table");
-
-  api("/admin/audit?limit=100")
-    .then(function (r) { return r.json(); })
-    .then(function (d) {
-      renderTable(table, ["When", "Who", "Action", "Target", "Detail", "Address"], d.rows, function (a) {
-        return [when(a.created_at), a.actor_name, a.action, a.target, a.detail, a.ip];
-      });
-    })
-    .catch(function (e) { fail(table, e); });
-}
-
 // ---------------------------------------------------------------------------
-// Pages — the project-page CMS.
-//
-// A project is head fields plus a linear stack of typed blocks. The stack is
-// a form that grows: each block is a bordered card with its own fields and
-// up/down/remove controls, and an "Add block" select at the bottom. Publish
-// asks the server to render the whole thing to a static file; nothing here
-// touches the generated page directly.
-//
-// The textContent rule holds with extra force in this panel: everything typed
-// here round-trips through the API and comes back to be edited again, and on
-// Publish it becomes a PUBLIC page. This form never interprets any of it as
-// markup — and the server escapes it all over again before it renders.
+// Projects — the list, and the editor in its place.
 // ---------------------------------------------------------------------------
 
 // Must match the icon catalogue in the server's renderer.
 var CHIP_ICONS = ["nodes", "image", "python", "rust", "proxy", "stream",
                   "cloud", "react", "typescript", "kobold", "node"];
 
-var BLOCK_TYPES = [
-  ["section",  "Text section"],
-  ["steps",    "Numbered steps"],
-  ["features", "Feature list"],
-  ["table",    "Table"],
-  ["figure",   "Screenshot"],
-  ["media",    "Clips band (GIFs / MP4)"],
-  ["datarow",  "Facts strip"],
-  ["files",    "Downloads"],
-  ["links",    "Links"]
+var HOME_SLOTS = [
+  ["feature", "Feature", "wide · two rows"],
+  ["tall",    "Tall",    "two rows"],
+  ["smallA",  "Small A", ""],
+  ["smallB",  "Small B", ""]
 ];
 
-var PALETTES = ["comfy", "ignite", "kobui", "stalkr"];
+var DEFAULT_ACCENT = "#ff1e2f";
 
 function loadProjects() {
   var form = document.getElementById("create-project-form");
@@ -583,16 +639,11 @@ function loadProjects() {
     form.dataset.bound = "1";
     form.addEventListener("submit", function (e) {
       e.preventDefault();
-      var body = { slug: form.slug.value.trim(), title: form.title.value.trim() };
-      if (!body.slug || !body.title) return;
+      var title = form.title.value.trim();
+      if (!title) return;
 
-      api("/admin/projects", { method: "POST", body: body })
-        .then(function (res) {
-          return res.json().then(function (b) {
-            if (!res.ok) throw new Error(b.message || "Could not create the page.");
-            return b;
-          });
-        })
+      api("/admin/projects", { method: "POST", body: { title: title } })
+        .then(function (res) { return ok(res, "Could not create the page."); })
         .then(function (created) {
           form.reset();
           openProjectEditor(created.id);
@@ -602,7 +653,6 @@ function loadProjects() {
   }
 
   loadProjectsTable();
-  loadMediaTable();
 }
 
 function loadProjectsTable() {
@@ -613,7 +663,7 @@ function loadProjectsTable() {
     .then(function (d) {
       renderTable(
         table,
-        ["Title", "Slug", "Status", "Order", "Published", ""],
+        ["Title", "Slug", "Status", "Home", "Published", ""],
         d.rows,
         function (p) {
           var actions = el("span", "admin-actions");
@@ -624,12 +674,11 @@ function loadProjectsTable() {
 
           if (p.publishedAt) {
             actions.appendChild(button("Unpublish", "", function () {
-              if (!confirm("Take project-" + p.slug + ".html off the site?")) return;
+              if (!confirm("Take project-" + p.slug + ".html off the site? It also leaves the home page and the index.")) return;
               api("/admin/projects/" + p.id + "/unpublish", { method: "POST" })
-                .then(function (res) {
-                  if (!res.ok) return res.json().then(function (b) { alert(b.message || "Failed."); });
-                  reload("projects");
-                });
+                .then(function (res) { return ok(res, "Failed."); })
+                .then(function () { reload("projects"); loaded.home = false; })
+                .catch(function (err) { alert(err.message); });
             }));
           }
 
@@ -639,52 +688,234 @@ function loadProjectsTable() {
               : "Delete the draft " + p.title + "?";
             if (!confirm(warning)) return;
             api("/admin/projects/" + p.id, { method: "DELETE" })
-              .then(function (res) {
-                if (!res.ok) return res.json().then(function (b) { alert(b.message || "Failed."); });
-                reload("projects");
-              });
+              .then(function (res) { return ok(res, "Failed."); })
+              .then(function () { reload("projects"); loaded.home = false; })
+              .catch(function (err) { alert(err.message); });
           }));
 
           var published = p.publishedAt ? when(p.publishedAt) : "draft";
           if (p.publishedAt && p.updatedAt > p.publishedAt) published += " · edits pending";
 
-          return [p.title, p.slug, p.status, p.sortOrder, published, actions];
+          return [p.title, p.slug, p.status, slotLabel(p.homeSlot), published, actions];
         }
       );
     })
     .catch(function (e) { fail(table, e); });
 }
 
-function loadMediaTable() {
-  var table = document.getElementById("media-table");
+function slotLabel(slot) {
+  var found = null;
+  HOME_SLOTS.forEach(function (s) { if (s[0] === slot) found = s[1]; });
+  return found || "not shown";
+}
 
-  api("/admin/media")
+// ---------------------------------------------------------------------------
+// Home page — the four cells, and the order the index and the pagers follow.
+// A decision about the home page, made looking at all four cells at once,
+// which is why it is not a field on one project.
+// ---------------------------------------------------------------------------
+
+function loadHomePage() {
+  var host = document.getElementById("home-editor");
+
+  api("/admin/projects")
     .then(function (r) { return r.json(); })
-    .then(function (d) {
-      renderTable(
-        table,
-        ["File", "Uploaded as", "Type", "Size", "Dimensions", ""],
-        d.rows,
-        function (m) {
-          return [
-            m.filename,
-            m.original_name,
-            m.mime,
-            formatBytes(m.size_bytes),
-            m.width && m.height ? m.width + " × " + m.height : "—",
-            button("Delete", "", function () {
-              if (!confirm("Delete " + m.filename + "? Pages that still use it will refuse this.")) return;
-              api("/admin/media/" + m.id, { method: "DELETE" })
-                .then(function (res) {
-                  if (res.ok) return loadMediaTable();
-                  return res.json().then(function (b) { alert(b.message || "Failed."); });
-                });
-            })
-          ];
-        }
-      );
-    })
-    .catch(function (e) { fail(table, e); });
+    .then(function (d) { buildHomeEditor(host, d.rows || []); })
+    .catch(function () {
+      host.textContent = "";
+      host.appendChild(el("p", "admin-note", "Could not load the pages."));
+    });
+}
+
+function buildHomeEditor(host, rows) {
+  host.textContent = "";
+
+  var placed = rows.filter(function (r) { return r.homeSlot; });
+  var live = rows.filter(function (r) { return r.publishedAt && r.visible; });
+
+  function republish(afterwards) {
+    return api("/admin/projects/render", { method: "POST" })
+      .then(function (res) { return ok(res, "Could not write the pages."); })
+      .then(function () { if (afterwards) afterwards(); })
+      .catch(function (err) { alert(err.message); });
+  }
+
+  function refresh() {
+    republish(function () { reload("home"); loaded.projects = false; loadProjectsTable(); });
+  }
+
+  // --- bar ------------------------------------------------------------------
+  var bar = el("div", "pe-bar");
+  var state = el("span", "pe-bar__state");
+  var unplaced = placed.filter(function (p) { return !(p.publishedAt && p.visible); }).length;
+  state.textContent = unplaced
+    ? unplaced + " placed page" + (unplaced === 1 ? " is" : "s are") + " not published, so " +
+      (unplaced === 1 ? "it does" : "they do") + " not appear on the home page yet."
+    : placed.length + " of 4 cells in use.";
+  bar.appendChild(state);
+  bar.appendChild(el("span", "pe-bar__spacer"));
+  bar.appendChild(button("Preview ↗", "", function () { window.open("/", "_blank"); }));
+  bar.appendChild(button("Write the pages again", "admin-btn--accent", function () {
+    republish(function () { alert("Home page, index and every published project page rewritten."); });
+  }));
+  host.appendChild(bar);
+
+  host.appendChild(el("p", "pe-annot",
+    "The bento has four project cells. Only published, listed pages appear in them. Everything else on the " +
+    "home page — the hero, the about card, the GitHub graph, the link stack — is hand-written and untouched by this."));
+
+  // --- the four cells -------------------------------------------------------
+  var cells = el("section", "pe-card");
+  cells.appendChild(el("span", "pe-card__label", "The four cells"));
+
+  var map = el("div", "pe-slots pe-slots--lg");
+  map.setAttribute("role", "group");
+  map.setAttribute("aria-label", "Home page cells");
+
+  HOME_SLOTS.forEach(function (slot) {
+    var holder = null;
+    rows.forEach(function (r) { if (r.homeSlot === slot[0]) holder = r; });
+
+    var cell = el("button", "pe-slot pe-slot--" + slot[0]);
+    cell.type = "button";
+    cell.setAttribute("aria-pressed", holder ? "true" : "false");
+    if (holder) {
+      cell.setAttribute("data-taken", "1");
+      if (holder.accent) cell.style.setProperty("--edge-brand", holder.accent);
+    }
+
+    var name = el("strong");
+    name.appendChild(el("span", "pe-slot__dot"));
+    name.appendChild(document.createTextNode(slot[1]));
+    cell.appendChild(name);
+    cell.appendChild(el("span", "pe-slot__name", holder ? holder.title : "empty"));
+    if (slot[2]) cell.appendChild(el("span", "pe-slot__name", slot[2]));
+
+    // Clicking a cell is the same act as choosing from its dropdown: it
+    // scrolls to it and opens it, rather than being a second way to do the
+    // same thing that behaves subtly differently.
+    cell.addEventListener("click", function () {
+      var select = document.getElementById("slot-" + slot[0]);
+      if (select) { select.focus(); }
+    });
+
+    map.appendChild(cell);
+  });
+
+  cells.appendChild(map);
+
+  var grid = el("div", "pe-grid");
+  grid.style.marginTop = "var(--stack-md)";
+
+  HOME_SLOTS.forEach(function (slot) {
+    var field = el("label", "pe-field");
+    field.appendChild(el("span", "pe-field__label", slot[1]));
+
+    var select = el("select", "admin-input");
+    select.id = "slot-" + slot[0];
+    select.appendChild(new Option("— empty —", ""));
+    rows.forEach(function (r) {
+      select.appendChild(new Option(r.title, String(r.id)));
+    });
+
+    var holder = null;
+    rows.forEach(function (r) { if (r.homeSlot === slot[0]) holder = r; });
+    select.value = holder ? String(holder.id) : "";
+
+    select.addEventListener("change", function () {
+      var id = Number(select.value);
+      var previous = holder;
+
+      // Emptying a cell is a write on whoever was in it; filling one is a
+      // write on the project moving in, and the server does the swap.
+      var call = id
+        ? api("/admin/projects/" + id, { method: "PUT", body: { homeSlot: slot[0] } })
+        : previous
+          ? api("/admin/projects/" + previous.id, { method: "PUT", body: { homeSlot: null } })
+          : Promise.resolve(null);
+
+      Promise.resolve(call)
+        .then(function (res) { return res ? ok(res, "Could not place the page.") : null; })
+        .then(function () { refresh(); })
+        .catch(function (err) { alert(err.message); reload("home"); });
+    });
+
+    field.appendChild(select);
+    grid.appendChild(field);
+  });
+
+  cells.appendChild(grid);
+  cells.appendChild(el("p", "pe-field__hint",
+    "Picking a page that already holds another cell swaps the two — a cell can never hold two pages, and a page " +
+    "can never hold two cells. With fewer than four placed, the cards close up from the top and the grid reflows " +
+    "so there is no hole."));
+  host.appendChild(cells);
+
+  // --- order ----------------------------------------------------------------
+  var order = el("section", "pe-card");
+  order.appendChild(el("span", "pe-card__label", "Order on projects.html"));
+  order.appendChild(el("p", "pe-field__hint",
+    "The index page and the prev/next pager at the bottom of every project follow this order, independently of the bento."));
+
+  var table = el("table", "admin-table");
+  var sorted = rows.slice().sort(function (a, b) {
+    return a.sortOrder - b.sortOrder || a.title.localeCompare(b.title);
+  });
+
+  function move(index, delta) {
+    if (index + delta < 0 || index + delta >= sorted.length) return;
+
+    var next = sorted.slice();
+    var moved = next.splice(index, 1)[0];
+    next.splice(index + delta, 0, moved);
+
+    // Every row is renumbered from its new position rather than two rows
+    // trading numbers: pages created before this table existed all sit on
+    // sort_order 0, and swapping 0 for 0 moves nothing.
+    Promise.all(next.map(function (row, i) {
+      if (row.sortOrder === i * 10) return null;
+      return api("/admin/projects/" + row.id, { method: "PUT", body: { sortOrder: i * 10 } })
+        .then(function (res) { return ok(res, "Could not reorder."); });
+    }).filter(Boolean))
+      .then(function () { refresh(); })
+      .catch(function (err) { alert(err.message); reload("home"); });
+  }
+
+  renderTable(table, ["#", "Page", "Status", "Listed", "Home", ""], sorted, function (row) {
+    var i = sorted.indexOf(row);
+
+    var listed = el("input");
+    listed.type = "checkbox";
+    listed.checked = row.visible;
+    listed.title = "Shown on projects.html, in the pagers and on the home page";
+    listed.addEventListener("change", function () {
+      api("/admin/projects/" + row.id, { method: "PUT", body: { visible: listed.checked } })
+        .then(function (res) { return ok(res, "Failed."); })
+        .then(function () { refresh(); })
+        .catch(function (err) { alert(err.message); reload("home"); });
+    });
+
+    var actions = el("span", "admin-actions");
+    actions.appendChild(button("▲", "", function () { move(i, -1); }));
+    actions.appendChild(button("▼", "", function () { move(i, 1); }));
+
+    return [
+      i + 1,
+      row.title + (row.publishedAt ? "" : " · draft"),
+      row.status,
+      listed,
+      slotLabel(row.homeSlot),
+      actions
+    ];
+  });
+
+  order.appendChild(el("div", "admin-scroll")).appendChild(table);
+  host.appendChild(order);
+
+  if (!live.length) {
+    host.appendChild(el("p", "pe-annot",
+      "Nothing is published yet, so the home page has no project cards and the bento is drawn without them."));
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -726,23 +957,50 @@ function uploadMedia(file) {
 
     return api("/admin/media", { method: "POST", body: fd });
   }).then(function (res) {
-    return res.json().then(function (b) {
-      if (!res.ok) throw new Error(b.message || "Upload failed.");
-      return b;
-    });
+    return ok(res, "Upload failed.");
   });
 }
 
 function mediaLabel(m) {
   var name = m.original_name || m.filename;
-  return name + " · " + m.mime + (m.size_bytes ? " · " + formatBytes(m.size_bytes) : "");
+  var size = m.size_bytes ? " · " + formatBytes(m.size_bytes) : "";
+  var dims = m.width && m.height ? " · " + m.width + "×" + m.height : "";
+  return name + dims + size;
 }
 
-// A select of existing uploads plus a file input that uploads immediately and
-// selects the result. `mediaRows` is the editor's shared list, so an upload
-// made in one block is offered in every other one opened afterwards.
-function mediaPicker(mediaRows, currentId, accept) {
-  var select = el("select", "auth-field__input");
+// An MP4 shows its own first frame; anything else is an image. Both wear the
+// same frame, so a row card looks like the band it renders.
+function mediaThumb(m, width) {
+  var node;
+  if (m && m.mime === "video/mp4") {
+    node = el("video", "pe-thumb");
+    node.muted = true;
+    node.playsInline = true;
+    node.preload = "metadata";
+    node.src = "/assets/up/" + m.filename;
+  } else if (m) {
+    node = el("img", "pe-thumb");
+    node.loading = "lazy";
+    node.decoding = "async";
+    node.alt = "";
+    node.src = "/assets/up/" + m.filename;
+  } else {
+    node = el("div", "pe-thumb");
+  }
+  if (width) node.style.width = width;
+  return node;
+}
+
+// A thumbnail, the file's real numbers, a select of what is already uploaded
+// and a file input that uploads immediately and selects the result.
+// `mediaRows` is the editor's shared list, so an upload made in one band is
+// offered in every other one opened afterwards.
+function mediaPicker(mediaRows, currentId, accept, onPick) {
+  var root = el("div");
+  var preview = el("div");
+  var meta = el("span", "pe-row__meta");
+
+  var select = el("select", "admin-input");
   select.appendChild(new Option("— choose an upload —", ""));
   mediaRows.forEach(function (m) {
     select.appendChild(new Option(mediaLabel(m), String(m.id)));
@@ -752,6 +1010,23 @@ function mediaPicker(mediaRows, currentId, accept) {
   var file = el("input", "admin-input");
   file.type = "file";
   if (accept) file.accept = accept;
+
+  function current() {
+    var id = Number(select.value) || 0;
+    var found = null;
+    mediaRows.forEach(function (m) { if (m.id === id) found = m; });
+    return found;
+  }
+
+  function paint() {
+    var m = current();
+    preview.textContent = "";
+    preview.appendChild(mediaThumb(m));
+    meta.textContent = m ? mediaLabel(m) : "No file chosen yet.";
+    if (onPick) onPick(m);
+  }
+
+  select.addEventListener("change", paint);
 
   file.addEventListener("change", function () {
     if (!file.files.length) return;
@@ -765,6 +1040,7 @@ function mediaPicker(mediaRows, currentId, accept) {
           select.insertBefore(new Option(mediaLabel(row), String(row.id)), select.options[1]);
         }
         select.value = String(row.id);
+        paint();
       })
       .catch(function (err) { alert(err.message); })
       .finally(function () {
@@ -773,13 +1049,16 @@ function mediaPicker(mediaRows, currentId, accept) {
       });
   });
 
-  var root = el("div", "auth-field");
+  root.appendChild(preview);
+  root.appendChild(meta);
   root.appendChild(select);
   root.appendChild(file);
+  paint();
 
   return {
     root: root,
-    read: function () { return Number(select.value) || 0; }
+    read: function () { return Number(select.value) || 0; },
+    mime: function () { var m = current(); return m ? m.mime : ""; }
   };
 }
 
@@ -787,30 +1066,32 @@ function mediaPicker(mediaRows, currentId, accept) {
 // Small form helpers, all el()-based.
 // ---------------------------------------------------------------------------
 
-function pField(labelText, input) {
-  var wrap = el("div", "auth-field");
-  wrap.appendChild(el("label", "auth-field__label", labelText));
-  wrap.appendChild(input);
+function peField(labelText, control, hint, wide) {
+  var wrap = el("label", "pe-field" + (wide ? " pe-field--wide" : ""));
+  wrap.appendChild(el("span", "pe-field__label", labelText));
+  wrap.appendChild(control);
+  if (hint) wrap.appendChild(el("span", "pe-field__hint", hint));
   return wrap;
 }
 
-function pInput(value, maxLength) {
-  var input = el("input", "auth-field__input");
+function peInput(value, maxLength, className) {
+  var input = el("input", "admin-input" + (className ? " " + className : ""));
   input.type = "text";
   if (maxLength) input.maxLength = maxLength;
   input.value = value || "";
   return input;
 }
 
-function pArea(value, rows) {
-  var area = el("textarea", "auth-field__input");
+function peArea(value, rows, maxLength) {
+  var area = el("textarea", "admin-input");
   area.rows = rows || 4;
+  if (maxLength) area.maxLength = maxLength;
   area.value = value || "";
   return area;
 }
 
-function pSelect(options, value) {
-  var select = el("select", "auth-field__input");
+function peSelect(options, value) {
+  var select = el("select", "admin-input");
   options.forEach(function (opt) {
     select.appendChild(new Option(opt[1], opt[0]));
   });
@@ -818,8 +1099,8 @@ function pSelect(options, value) {
   return select;
 }
 
-function pCheck(labelText, checked) {
-  var label = el("label", "auth-field__label");
+function peCheck(labelText, checked) {
+  var label = el("label", "pe-check");
   var input = el("input");
   input.type = "checkbox";
   input.checked = !!checked;
@@ -828,17 +1109,214 @@ function pCheck(labelText, checked) {
   return { root: label, input: input };
 }
 
-function splitLines(value) {
-  return value.split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+function peRadio(name, labelText, checked, value) {
+  var label = el("label", "pe-check");
+  var input = el("input");
+  input.type = "radio";
+  input.name = name;
+  input.value = value;
+  input.checked = !!checked;
+  label.appendChild(input);
+  label.appendChild(document.createTextNode(" " + labelText));
+  return { root: label, input: input };
 }
 
 function splitParas(value) {
   return value.split(/\n\s*\n/).map(function (s) { return s.trim(); }).filter(Boolean);
 }
 
+// Title -> slug, the same shape the server derives. Kept in the panel so the
+// field fills in as the title is typed rather than after the first save.
+function slugify(title) {
+  return title
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48)
+    .replace(/-+$/, "");
+}
+
 // ---------------------------------------------------------------------------
-// The editor
+// The colour picker.
+//
+// HSV rather than a hex field alone: picking "a bit darker" by typing hex is
+// guesswork. And built rather than borrowed, because the OS colour dialog is
+// rounded, shadowed and in the wrong typeface — it is the one control on the
+// site that would arrive wearing someone else's design.
 // ---------------------------------------------------------------------------
+
+function hsvToRgb(h, s, v) {
+  var c = v * s, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = v - c;
+  var t = [[c, x, 0], [x, c, 0], [0, c, x], [0, x, c], [x, 0, c], [c, 0, x]][Math.floor(h / 60) % 6];
+  return t.map(function (n) { return Math.round((n + m) * 255); });
+}
+
+function rgbToHsv(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  var mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn, h = 0;
+  if (d) {
+    if (mx === r) h = 60 * (((g - b) / d) % 6);
+    else if (mx === g) h = 60 * ((b - r) / d + 2);
+    else h = 60 * ((r - g) / d + 4);
+  }
+  return { h: (h + 360) % 360, s: mx ? d / mx : 0, v: mx };
+}
+
+function toHex(rgb) {
+  return "#" + rgb.map(function (n) { return n.toString(16).padStart(2, "0"); }).join("");
+}
+
+function buildColorPicker(initial, presets, title, onChange) {
+  var root = el("div", "pe-color");
+
+  var sv = el("div", "pe-color__sv");
+  sv.setAttribute("role", "application");
+  sv.setAttribute("aria-label", "Saturation and brightness");
+  var svKnob = el("span", "pe-color__knob");
+  sv.appendChild(svKnob);
+
+  var hue = el("div", "pe-color__hue");
+  hue.setAttribute("role", "application");
+  hue.setAttribute("aria-label", "Hue");
+  var hueKnob = el("span", "pe-color__knob pe-color__knob--hue");
+  hue.appendChild(hueKnob);
+
+  var side = el("div", "pe-color__side");
+  var hex = el("input", "admin-input pe-color__hex");
+  hex.type = "text";
+  hex.maxLength = 7;
+  hex.spellcheck = false;
+  hex.setAttribute("aria-label", "Accent colour, hex");
+  hex.value = initial || DEFAULT_ACCENT;
+  side.appendChild(hex);
+
+  var presetRow = el("div", "pe-color__presets");
+  presets.forEach(function (value) {
+    var b = el("button", "pe-color__preset");
+    b.type = "button";
+    b.style.background = value;
+    b.setAttribute("aria-label", value);
+    b.addEventListener("click", function () {
+      hex.value = value;
+      fromHex();
+    });
+    presetRow.appendChild(b);
+  });
+  side.appendChild(presetRow);
+  side.appendChild(el("span", "pe-field__hint", "One colour. The rim's shade and tint are derived from it, in both themes."));
+
+  // The point of the picker: the actual card rim, live.
+  var demo = el("div", "box box--edge box--link is-custom pe-color__demo");
+  demo.appendChild(el("span", "box__label", "Featured"));
+  var demoHead = el("div", "project-box__head");
+  var demoName = el("span", "project-box__name", title || "This project");
+  demoHead.appendChild(demoName);
+  demo.appendChild(demoHead);
+
+  root.appendChild(sv);
+  root.appendChild(hue);
+  root.appendChild(side);
+  root.appendChild(demo);
+
+  var state = { h: 0, s: 1, v: 1 };
+
+  // Nothing is announced while the picker is being seeded from the stored
+  // colour: opening the editor is not an edit, and the first thing this does
+  // is repaint itself from a hex it was handed.
+  var ready = false;
+
+  function paint(pushHex) {
+    var value = toHex(hsvToRgb(state.h, state.s, state.v));
+    sv.style.setProperty("--pick-hue", toHex(hsvToRgb(state.h, 1, 1)));
+    svKnob.style.left = (state.s * 100) + "%";
+    svKnob.style.top = ((1 - state.v) * 100) + "%";
+    hueKnob.style.top = ((state.h / 360) * 100) + "%";
+    demo.style.setProperty("--edge-brand", value);
+    if (pushHex) hex.value = value;
+    if (ready && onChange) onChange(value);
+  }
+
+  function fromHex() {
+    var v = hex.value.trim();
+    if (!/^#[0-9a-fA-F]{6}$/.test(v)) return;
+    state = rgbToHsv(parseInt(v.slice(1, 3), 16), parseInt(v.slice(3, 5), 16), parseInt(v.slice(5, 7), 16));
+    paint(false);
+  }
+
+  function drag(elm, onMove) {
+    function run(e) {
+      var r = elm.getBoundingClientRect();
+      onMove(
+        Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)),
+        Math.min(1, Math.max(0, (e.clientY - r.top) / r.height))
+      );
+      paint(true);
+    }
+    elm.addEventListener("pointerdown", function (e) {
+      elm.setPointerCapture(e.pointerId);
+      run(e);
+      function mv(ev) { run(ev); }
+      function up() { elm.removeEventListener("pointermove", mv); }
+      elm.addEventListener("pointermove", mv);
+      elm.addEventListener("pointerup", up, { once: true });
+    });
+  }
+
+  drag(sv, function (x, y) { state.s = x; state.v = 1 - y; });
+  drag(hue, function (_, y) { state.h = y * 360; });
+
+  hex.addEventListener("input", fromHex);
+
+  // Seed from the field, not from a default: the stored colour is the hex the
+  // project already has, and repainting it from an arbitrary HSV would
+  // silently rewrite it the moment the editor opened.
+  fromHex();
+  ready = true;
+
+  return {
+    root: root,
+    read: function () {
+      var v = hex.value.trim().toLowerCase();
+      return /^#[0-9a-f]{6}$/.test(v) ? v : null;
+    },
+    setTitle: function (value) { demoName.textContent = value || "This project"; }
+  };
+}
+
+// ---------------------------------------------------------------------------
+// The editor. A page-shaped column in the order the page renders: identity at
+// the top, bands in the middle, the repo link at the bottom.
+// ---------------------------------------------------------------------------
+
+var editorDirty = false;
+
+function markDirty(on) {
+  editorDirty = on;
+  var state = document.getElementById("pe-state");
+  if (!state) return;
+  state.setAttribute("data-dirty", on ? "1" : "0");
+  if (on) state.textContent = "Unsaved changes";
+}
+
+// Returns false to cancel the navigation that asked.
+function guardUnsaved() {
+  if (!editorDirty) return true;
+  return confirm("This page has unsaved changes. Leave them behind?");
+}
+
+function guardSectionSwitch() {
+  var editor = document.getElementById("project-editor");
+  if (!editor || editor.hidden) return true;
+  return guardUnsaved();
+}
+
+window.addEventListener("beforeunload", function (e) {
+  if (!editorDirty) return;
+  e.preventDefault();
+  e.returnValue = "";
+});
 
 function openProjectEditor(id) {
   var host = document.getElementById("project-editor");
@@ -849,33 +1327,46 @@ function openProjectEditor(id) {
       if (!r.ok) throw new Error("Could not load the project.");
       return r.json();
     }),
-    api("/admin/media").then(function (r) { return r.json(); })
+    api("/admin/media").then(function (r) { return r.json(); }),
+    api("/admin/projects").then(function (r) { return r.json(); })
   ])
     .then(function (results) {
       list.hidden = true;
       host.hidden = false;
-      buildProjectEditor(host, results[0], results[1].rows || []);
+      window.scrollTo(0, 0);
+      buildProjectEditor(host, results[0], results[1].rows || [], results[2].rows || []);
     })
     .catch(function (err) { alert(err.message); });
 }
 
 function closeProjectEditor() {
+  markDirty(false);
   document.getElementById("project-editor").hidden = true;
+  document.getElementById("project-editor").textContent = "";
   document.getElementById("projects-list").hidden = false;
   reload("projects");
 }
 
-function buildProjectEditor(host, record, mediaRows) {
+function buildProjectEditor(host, record, mediaRows, allProjects) {
   host.textContent = "";
+  editorDirty = false;
 
-  var cards = [];   // ordered block cards, each with .root and .read()
+  var bands = [];    // ordered band cards, each { root, read, kind }
   var chipRows = []; // ordered chip rows
 
-  // --- toolbar ------------------------------------------------------------
-  var toolbar = el("div", "admin-actions");
-  var statusNote = el("p", "admin-note");
+  var column = el("div", "pe");
+  host.appendChild(column);
 
-  function setStatus(text) { statusNote.textContent = text; }
+  // Any edit anywhere in the column is an unsaved change. One listener rather
+  // than one per field: a form this long grows a field every few weeks, and
+  // the one that gets forgotten is the one that loses someone's work.
+  column.addEventListener("input", function () { markDirty(true); });
+  column.addEventListener("change", function () { markDirty(true); });
+
+  // --- the bar --------------------------------------------------------------
+  var bar = el("div", "pe-bar");
+  var state = el("span", "pe-bar__state");
+  state.id = "pe-state";
 
   function describe() {
     if (!record.publishedAt) return "Draft — not on the site yet.";
@@ -884,15 +1375,26 @@ function buildProjectEditor(host, record, mediaRows) {
     return s;
   }
 
-  toolbar.appendChild(button("← Back", "", function () { closeProjectEditor(); }));
+  function setState(text) {
+    state.textContent = text;
+    state.setAttribute("data-dirty", "0");
+    editorDirty = false;
+  }
 
-  toolbar.appendChild(button("Save", "admin-btn--accent", function () {
-    saveProject().then(function () {
-      setStatus("Saved. " + describe());
-    }).catch(function (err) { alert(err.message); });
+  bar.appendChild(button("← All pages", "", function () {
+    if (!guardUnsaved()) return;
+    closeProjectEditor();
+  }));
+  bar.appendChild(el("span", "pe-bar__spacer"));
+  bar.appendChild(state);
+
+  bar.appendChild(button("Save", "", function () {
+    saveProject()
+      .then(function () { setState("Saved. " + describe()); })
+      .catch(function (err) { alert(err.message); });
   }));
 
-  toolbar.appendChild(button("Preview", "", function () {
+  bar.appendChild(button("Preview ↗", "", function () {
     // Opened synchronously so the click still counts as a user gesture —
     // window.open after the async save would be popup-blocked.
     var tab = window.open("about:blank", "_blank");
@@ -906,89 +1408,145 @@ function buildProjectEditor(host, record, mediaRows) {
     });
   }));
 
-  toolbar.appendChild(button(record.publishedAt ? "Publish again" : "Publish", "admin-btn--accent", function () {
+  bar.appendChild(button(record.publishedAt ? "Publish again" : "Publish", "admin-btn--accent", function () {
     saveProject().then(function () {
-      if (!confirm("Publish project-" + record.slug + ".html to the live site?")) return null;
+      if (!confirm("Publish project-" + slugInput.value.trim() + ".html to the live site?")) return null;
       return api("/admin/projects/" + record.id + "/publish", { method: "POST" })
-        .then(function (res) {
-          if (!res.ok) return res.json().then(function (b) { throw new Error(b.message || "Publish failed."); });
+        .then(function (res) { return ok(res, "Publish failed."); })
+        .then(function () {
+          markDirty(false);
+          loaded.home = false;
           openProjectEditor(record.id);
         });
     }).catch(function (err) { alert(err.message); });
   }));
 
   if (record.publishedAt) {
-    toolbar.appendChild(button("Unpublish", "", function () {
+    bar.appendChild(button("Unpublish", "", function () {
       if (!confirm("Take project-" + record.slug + ".html off the site?")) return;
       api("/admin/projects/" + record.id + "/unpublish", { method: "POST" })
-        .then(function (res) {
-          if (!res.ok) return res.json().then(function (b) { alert(b.message || "Failed."); });
+        .then(function (res) { return ok(res, "Failed."); })
+        .then(function () {
+          markDirty(false);
+          loaded.home = false;
           openProjectEditor(record.id);
-        });
+        })
+        .catch(function (err) { alert(err.message); });
     }));
   }
 
-  host.appendChild(toolbar);
-  setStatus(describe());
-  host.appendChild(statusNote);
+  column.appendChild(bar);
+  setState(describe());
 
-  // --- head fields ----------------------------------------------------------
-  host.appendChild(el("h2", "box__label admin-subhead", "Page head"));
+  column.appendChild(el("p", "pe-annot",
+    "The form is in the order the page renders: identity at the top, bands in the middle, the repo link at the " +
+    "bottom. What you fill in top to bottom is what a reader sees top to bottom."));
 
-  var titleInput = pInput(record.title, 120);
-  var slugInput = pInput(record.slug, 48);
+  // --- head -----------------------------------------------------------------
+  var head = el("section", "pe-card");
+  head.appendChild(el("span", "pe-card__label", "The project"));
+  var grid = el("div", "pe-grid");
+
+  var titleInput = peInput(record.title, 120, "pe-input--title");
+  grid.appendChild(peField("Title", titleInput, null, true));
+
+  var slugInput = peInput(record.slug, 48);
   slugInput.disabled = !!record.publishedAt;
-  if (slugInput.disabled) slugInput.title = "The slug is the published filename. Unpublish to change it.";
+  var slugTouched = !!record.publishedAt;
+  slugInput.addEventListener("input", function () { slugTouched = true; });
+  grid.appendChild(peField(
+    "Slug",
+    slugInput,
+    record.publishedAt
+      ? "Locked: it is the published file's name. Unpublish to change it."
+      : "Follows the title until you touch it. Becomes project-<slug>.html, and locks once published.",
+    false
+  ));
 
-  var statusSelect = pSelect([["", "—"], ["WIP", "WIP"], ["Featured", "Featured"]], record.status);
-  var paletteSelect = pSelect(
-    [["", "—"]].concat(PALETTES.map(function (p) { return [p, p]; })),
-    record.palette
-  );
-  var orderInput = el("input", "auth-field__input");
-  orderInput.type = "number";
-  orderInput.min = "0";
-  orderInput.value = record.sortOrder;
-  var visibleCheck = pCheck("Listed on projects.html and in pagers", record.visible);
+  titleInput.addEventListener("input", function () {
+    if (!slugTouched) slugInput.value = slugify(titleInput.value);
+    accent.setTitle(titleInput.value.trim());
+  });
 
-  var headForm = el("div", "admin-form");
-  headForm.appendChild(pField("Title", titleInput));
-  headForm.appendChild(pField("Slug", slugInput));
-  headForm.appendChild(pField("Status chip", statusSelect));
-  headForm.appendChild(pField("Palette (colour set in style.css)", paletteSelect));
-  headForm.appendChild(pField("Sort order (position among projects)", orderInput));
-  headForm.appendChild(visibleCheck.root);
-  host.appendChild(headForm);
+  var repoInput = peInput(record.repoUrl, 200);
+  repoInput.type = "url";
+  repoInput.placeholder = "https://github.com/…";
+  grid.appendChild(peField("Repository", repoInput,
+    "A small link at the very bottom of the page. Leave empty and no link is rendered.", false));
 
-  var ledeArea = pArea(record.lede, 2);
-  var blurbArea = pArea(record.cardBlurb, 2);
-  var proseForm = el("div", "admin-form");
-  proseForm.appendChild(pField("Lede — the one-sentence pitch at the top of the page", ledeArea));
-  proseForm.appendChild(pField("Card blurb — the line on the projects.html card", blurbArea));
-  host.appendChild(proseForm);
+  var ledeArea = peArea(record.lede, 3, 500);
+  grid.appendChild(peField("Description", ledeArea,
+    "One text, two jobs: the opening line of the project page and the blurb on both index cards.", true));
 
-  var markupNote = el("p", "admin-note",
-    "In any prose field: [text](url) makes a link, `text` makes code. Everything else is plain text — HTML is never interpreted.");
-  host.appendChild(markupNote);
+  // Card text, hidden behind its own tick — the one Description is all that
+  // matters until someone asks for two.
+  var blurbWrap = el("div", "pe-field pe-field--wide");
+  var blurbToggle = peCheck("Use a shorter text on the cards", !!record.cardBlurb);
+  var blurbArea = peArea(record.cardBlurb, 2, 300);
+  blurbArea.placeholder = "A sentence for the home bento and the projects index.";
+  var blurbField = peField("Card text", blurbArea,
+    "Used on both index cards instead of the description. The page itself keeps the long one.", false);
+  blurbField.style.marginTop = "var(--stack-sm)";
+  if (!record.cardBlurb) blurbField.classList.add("pe-hidden");
 
-  // --- chips ----------------------------------------------------------------
-  host.appendChild(el("h2", "box__label admin-subhead", "Tech chips"));
-  var chipsHost = el("div");
-  host.appendChild(chipsHost);
+  blurbToggle.input.addEventListener("change", function () {
+    blurbField.classList.toggle("pe-hidden", !blurbToggle.input.checked);
+    if (blurbToggle.input.checked) blurbArea.focus();
+    else blurbArea.value = "";
+  });
+
+  blurbWrap.appendChild(blurbToggle.root);
+  blurbWrap.appendChild(blurbField);
+  grid.appendChild(blurbWrap);
+
+  var statusSelect = peSelect([["", "—"], ["WIP", "WIP"], ["Featured", "Featured"]], record.status);
+  grid.appendChild(peField("Status", statusSelect, null, false));
+
+  // Accent. The presets are the colours already in use, so a new project can
+  // be made to sit next to the others without matching hex by eye.
+  var inUse = [];
+  allProjects.forEach(function (p) {
+    if (p.accent && p.id !== record.id && inUse.indexOf(p.accent) === -1) inUse.push(p.accent);
+  });
+  if (!inUse.length) inUse = ["#ff4d00", "#eafb2e", "#4e8c5a", "#52c23a", "#35e0ff", "#ff1e2f"];
+
+  var accentWrap = el("div", "pe-field pe-field--wide");
+  accentWrap.appendChild(el("span", "pe-field__label", "Accent"));
+  var accent = buildColorPicker(record.accent || DEFAULT_ACCENT, inUse, record.title, function () {
+    markDirty(true);
+  });
+  accentWrap.appendChild(accent.root);
+  grid.appendChild(accentWrap);
+
+  // Chips.
+  var chipsWrap = el("div", "pe-field pe-field--wide");
+  chipsWrap.appendChild(el("span", "pe-field__label", "Chips"));
+  var chipsHost = el("div", "admin-actions");
+  chipsHost.style.flexWrap = "wrap";
+  chipsWrap.appendChild(chipsHost);
 
   function addChipRow(chip) {
-    var labelInput = pInput(chip.label, 60);
-    var iconSelect = pSelect(
+    var labelInput = peInput(chip.label, 60);
+    labelInput.style.maxWidth = "10rem";
+    labelInput.setAttribute("aria-label", "Chip label");
+
+    var iconSelect = peSelect(
       [["", "no icon"]].concat(CHIP_ICONS.map(function (n) { return [n, n]; })),
       chip.icon
     );
+    iconSelect.style.maxWidth = "9rem";
+    iconSelect.setAttribute("aria-label", "Chip icon");
 
-    var row = el("div", "admin-form");
-    row.appendChild(pField("Label", labelInput));
-    row.appendChild(pField("Icon", iconSelect));
+    var remove = button("✕", "", function () {
+      chipsHost.removeChild(labelInput);
+      chipsHost.removeChild(iconSelect);
+      chipsHost.removeChild(remove);
+      chipRows.splice(chipRows.indexOf(entry), 1);
+      markDirty(true);
+    });
+    remove.setAttribute("aria-label", "Remove chip");
 
     var entry = {
-      root: row,
       read: function () {
         var label = labelInput.value.trim();
         if (!label) return null;
@@ -996,425 +1554,317 @@ function buildProjectEditor(host, record, mediaRows) {
       }
     };
 
-    var remove = el("div", "auth-field");
-    remove.appendChild(button("✕ Remove chip", "", function () {
-      chipsHost.removeChild(row);
-      chipRows.splice(chipRows.indexOf(entry), 1);
-    }));
-    row.appendChild(remove);
-
     chipRows.push(entry);
-    chipsHost.appendChild(row);
+    chipsHost.insertBefore(labelInput, addChip);
+    chipsHost.insertBefore(iconSelect, addChip);
+    chipsHost.insertBefore(remove, addChip);
   }
 
+  var addChip = button("+ Chip", "", function () { addChipRow({ label: "", icon: null }); });
+  chipsHost.appendChild(addChip);
   (record.chips || []).forEach(addChipRow);
-  var addChip = button("+ Add chip", "", function () { addChipRow({ label: "", icon: null }); });
-  host.appendChild(addChip);
 
-  // --- blocks -----------------------------------------------------------
-  host.appendChild(el("h2", "box__label admin-subhead", "Blocks"));
-  host.appendChild(el("p", "admin-note",
-    "Rendered top to bottom. Whatever the order here, the page always ends with: facts strip, downloads, links, pager — the fixed shape every project page has."));
+  grid.appendChild(chipsWrap);
+  head.appendChild(grid);
+  column.appendChild(head);
 
-  var blocksHost = el("div");
-  host.appendChild(blocksHost);
+  // --- bands ----------------------------------------------------------------
+  var placement = el("p", "pe-annot");
+  placement.appendChild(document.createTextNode(
+    "One card per band, in the order they appear on the page. Foldable wraps that band in the closed <details> " +
+    "the site already uses — nothing inside a folded band is downloaded until a reader opens it. Where this " +
+    "project sits on the home page is set in "));
+  placement.appendChild(button("Home page", "", function () {
+    if (!guardUnsaved()) return;
+    closeProjectEditor();
+    var tab = document.getElementById("tab-home");
+    if (tab) tab.click();
+  }));
+  placement.appendChild(document.createTextNode("."));
+  column.appendChild(placement);
 
-  function repaintBlocks() {
-    blocksHost.textContent = "";
-    cards.forEach(function (c) { blocksHost.appendChild(c.root); });
+  var bandsHost = el("div");
+  column.appendChild(bandsHost);
+
+  function repaint() {
+    bandsHost.textContent = "";
+    bands.forEach(function (b) { bandsHost.appendChild(b.root); });
   }
 
-  function addBlockCard(block) {
-    var entry = buildBlockCard(block, mediaRows, {
+  function addBand(block, kind) {
+    var entry = buildBandCard(block, kind, mediaRows, {
       moveUp: function () {
-        var i = cards.indexOf(entry);
-        if (i > 0) { cards.splice(i, 1); cards.splice(i - 1, 0, entry); repaintBlocks(); }
+        var i = bands.indexOf(entry);
+        if (i > 0) { bands.splice(i, 1); bands.splice(i - 1, 0, entry); repaint(); markDirty(true); }
       },
       moveDown: function () {
-        var i = cards.indexOf(entry);
-        if (i < cards.length - 1) { cards.splice(i, 1); cards.splice(i + 1, 0, entry); repaintBlocks(); }
+        var i = bands.indexOf(entry);
+        if (i < bands.length - 1) { bands.splice(i, 1); bands.splice(i + 1, 0, entry); repaint(); markDirty(true); }
       },
       remove: function () {
-        if (!confirm("Remove this block?")) return;
-        cards.splice(cards.indexOf(entry), 1);
-        repaintBlocks();
+        if (!confirm("Remove this band?")) return;
+        bands.splice(bands.indexOf(entry), 1);
+        repaint();
+        markDirty(true);
       }
     });
-    cards.push(entry);
-    blocksHost.appendChild(entry.root);
+    bands.push(entry);
+    bandsHost.appendChild(entry.root);
+    return entry;
   }
 
-  (record.blocks || []).forEach(addBlockCard);
+  (record.blocks || []).forEach(function (block) {
+    addBand(block, bandKind(block, mediaRows));
+  });
 
-  var adderSelect = pSelect(BLOCK_TYPES, "section");
-  var adder = el("div", "admin-form");
-  adder.appendChild(pField("Add a block", adderSelect));
-  var addWrap = el("div", "auth-field");
-  addWrap.appendChild(button("+ Add", "admin-btn--accent", function () {
-    addBlockCard({ type: adderSelect.value });
+  var adders = el("div", "pe-adders");
+  adders.appendChild(button("+ Text", "", function () {
+    addBand({ type: "text", heading: "", body: [], collapsible: false }, "text");
+    markDirty(true);
   }));
-  adder.appendChild(addWrap);
-  host.appendChild(adder);
+  adders.appendChild(button("+ Images / GIFs", "", function () {
+    addBand({ type: "media", heading: "", rows: [], collapsible: false }, "images");
+    markDirty(true);
+  }));
+  adders.appendChild(button("+ Video", "", function () {
+    addBand({ type: "media", heading: "", rows: [], collapsible: true }, "video");
+    markDirty(true);
+  }));
+  column.appendChild(adders);
+
+  column.appendChild(el("p", "pe-annot",
+    "Those three are the whole catalogue. A project page is a description, some words, and some pictures."));
 
   // --- save -----------------------------------------------------------------
   function saveProject() {
     var body = {
       title: titleInput.value.trim(),
       status: statusSelect.value || null,
-      palette: paletteSelect.value || null,
+      accent: accent.read(),
+      repoUrl: repoInput.value.trim() || null,
       lede: ledeArea.value.trim() || null,
-      cardBlurb: blurbArea.value.trim() || null,
-      sortOrder: Number(orderInput.value) || 0,
-      visible: visibleCheck.input.checked,
+      cardBlurb: blurbToggle.input.checked ? (blurbArea.value.trim() || null) : null,
       chips: chipRows.map(function (c) { return c.read(); }).filter(Boolean),
-      blocks: cards.map(function (c) { return c.read(); })
+      blocks: bands.map(function (b) { return b.read(); })
     };
     if (!slugInput.disabled) body.slug = slugInput.value.trim();
 
     if (!body.title) return Promise.reject(new Error("The page needs a title."));
+    if (!body.slug && !slugInput.disabled) return Promise.reject(new Error("The page needs a slug."));
 
     return api("/admin/projects/" + record.id, { method: "PUT", body: body })
-      .then(function (res) {
-        if (res.ok) return null;
-        return res.json().then(function (b) { throw new Error(b.message || "Could not save."); });
+      .then(function (res) { return ok(res, "Could not save."); })
+      .then(function () {
+        record.title = body.title;
+        if (body.slug) record.slug = body.slug;
+        markDirty(false);
       });
   }
 }
 
-// One bordered card per block: a header with the type name and the reorder /
-// remove controls, then the type's own fields. Returns { root, read }.
-function buildBlockCard(block, mediaRows, controls) {
-  var root = el("div", "box box--static");
+// Which of the two adders made this band, remembered by what is in it rather
+// than stored: a band of MP4s is a video band, anything else is pictures.
+function bandKind(block, mediaRows) {
+  if (block.type === "text") return "text";
+  var rows = block.rows || [];
+  if (!rows.length) return "images";
+  var allVideo = rows.every(function (r) {
+    var m = null;
+    mediaRows.forEach(function (x) { if (x.id === r.mediaId) m = x; });
+    return m && m.mime === "video/mp4";
+  });
+  return allVideo ? "video" : "images";
+}
 
-  var name = "";
-  BLOCK_TYPES.forEach(function (t) { if (t[0] === block.type) name = t[1]; });
+var rowSeq = 0;
 
-  var head = el("div", "admin-actions");
-  head.appendChild(el("span", "box__label", name || block.type));
-  head.appendChild(button("↑", "", controls.moveUp));
-  head.appendChild(button("↓", "", controls.moveDown));
-  head.appendChild(button("✕", "", controls.remove));
+// One card per band: a head with the kind, the heading, the Foldable tick and
+// the reorder / remove controls, then the band's own fields.
+function buildBandCard(block, kind, mediaRows, controls) {
+  var root = el("section", "pe-card pe-band");
+  var isText = kind === "text";
+
+  var head = el("div", "pe-band__head");
+  head.appendChild(el("span", "pe-band__kind", isText ? "Text" : kind === "video" ? "Video" : "Images"));
+
+  var heading = peInput(block.heading, 120);
+  heading.setAttribute("aria-label", "Band heading");
+  heading.placeholder = isText ? "What it does" : "My setup";
+  head.appendChild(heading);
+
+  var fold = peCheck("Foldable", block.collapsible);
+  fold.input.addEventListener("change", function () {
+    root.classList.toggle("pe-band--folded", fold.input.checked);
+  });
+  if (block.collapsible) root.classList.add("pe-band--folded");
+  head.appendChild(fold.root);
+
+  var actions = el("div", "admin-actions");
+  var up = button("▲", "", controls.moveUp);
+  up.setAttribute("aria-label", "Move band up");
+  var down = button("▼", "", controls.moveDown);
+  down.setAttribute("aria-label", "Move band down");
+  var kill = button("✕", "", controls.remove);
+  kill.setAttribute("aria-label", "Remove band");
+  actions.appendChild(up);
+  actions.appendChild(down);
+  actions.appendChild(kill);
+  head.appendChild(actions);
+
   root.appendChild(head);
 
-  var read;
+  if (isText) {
+    var body = peArea((block.body || []).join("\n\n"), 6);
+    root.appendChild(peField("Paragraphs", body,
+      "One blank line starts a new paragraph. `code` and [label](url) are the only markup.", false));
 
-  function form() {
-    var f = el("div", "admin-form");
-    root.appendChild(f);
-    return f;
-  }
-
-  function hint(text) {
-    root.appendChild(el("p", "admin-note", text));
-  }
-
-  switch (block.type) {
-    case "section": {
-      var heading = pInput(block.heading, 120);
-      var body = pArea((block.body || []).join("\n\n"), 6);
-      var noteText = pInput(block.note ? block.note.text : "", 4000);
-      var accent = pCheck("Accent border (WIP / caveat notice)", block.note && block.note.accent);
-
-      var f1 = form();
-      f1.appendChild(pField("Heading", heading));
-      var f2 = form();
-      f2.appendChild(pField("Paragraphs — separate with a blank line", body));
-      var f3 = form();
-      f3.appendChild(pField("Note (optional aside, shown boxed under the text)", noteText));
-      f3.appendChild(accent.root);
-
-      read = function () {
+    return {
+      root: root,
+      kind: kind,
+      read: function () {
         return {
-          type: "section",
+          type: "text",
           heading: heading.value.trim(),
           body: splitParas(body.value),
-          note: noteText.value.trim()
-            ? { text: noteText.value.trim(), accent: accent.input.checked }
-            : null
+          collapsible: fold.input.checked
         };
-      };
-      break;
-    }
-
-    case "steps": {
-      var sHeading = pInput(block.heading, 120);
-      var sItems = pArea((block.items || []).map(function (it) {
-        return it.lead ? it.lead + " — " + it.text : it.text;
-      }).join("\n"), 6);
-
-      var sf = form();
-      sf.appendChild(pField("Heading", sHeading));
-      var sf2 = form();
-      sf2.appendChild(pField("Steps — one per line", sItems));
-      hint("A line like “Base pass — 8 steps at denoise 1.0” gets a bold lead. No “ — ”, no lead.");
-
-      read = function () {
-        return {
-          type: "steps",
-          heading: sHeading.value.trim(),
-          items: splitLines(sItems.value).map(function (line) {
-            var cut = line.indexOf(" — ");
-            if (cut === -1) return { lead: null, text: line };
-            return { lead: line.slice(0, cut).trim(), text: line.slice(cut + 3).trim() };
-          })
-        };
-      };
-      break;
-    }
-
-    case "features": {
-      var fHeading = pInput(block.heading, 120);
-      var fItems = pArea((block.items || []).join("\n"), 5);
-
-      var ff = form();
-      ff.appendChild(pField("Heading", fHeading));
-      var ff2 = form();
-      ff2.appendChild(pField("Features — one per line, short, no sentences", fItems));
-
-      read = function () {
-        return { type: "features", heading: fHeading.value.trim(), items: splitLines(fItems.value) };
-      };
-      break;
-    }
-
-    case "table": {
-      var tHeading = pInput(block.heading, 120);
-      var tLines = [(block.columns || []).join(" | ")]
-        .concat((block.rows || []).map(function (r) { return r.join(" | "); }))
-        .filter(Boolean);
-      var tArea = pArea(tLines.join("\n"), 6);
-
-      var tf = form();
-      tf.appendChild(pField("Heading", tHeading));
-      var tf2 = form();
-      tf2.appendChild(pField("Rows — first line is the header, cells separated by |", tArea));
-
-      read = function () {
-        var lines = splitLines(tArea.value).map(function (line) {
-          return line.split("|").map(function (c) { return c.trim(); });
-        });
-        return {
-          type: "table",
-          heading: tHeading.value.trim(),
-          columns: lines.length ? lines[0] : [],
-          rows: lines.slice(1)
-        };
-      };
-      break;
-    }
-
-    case "figure": {
-      var fig = mediaPicker(mediaRows, block.mediaId, "image/*");
-      var figAlt = pArea(block.alt, 2);
-      var figCaption = pInput(block.caption, 300);
-
-      var gf = form();
-      gf.appendChild(pField("Image", fig.root));
-      var gf2 = form();
-      gf2.appendChild(pField("Alt text — describe what is shown", figAlt));
-      gf2.appendChild(pField("Caption", figCaption));
-
-      read = function () {
-        return {
-          type: "figure",
-          mediaId: fig.read(),
-          alt: figAlt.value.trim(),
-          caption: figCaption.value.trim()
-        };
-      };
-      break;
-    }
-
-    case "media": {
-      var mHeading = pInput(block.heading, 120);
-      var mf = form();
-      mf.appendChild(pField("Band heading (e.g. “Walkthrough”, “My setup”)", mHeading));
-      hint("Closed by default on the page; the clip count and size under the heading are computed, not typed. GIFs render as plain rows, MP4s get pause / fullscreen controls.");
-
-      var rowsHost = el("div");
-      root.appendChild(rowsHost);
-      var rowEntries = [];
-
-      var addRow = function (row) {
-        var picker = mediaPicker(mediaRows, row.mediaId, "image/*,video/mp4");
-        var title = pInput(row.title, 120);
-        var alt = pArea(row.alt, 2);
-        var body = pArea((row.body || []).join("\n\n"), 4);
-        var wide = pCheck("Wide row (full-width frame, like the ComfyUI clip)", row.wide);
-
-        var card = el("div", "box box--static");
-        var rowHead = el("div", "admin-actions");
-        rowHead.appendChild(el("span", "box__label", "Clip"));
-        var entry = {
-          root: card,
-          read: function () {
-            return {
-              mediaId: picker.read(),
-              title: title.value.trim(),
-              alt: alt.value.trim(),
-              body: splitParas(body.value),
-              wide: wide.input.checked
-            };
-          }
-        };
-        rowHead.appendChild(button("✕", "", function () {
-          rowsHost.removeChild(card);
-          rowEntries.splice(rowEntries.indexOf(entry), 1);
-        }));
-        card.appendChild(rowHead);
-
-        var rf = el("div", "admin-form");
-        rf.appendChild(pField("File (GIF, image or MP4)", picker.root));
-        rf.appendChild(pField("Row title", title));
-        card.appendChild(rf);
-        var rf2 = el("div", "admin-form");
-        rf2.appendChild(pField("Alt text", alt));
-        rf2.appendChild(pField("Paragraphs beside the clip — blank line between them", body));
-        card.appendChild(rf2);
-        var rf3 = el("div", "admin-form");
-        rf3.appendChild(wide.root);
-        card.appendChild(rf3);
-
-        rowEntries.push(entry);
-        rowsHost.appendChild(card);
-      };
-
-      (block.rows || []).forEach(addRow);
-      root.appendChild(button("+ Add clip", "", function () { addRow({}); }));
-
-      read = function () {
-        return {
-          type: "media",
-          heading: mHeading.value.trim(),
-          rows: rowEntries.map(function (r) { return r.read(); })
-        };
-      };
-      break;
-    }
-
-    case "datarow": {
-      var dLines = (block.cells || []).map(function (c) { return c.key + " | " + c.value; });
-      var dArea = pArea(dLines.join("\n"), 4);
-
-      var df = form();
-      df.appendChild(pField("Facts — one per line as “Key | Value”, 3–4 reads best", dArea));
-
-      read = function () {
-        return {
-          type: "datarow",
-          cells: splitLines(dArea.value).map(function (line) {
-            var cut = line.indexOf("|");
-            if (cut === -1) return { key: line.trim(), value: "" };
-            return { key: line.slice(0, cut).trim(), value: line.slice(cut + 1).trim() };
-          })
-        };
-      };
-      break;
-    }
-
-    case "files": {
-      var flHeading = pInput(block.heading || "Downloads", 120);
-      var flf = form();
-      flf.appendChild(pField("Heading", flHeading));
-
-      var itemsHost = el("div");
-      root.appendChild(itemsHost);
-      var itemEntries = [];
-
-      var addFileItem = function (item) {
-        var picker = mediaPicker(mediaRows, item.mediaId, "");
-        var label = pInput(item.label, 120);
-        var note = pInput(item.note, 300);
-
-        var rowEl = el("div", "admin-form");
-        rowEl.appendChild(pField("File", picker.root));
-        rowEl.appendChild(pField("Label", label));
-        rowEl.appendChild(pField("Note (optional gloss)", note));
-
-        var entry = {
-          root: rowEl,
-          read: function () {
-            return { mediaId: picker.read(), label: label.value.trim(), note: note.value.trim() || null };
-          }
-        };
-        var rm = el("div", "auth-field");
-        rm.appendChild(button("✕ Remove", "", function () {
-          itemsHost.removeChild(rowEl);
-          itemEntries.splice(itemEntries.indexOf(entry), 1);
-        }));
-        rowEl.appendChild(rm);
-
-        itemEntries.push(entry);
-        itemsHost.appendChild(rowEl);
-      };
-
-      (block.items || []).forEach(addFileItem);
-      root.appendChild(button("+ Add download", "", function () { addFileItem({}); }));
-
-      read = function () {
-        return {
-          type: "files",
-          heading: flHeading.value.trim(),
-          items: itemEntries.map(function (i) { return i.read(); })
-        };
-      };
-      break;
-    }
-
-    case "links": {
-      var lHeading = pInput(block.heading || "Links", 120);
-      var lf = form();
-      lf.appendChild(pField("Heading", lHeading));
-
-      var linksHost = el("div");
-      root.appendChild(linksHost);
-      var linkEntries = [];
-
-      var addLinkItem = function (item) {
-        var label = pInput(item.label, 120);
-        var href = pInput(item.href, 600);
-        var note = pInput(item.note, 300);
-
-        var rowEl = el("div", "admin-form");
-        rowEl.appendChild(pField("Label", label));
-        rowEl.appendChild(pField("URL", href));
-        rowEl.appendChild(pField("Note (optional gloss)", note));
-
-        var entry = {
-          root: rowEl,
-          read: function () {
-            return { label: label.value.trim(), href: href.value.trim(), note: note.value.trim() || null };
-          }
-        };
-        var rm = el("div", "auth-field");
-        rm.appendChild(button("✕ Remove", "", function () {
-          linksHost.removeChild(rowEl);
-          linkEntries.splice(linkEntries.indexOf(entry), 1);
-        }));
-        rowEl.appendChild(rm);
-
-        linkEntries.push(entry);
-        linksHost.appendChild(rowEl);
-      };
-
-      (block.items || []).forEach(addLinkItem);
-      root.appendChild(button("+ Add link", "", function () { addLinkItem({}); }));
-
-      read = function () {
-        return {
-          type: "links",
-          heading: lHeading.value.trim(),
-          items: linkEntries.map(function (i) { return i.read(); })
-        };
-      };
-      break;
-    }
-
-    default: {
-      hint("Unknown block type “" + block.type + "” — it will be kept as-is.");
-      read = function () { return block; };
-    }
+      }
+    };
   }
 
-  return { root: root, read: read };
+  // --- media band -----------------------------------------------------------
+  var accept = kind === "video" ? "video/mp4" : "image/png,image/jpeg,image/webp,image/gif";
+  var rowsHost = el("div");
+  root.appendChild(rowsHost);
+  var rowEntries = [];
+
+  function repaintRows() {
+    rowsHost.textContent = "";
+    rowEntries.forEach(function (r) { rowsHost.appendChild(r.root); });
+  }
+
+  function addRow(row) {
+    var name = "layout-" + (rowSeq++);
+    var card = el("div", "pe-row");
+
+    var left = el("div");
+    var fields = el("div", "pe-row__fields");
+
+    // An MP4 defaults to text below — a 16:9 clip wants the full width —
+    // and an image to text beside. Either can be overridden per row, and
+    // once it has been, uploading another file does not undo the choice.
+    var layout = row.layout || (kind === "video" ? "below" : "beside");
+    var layoutTouched = !!row.layout;
+
+    var title = peInput(row.title, 120);
+    title.setAttribute("aria-label", "Row title");
+    title.placeholder = "What this one is";
+
+    var text = peArea((row.body || []).join("\n\n"), 3);
+    text.setAttribute("aria-label", "Row text");
+    text.placeholder = "The words beside it. Blank line between paragraphs.";
+
+    var alt = peInput(row.alt, 300);
+    alt.setAttribute("aria-label", "Alt text");
+    alt.placeholder = "Alt text — what the picture shows";
+
+    var beside = peRadio(name, "Text beside", layout === "beside", "beside");
+    var below = peRadio(name, "Text below", layout === "below", "below");
+
+    function setLayout(value) {
+      beside.input.checked = value === "beside";
+      below.input.checked = value === "below";
+      card.classList.toggle("pe-row--below", value === "below");
+    }
+
+    [beside, below].forEach(function (r) {
+      r.input.addEventListener("change", function () {
+        layoutTouched = true;
+        setLayout(r.input.value);
+      });
+    });
+
+    var radios = el("div", "pe-radios");
+    radios.appendChild(beside.root);
+    radios.appendChild(below.root);
+    radios.appendChild(el("span", "pe-bar__spacer"));
+
+    var rowUp = button("▲", "", function () {
+      var i = rowEntries.indexOf(entry);
+      if (i > 0) { rowEntries.splice(i, 1); rowEntries.splice(i - 1, 0, entry); repaintRows(); }
+    });
+    rowUp.setAttribute("aria-label", "Move row up");
+    var rowDown = button("▼", "", function () {
+      var i = rowEntries.indexOf(entry);
+      if (i < rowEntries.length - 1) { rowEntries.splice(i, 1); rowEntries.splice(i + 1, 0, entry); repaintRows(); }
+    });
+    rowDown.setAttribute("aria-label", "Move row down");
+    var rowKill = button("✕", "", function () {
+      rowEntries.splice(rowEntries.indexOf(entry), 1);
+      repaintRows();
+    });
+    rowKill.setAttribute("aria-label", "Remove row");
+
+    radios.appendChild(rowUp);
+    radios.appendChild(rowDown);
+    radios.appendChild(rowKill);
+
+    // Built after the radios, because picking a file is what sets the layout
+    // on a row nobody has overridden yet — and it does that on construction,
+    // for a row loaded from the server as much as for a fresh upload.
+    var picker = mediaPicker(mediaRows, row.mediaId, accept, function (m) {
+      if (!m || layoutTouched) return;
+      setLayout(m.mime === "video/mp4" ? "below" : "beside");
+    });
+    left.appendChild(picker.root);
+
+    fields.appendChild(title);
+    fields.appendChild(text);
+    fields.appendChild(alt);
+    fields.appendChild(radios);
+
+    card.appendChild(left);
+    card.appendChild(fields);
+    setLayout(layout);
+
+    var entry = {
+      root: card,
+      read: function () {
+        return {
+          mediaId: picker.read(),
+          title: title.value.trim(),
+          alt: alt.value.trim(),
+          body: splitParas(text.value),
+          layout: below.input.checked ? "below" : "beside"
+        };
+      }
+    };
+
+    rowEntries.push(entry);
+    rowsHost.appendChild(card);
+  }
+
+  (block.rows || []).forEach(addRow);
+
+  var add = button(kind === "video" ? "+ Add a clip" : "+ Add an image / GIF", "", function () {
+    addRow({});
+  });
+  var drop = el("div", "pe-drop");
+  drop.appendChild(add);
+  drop.appendChild(el("span", "pe-field__hint",
+    "Size and dimensions are read from the file itself; the fold's “N clips · X MB” hint is computed from them."));
+  root.appendChild(drop);
+
+  return {
+    root: root,
+    kind: kind,
+    read: function () {
+      return {
+        type: "media",
+        heading: heading.value.trim(),
+        collapsible: fold.input.checked,
+        rows: rowEntries.map(function (r) { return r.read(); })
+      };
+    }
+  };
 }
