@@ -103,6 +103,54 @@
         <figcaption>The full workflow — Models and LoRA stack on the left, Base and Refine stages on the right, joined by the Compare node.</figcaption>
       </figure>
 
+      <!-- Same band as the About page's setup section, and closed for the same
+           reason: 16 MB is not something to spend before it is asked for. This
+           clip is an MP4 rather than a GIF because 1920x1080 of readable node
+           text is 16 MB encoded and would be several times that as a GIF. It
+           carries no native controls — a pause button and a fullscreen button,
+           drawn in the site's own stroke, and a progress rule that appears
+           only in fullscreen. The file has an audio track; the element is
+           muted, which is also what lets it autoplay at all. -->
+      <details class="reveal">
+        <summary class="reveal__summary">
+          <h2 class="section-label">Walkthrough</h2>
+          <span class="reveal__hint">1 clip &middot; 16 MB</span>
+          <span class="reveal__mark" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </summary>
+
+        <div class="reveal__body">
+          <div class="mediarow mediarow--wide">
+            <div class="mediarow__frame">
+              <video class="mediarow__media" src="assets/comfyui.mp4" width="1920" height="1080" autoplay loop muted playsinline preload="none" aria-label="A screen recording panning across the workflow in ComfyUI and zooming in on the note cards, the model column and the two sampler nodes."></video>
+              <button class="clip-btn clip-btn--play" type="button" data-clip-toggle aria-label="Pause clip">
+                <span data-clip-icon="pause">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="9" y1="4" x2="9" y2="20"/><line x1="15" y1="4" x2="15" y2="20"/></svg>
+                </span>
+                <span data-clip-icon="play" hidden>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 4 20 12 6 20"/></svg>
+                </span>
+              </button>
+              <button class="clip-btn clip-btn--full" type="button" data-clip-fullscreen aria-label="Fullscreen">
+                <span data-clip-icon="enter">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 3 3 3 3 9"/><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><polyline points="15 21 21 21 21 15"/></svg>
+                </span>
+                <span data-clip-icon="exit" hidden>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 9 9 9 9 3"/><polyline points="21 9 15 9 15 3"/><polyline points="3 15 9 15 9 21"/><polyline points="21 15 15 15 15 21"/></svg>
+                </span>
+              </button>
+              <div class="clip-track" data-clip-track aria-hidden="true"><span class="clip-track__fill" data-clip-fill></span></div>
+            </div>
+            <div class="mediarow__text reading">
+              <h3 class="mediarow__title">The graph, moving</h3>
+              <p>Twenty seconds across the same graph as the still above, at a zoom where the nodes can be read &mdash; the models column, both samplers, and the Quick Switches group that bypasses the LoRA stack.</p>
+              <p>The prompts and LoRA slots are empty because this is the published copy, not the working file.</p>
+            </div>
+          </div>
+        </div>
+      </details>
+
       <dl class="datarow">
         <div class="datarow__cell">
           <dt>Type</dt>

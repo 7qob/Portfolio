@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
   renderContributions();
   initThemeToggle();
   initFigures();
+  initClipToggles();
   initBoxScroll();
 
   // Backend-dependent, and not all in the same way. initVault() and
@@ -79,19 +80,124 @@ function initBoxScroll() {
 // into a page before its image file exists (e.g. it lands later via upload);
 // until then the <img> would render as a broken-image box. This hides any
 // figure whose image fails to load, so an empty assets/ never shows a scar.
+//
+// .mediarow is the same deal one step out: the whole row goes, not just the
+// picture. A row is a clip and the paragraph explaining the clip — with the
+// clip gone the paragraph is describing nothing. Note that a lazy image that
+// never scrolls into view never fires `error` either, so a row inside a
+// closed <details> is not hidden before anyone has asked to see it.
+//
+// And one step out again: when the last row of a .reveal has gone, the band
+// goes too. Otherwise the page offers a section that opens onto nothing,
+// which is worse than not offering it. That is what lets a walkthrough be
+// wired up before its clip has been recorded — until the file lands, the
+// band is simply not part of the page.
 function initFigures() {
-  var imgs = document.querySelectorAll(".figure img");
+  // <video> is in the list for the same reason <img> is: a clip whose file is
+  // missing must take its row down with it rather than leave an empty frame.
+  var imgs = document.querySelectorAll(".figure img, .mediarow img, .mediarow video");
   for (var i = 0; i < imgs.length; i++) {
     var img = imgs[i];
     var hide = (function (image) {
       return function () {
-        var fig = image.closest(".figure");
+        var fig = image.closest(".figure, .mediarow");
         if (fig) fig.hidden = true;
+
+        var band = image.closest(".reveal");
+        if (band && !band.querySelector(".mediarow:not([hidden])")) {
+          band.hidden = true;
+        }
       };
     })(img);
     // Already failed (cached error) or fails later.
     if (img.complete && img.naturalWidth === 0) hide();
     else img.addEventListener("error", hide);
+  }
+}
+
+// The two controls on a clip: stop it, or fill the screen with it.
+//
+// The video carries no native `controls`, so this is the entire interface.
+// Every icon ships in the markup and is shown or hidden by the `hidden`
+// attribute — nothing here writes markup, which keeps this the same shape as
+// the theme toggle.
+//
+// The pause button is also what makes autoplay honest. A GIF ignores
+// prefers-reduced-motion entirely and cannot be stopped; a <video> can do
+// both, so a reader who has asked for less motion gets the clip paused on its
+// first frame and starts it themselves.
+//
+// The progress rule is updated always and shown only in fullscreen (see
+// .clip-track in style.css) — one `style.width` per timeupdate is cheaper than
+// binding and unbinding the listener around fullscreenchange.
+function initClipToggles() {
+  var frames = document.querySelectorAll(".mediarow__frame");
+  var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  for (var i = 0; i < frames.length; i++) {
+    (function (frame) {
+      var video = frame.querySelector("video");
+      if (!video) return;
+
+      var toggle = frame.querySelector("[data-clip-toggle]");
+      var full = frame.querySelector("[data-clip-fullscreen]");
+      var fill = frame.querySelector("[data-clip-fill]");
+
+      if (toggle) {
+        var pause = toggle.querySelector('[data-clip-icon="pause"]');
+        var play = toggle.querySelector('[data-clip-icon="play"]');
+
+        var syncPlay = function () {
+          pause.hidden = video.paused;
+          play.hidden = !video.paused;
+          toggle.setAttribute("aria-label", video.paused ? "Play clip" : "Pause clip");
+        };
+
+        toggle.addEventListener("click", function () {
+          if (video.paused) video.play();
+          else video.pause();
+        });
+
+        video.addEventListener("play", syncPlay);
+        video.addEventListener("pause", syncPlay);
+
+        if (still) {
+          video.autoplay = false;
+          video.pause();
+        }
+        syncPlay();
+      }
+
+      // The frame is what goes fullscreen, not the video — see the note above
+      // .mediarow__frame:fullscreen in style.css. Escape also leaves, so the
+      // icon is synced off the browser's event rather than off the click.
+      if (full) {
+        var enter = full.querySelector('[data-clip-icon="enter"]');
+        var exit = full.querySelector('[data-clip-icon="exit"]');
+
+        var syncFull = function () {
+          var on = document.fullscreenElement === frame;
+          enter.hidden = on;
+          exit.hidden = !on;
+          full.setAttribute("aria-label", on ? "Exit fullscreen" : "Fullscreen");
+        };
+
+        full.addEventListener("click", function () {
+          if (document.fullscreenElement === frame) document.exitFullscreen();
+          else if (frame.requestFullscreen) frame.requestFullscreen();
+        });
+
+        document.addEventListener("fullscreenchange", syncFull);
+        syncFull();
+      }
+
+      if (fill) {
+        video.addEventListener("timeupdate", function () {
+          var d = video.duration;
+          fill.style.width = d ? (video.currentTime / d) * 100 + "%" : 0;
+        });
+      }
+    })(frames[i]);
   }
 }
 

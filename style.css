@@ -369,7 +369,8 @@ body {
 .link-box__caption,
 .field__label,
 .section-label,
-.datarow dt {
+.datarow dt,
+.mediarow__title {
   font-size: var(--fs-caption);
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1842,7 +1843,8 @@ a:focus-visible,
 /* Every band in the article shares one opening seam. */
 .project > .project__section,
 .project > .figure,
-.project > .datarow {
+.project > .datarow,
+.project > .reveal {
   padding-top: var(--stack-md);
   border-top: var(--border-width) solid var(--border);
 }
@@ -1894,7 +1896,8 @@ a:focus-visible,
    it takes the heading size and the full text colour. The accent tick before
    it is what makes the start of a section findable when scrolling past. */
 .project__section > .section-label,
-.linklist > .section-label {
+.linklist > .section-label,
+.reveal__summary > .section-label {
   display: flex;
   align-items: baseline;
   gap: calc(var(--space) * 1.25);
@@ -1905,7 +1908,8 @@ a:focus-visible,
 }
 
 .project__section > .section-label::before,
-.linklist > .section-label::before {
+.linklist > .section-label::before,
+.reveal__summary > .section-label::before {
   content: "";
   flex: 0 0 auto;
   width: calc(var(--space) * 2);
@@ -2090,6 +2094,230 @@ code {
   color: var(--fg-mute);
 }
 
+/* ---- Expandable band ----
+   A <details> wearing the same seam as every other band, for a block worth
+   offering but not worth spending the reader's screen — or their data — on
+   unasked.
+
+   The weight is the reason it exists. The setup clips on the About page are
+   48 MB of GIF between them, roughly a thousand times the rest of the site.
+   Inside a CLOSED <details> those images have no layout box at all, so a
+   loading="lazy" image never intersects the viewport and not one of those
+   bytes is fetched until someone opens the section. Nothing is being hidden
+   by that: the summary names what is behind it and states the size, the same
+   courtesy the vault list pays by reading sizes off the real files.
+
+   It is also the only honest way to ship an animated GIF. A GIF cannot be
+   paused from CSS and ignores prefers-reduced-motion completely, so the
+   motion has to be something the reader starts, not something that starts at
+   them. Closed by default is that switch.
+
+   The <details> element itself gets no display of its own on purpose — its
+   own box is what the open/closed behaviour hangs off, and nothing here needs
+   it to be a flex container. */
+.reveal__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: calc(var(--space) * 1.25);
+  cursor: pointer;
+  /* Both halves of removing the default triangle: the standard property, and
+     the WebKit pseudo-element that predates it and ignores it. The site draws
+     its own marker, in the same stroke as every other icon. */
+  list-style: none;
+}
+
+.reveal__summary::-webkit-details-marker { display: none; }
+
+/* The label is a band heading like any other, so it is the same
+   .section-label and picks up the accent tick from the rule above. */
+
+/* What is behind the fold, in the meta size: how many clips and how many
+   megabytes. Someone on mobile data is entitled to know before they tap. */
+.reveal__hint {
+  font-size: var(--fs-meta);
+  color: var(--fg-mute);
+}
+
+/* Points down closed, up open. Centred rather than baseline-aligned — an
+   inline SVG has no text baseline of its own to sit on. */
+.reveal__mark {
+  display: inline-flex;
+  align-self: center;
+  color: var(--fg-mute);
+  transition: transform var(--motion), color var(--motion);
+}
+
+.reveal[open] .reveal__mark { transform: rotate(180deg); }
+
+.reveal__summary:hover .reveal__mark,
+.reveal__summary:focus-visible .reveal__mark { color: var(--fg-strong); }
+
+.reveal__summary:hover > .section-label,
+.reveal__summary:focus-visible > .section-label { color: var(--fg-strong); }
+
+.reveal__summary:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.reveal__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-lg);
+  padding-top: var(--stack-md);
+}
+
+/* ---- Media row: a clip beside the paragraph that explains it ----
+   Two tracks — the clip left, the words right. The clip's track is fixed at
+   20rem, and that number is not a taste call: the files are 480px wide, and
+   20rem is 360px at this root size, so a clip is always drawn at or under its
+   own resolution instead of being enlarged into mush. On the About page the
+   other track then lands on exactly one --measure, because that page's rail
+   was itself derived as measure + 20rem + the gap between them.
+
+   To put the clip on the right instead, this is the only edit: swap the two
+   values in grid-template-columns and give .mediarow__media `order: 1`. */
+.mediarow {
+  display: grid;
+  grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+  gap: var(--stack-md) var(--stack-lg);
+  align-items: start;
+}
+
+/* Framed exactly like a screenshot — 1px border, inset background, no radius.
+   The width/height attributes in the markup hold the 16:9 box before the file
+   arrives, so opening the section does not shove the page around underneath
+   the reader as each clip lands. The selector covers <video> as well: if
+   these ever become MP4s, only the markup changes. */
+.mediarow__media {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: var(--border-width) solid var(--border);
+  background: var(--panel-alt);
+}
+
+/* One clip does not fit the fixed track. The ComfyUI walkthrough is a 1280px
+   screen recording whose entire point is that the node text can be read, and
+   20rem drew it at 360 — under a third of the pixels it actually has. So this
+   modifier stacks the row: the clip takes the full rail like a screenshot,
+   because it is one that moves, and the words sit under it on the text
+   measure exactly as a figcaption does.
+
+   The condition for using it is the same one that set 20rem in the first
+   place — never draw a clip above its own resolution. Only reach for this
+   when the source file is wider than the track it would otherwise sit in; a
+   480px clip stretched to the rail is the mush the fixed track prevents. */
+.mediarow--wide {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.mediarow__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-sm);
+  font-size: var(--fs-body);
+  color: var(--text-muted);
+}
+
+.mediarow--wide .mediarow__text {
+  max-width: var(--measure);
+}
+
+/* The frame exists only to give the pause button something to be positioned
+   against. It has no border of its own — the border stays on the media, so a
+   clip is framed identically whether or not it has a control on it. */
+.mediarow__frame {
+  position: relative;
+  display: block;
+}
+
+/* Two controls, and only two. A <video> with native `controls` puts a
+   scrubber, a volume slider, a timer and a fullscreen button across the bottom
+   of the clip in the browser's chrome — rounded, shadowed, and nothing like
+   anything else on this site. These are the whole of what the clip needs: a
+   way to stop it, bottom left, and a way to fill the screen with it, bottom
+   right. Same 1px border, same square corners, same stroke weight as every
+   other icon here. They sit inside the frame rather than under it so the
+   band's rhythm is untouched — the clip is still one block, not a block plus a
+   toolbar. */
+.clip-btn {
+  position: absolute;
+  bottom: var(--space);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: var(--border-width) solid var(--border);
+  border-radius: 0;
+  background: var(--panel);
+  color: var(--fg-mute);
+  line-height: 1;
+  cursor: pointer;
+  transition: color var(--motion), border-color var(--motion);
+}
+
+.clip-btn--play { left: var(--space); }
+.clip-btn--full { right: var(--space); }
+
+.clip-btn:hover,
+.clip-btn:focus-visible {
+  color: var(--fg-strong);
+  border-color: var(--accent);
+}
+
+.clip-btn span { display: block; }
+.clip-btn svg { display: block; }
+
+/* Fullscreen. The frame goes fullscreen rather than the <video> itself, which
+   is the whole trick: hand the video to the browser and it brings its own
+   chrome back, but the frame is an ordinary element, so the two buttons and
+   the rule below travel with it and stay the only interface there is.
+   Letterboxing is object-fit's job; the border comes off because at that size
+   it is a line around the screen, not around a picture. */
+.mediarow__frame:fullscreen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+}
+
+.mediarow__frame:fullscreen .mediarow__media {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border: 0;
+}
+
+/* The timeline, and it is a 2px rule. In the page there is nothing to scrub
+   past — twenty seconds on a loop — so no bar is shown at all. Filling the
+   screen is the one case where knowing how far in you are is worth a mark,
+   and a hairline the width of the screen is the smallest honest one. */
+.clip-track {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--line-soft);
+}
+
+.mediarow__frame:fullscreen .clip-track { display: block; }
+
+.clip-track__fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--accent);
+}
+
+/* .mediarow__title takes the shared caption role — it names the thing in the
+   clip, which is a label's job, not a heading's. */
+
 /* ---- Link list ----
    Where a page sends you next. It used to be a single bare .more-link left
    floating after the last section with no rule and no label, which read as
@@ -2168,6 +2396,12 @@ code {
   .linklist a:hover svg,
   .linklist a:focus-visible svg {
     transform: none;
+  }
+
+  /* The marker still has to change state — a disclosure that looks identical
+     open and closed is broken, not calm — it just stops sliding there. */
+  .reveal__mark {
+    transition: color var(--motion);
   }
 }
 
@@ -2266,7 +2500,8 @@ code {
 }
 
 /* Same band rule as the project pages: hairline, air, next band. */
-.about > .project__section {
+.about > .project__section,
+.about > .reveal {
   padding-top: var(--stack-md);
   border-top: var(--border-width) solid var(--border);
 }
@@ -2674,6 +2909,22 @@ code {
 
   /* 70vh of screenshot leaves nothing of the page around it. */
   .figure img { max-height: 50vh; }
+
+  /* Side by side on a phone the clip gets about 150px and the paragraph gets
+     five words a line, which is neither a picture nor a sentence. Stacked,
+     each gets the whole width. */
+  .mediarow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* A disclosure is a control, and down here a control is 44px tall — the
+     same floor the nav links take. The row is already the full width, so
+     this is the only axis that was short. align-content centres the line
+     inside that height; the items still sit on a shared baseline. */
+  .reveal__summary {
+    min-height: 44px;
+    align-content: center;
+  }
 
   /* The step number sits above its text rather than stealing a column. */
   .steps > li {

@@ -87,6 +87,57 @@
         </section>
       </div>
 
+      <!-- Closed on purpose, and it is not a styling choice. These four clips
+           are 48 MB between them; inside a closed <details> a loading="lazy"
+           image has no layout box, so none of it is fetched until the section
+           is opened. It is also the pause button an animated GIF does not
+           have — the motion starts when the reader asks for it. -->
+      <details class="reveal">
+        <summary class="reveal__summary">
+          <h2 class="section-label">My setup</h2>
+          <span class="reveal__hint">4 clips &middot; 48 MB</span>
+          <span class="reveal__mark" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </summary>
+
+        <div class="reveal__body">
+
+          <div class="mediarow">
+            <img class="mediarow__media" src="assets/setup.gif" width="480" height="270" loading="lazy" decoding="async" alt="A pan across the desk: a monitor on an arm, headphones, a keyboard, a microphone on a boom arm, an audio interface and a drawing tablet, with the wall behind lit red.">
+            <div class="mediarow__text reading">
+              <h3 class="mediarow__title">The desk</h3>
+              <p>The monitor is on an arm, so the only things standing on the desk are the ones I touch: keyboard, headphones, the microphone on its own boom, the interface behind it and the drawing tablet. The tower is on the floor underneath. What is lit is the wall, not the desk.</p>
+            </div>
+          </div>
+
+          <div class="mediarow">
+            <img class="mediarow__media" src="assets/keyboard.gif" width="480" height="270" loading="lazy" decoding="async" alt="A close pass along a black mechanical keyboard with dark keycaps, on a wooden desk.">
+            <div class="mediarow__text reading">
+              <h3 class="mediarow__title">The keyboard</h3>
+              <p>All black — black case, black keycaps, nothing printed on them that catches the light. It sits square in front of the monitor with the cable running back over the edge of the desk.</p>
+            </div>
+          </div>
+
+          <div class="mediarow">
+            <img class="mediarow__media" src="assets/mouse.gif" width="480" height="270" loading="lazy" decoding="async" alt="A black wireless mouse turning slowly on a cloth mousepad.">
+            <div class="mediarow__text reading">
+              <h3 class="mediarow__title">The mouse</h3>
+              <p>Wireless, symmetric and matte black, on the cloth pad that takes up the right half of the desk. There is no cable in any frame of the clip because there is no cable.</p>
+            </div>
+          </div>
+
+          <div class="mediarow">
+            <img class="mediarow__media" src="assets/rpi5.gif" width="480" height="270" loading="lazy" decoding="async" alt="A Raspberry Pi 5 with an NVMe HAT stacked on its GPIO header, a Samsung 970 EVO Plus SSD on the HAT and its status LEDs lit, sitting on top of a black perforated case.">
+            <div class="mediarow__text reading">
+              <h3 class="mediarow__title">The Pi</h3>
+              <p>The homelab end of all this: a Raspberry Pi 5 with an NVMe HAT on the GPIO header and a Samsung 970 EVO Plus in the slot, so it runs off an SSD rather than an SD card. The Minecraft server behind <a href="project-stalkr.html">Stalkr</a> runs on a Pi 5 like this one.</p>
+            </div>
+          </div>
+
+        </div>
+      </details>
+
       <section class="project__section" aria-labelledby="lbl-interests">
         <h2 class="section-label" id="lbl-interests">Interests</h2>
         <ul class="chips">
