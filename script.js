@@ -289,19 +289,31 @@ function showSignedIn(user) {
     nav.appendChild(admin);
   }
 
-  if (!nav.querySelector("[data-signout]")) {
-    var out = document.createElement("a");
-    out.href = "#";
-    out.className = "site-nav__signout";
-    out.textContent = "Sign out";
+  // Sign out is an action, not a destination, so it is a button in the bar's
+  // right-hand controls next to the theme toggle rather than a fifth nav link.
+  // A door with an arrow says "leave" without a word of its own, which is what
+  // keeps the strip quiet; the label lives in aria-label and the tooltip.
+  var header = nav.parentNode;
+  if (header && !header.querySelector("[data-signout]")) {
+    var out = document.createElement("button");
+    out.type = "button";
+    out.className = "icon-btn site-header__signout";
+    out.title = "Sign out";
+    out.setAttribute("aria-label", "Sign out");
     out.setAttribute("data-signout", "");
-    out.addEventListener("click", function (e) {
-      e.preventDefault();
+    out.innerHTML = ICON_DOOR;
+    out.addEventListener("click", function () {
       api("/auth/logout", { method: "POST" })
         .then(function () { location.href = "/index.html"; })
         .catch(function () { location.href = "/index.html"; });
     });
-    nav.appendChild(out);
+    var toggle = document.getElementById("theme-toggle");
+    if (toggle && toggle.parentNode === header) header.insertBefore(out, toggle);
+    else header.appendChild(out);
+    // Two controls plus four nav links do not fit one phone row; the class is
+    // what lets style.css give the bar a second row for that case only, so a
+    // signed-out visitor's header is untouched.
+    header.classList.add("has-signout");
   }
 }
 
@@ -520,6 +532,12 @@ var ICON_MOON =
   '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
 var ICON_SUN =
   '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
+// Feather's "log-out": a door frame and an arrow leaving through it. Same
+// 24-grid, same 2px stroke as the moon and sun, so the two controls in the
+// bar read as one set. Used by showSignedIn above — the var is hoisted and
+// this file runs long before any session check comes back.
+var ICON_DOOR =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
 
 function initThemeToggle() {
   var root = document.documentElement;

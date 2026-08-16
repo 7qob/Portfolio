@@ -614,26 +614,79 @@ body {
      on a tall screen but can never be shorter than what it holds. */
   grid-template-rows: repeat(4, 1fr);
   gap: var(--gap);
-  /* Ignite is the only card with a paragraph rather than a sentence, so it
-     is the only one that earns two rows. Kobui and Stalkr are one-liners and
-     sit side by side under Comfy. Fitting the fourth project in without
-     adding a fifth row is what keeps the whole bento on one screen. */
-  grid-template-areas:
-    "name   name   comfy  comfy  comfy  comfy  buttons"
-    "about  about  comfy  comfy  comfy  comfy  buttons"
-    "about  about  kobui  kobui  ignite ignite buttons"
-    "github github stalkr stalkr ignite ignite buttons";
   flex: 1;
+}
+
+/* ---- Five maps, one per project count ----
+   The four project cells used to be named after the four projects, which is
+   why adding a fifth project meant editing this file: the map, the .area-*
+   class and the card markup all had to be written by hand. The cells are
+   named after their shape instead — feature is the wide one, tall is the two
+   row column, smallA and smallB are the one-liners — and index.html carries
+   data-projects, written by Publish, saying how many are placed.
+
+   Every count gets its own map because a hole is worse than a rearrangement:
+   the whole point of the bento is that it is one screen with nothing loose in
+   it. The non-project boxes take the space back as the projects give it up,
+   so the grid is full at four, at one and at none.
+
+   Publish fills the cells in this order — feature, tall, smallA, smallB — and
+   compacts them, so the Nth map never has to cope with a gap in the middle. */
+.bento[data-projects="4"] {
+  grid-template-areas:
+    "name   name   feature feature feature feature buttons"
+    "about  about  feature feature feature feature buttons"
+    "about  about  smallA  smallA  tall    tall    buttons"
+    "github github smallB  smallB  tall    tall    buttons";
+}
+
+/* Three: smallA takes the row smallB is not using. */
+.bento[data-projects="3"] {
+  grid-template-areas:
+    "name   name   feature feature feature feature buttons"
+    "about  about  feature feature feature feature buttons"
+    "about  about  smallA  smallA  tall    tall    buttons"
+    "github github smallA  smallA  tall    tall    buttons";
+}
+
+/* Two: the project band splits down the middle, both full height. */
+.bento[data-projects="2"] {
+  grid-template-areas:
+    "name   name   feature feature tall tall buttons"
+    "about  about  feature feature tall tall buttons"
+    "about  about  feature feature tall tall buttons"
+    "github github feature feature tall tall buttons";
+}
+
+/* One: it takes the whole band, which is the right amount of room for the
+   only project on the page. */
+.bento[data-projects="1"] {
+  grid-template-areas:
+    "name   name   feature feature feature feature buttons"
+    "about  about  feature feature feature feature buttons"
+    "about  about  feature feature feature feature buttons"
+    "github github feature feature feature feature buttons";
+}
+
+/* None — a fresh install, or everything unpublished at once. The three boxes
+   that are left spread across the width rather than leaving four columns of
+   nothing next to them. */
+.bento[data-projects="0"] {
+  grid-template-areas:
+    "name   name   name   name   name   name   buttons"
+    "about  about  about  about  about  about  buttons"
+    "about  about  about  about  about  about  buttons"
+    "github github github github github github buttons";
 }
 
 .area-name      { grid-area: name; }
 .area-github    { grid-area: github; }
 .area-buttons   { grid-area: buttons; }
 .area-about     { grid-area: about; }
-.area-comfy     { grid-area: comfy; }
-.area-ignite    { grid-area: ignite; }
-.area-kobui     { grid-area: kobui; }
-.area-stalkr    { grid-area: stalkr; }
+.area-feature   { grid-area: feature; }
+.area-tall      { grid-area: tall; }
+.area-smallA    { grid-area: smallA; }
+.area-smallB    { grid-area: smallB; }
 
 /* ---- GitHub contribution heatmap (data: third-party service) ---- */
 /* Levels are derived from --accent, so the heatmap follows the accent. */
@@ -933,30 +986,42 @@ body {
   .box--edge { transition: none; }
 }
 
-/* ---- Per-project palettes ----
-   One class per project. Used on the bento card, the projects-page card and
-   the project page's own header, so a project keeps the same signature colour
-   everywhere it appears. */
-/* --edge-2 is the project's actual brand colour and carries the middle of the
-   corner segment; --edge-1 and --edge-3 are a darker and a lighter version of
-   it, so the accent stays one hue and just gains depth.
-                  shade ........ BRAND ........ tint                        */
-.is-ignite  { --edge-1: #b23000; --edge-2: #ff4d00; --edge-3: #ffae00; }  /* lava   */
-.is-comfy   { --edge-1: #8a9a00; --edge-2: #eafb2e; --edge-3: #f7ffa8; }  /* lemon  */
-.is-kobui   { --edge-1: #2b5236; --edge-2: #4e8c5a; --edge-3: #86c795; }  /* green  */
-.is-stalkr  { --edge-1: #23611c; --edge-2: #52c23a; --edge-3: #b6e83a; }  /* grass  */
+/* ---- Per-project accent, from one hex ----
+   The four .is-comfy / .is-ignite / .is-kobui / .is-stalkr palettes were
+   three hand-picked hex values each, which is why adding a project meant
+   editing the stylesheet. A page now carries one custom property inline —
+   --edge-brand, a validated #rrggbb — and the shade and tint are derived
+   here with color-mix, so the rim still gains depth across the corner
+   without anyone choosing three colours.
 
-/* Light theme: the same four hues, shifted down in lightness. The dark-theme
-   hot stops (#ffae00, #b6e83a, #35e0ff) sit at roughly 1.4:1 on white — a 1px
-   rim in those colours simply disappears. These clear 3:1, so the card still
-   has a visible edge and the project is still recognisable by its colour. */
-:root.light .is-ignite  { --edge-1: #7a2000; --edge-2: #d63800; --edge-3: #e07800; }
-/* Comfy's lemon is the hard case — #eafb2e is ~1.2:1 on white and simply is
-   not visible as a 1px line, so light mode uses the olive end of the same
-   hue. It reads as the darker cousin of the brand colour, not a new one. */
-:root.light .is-comfy   { --edge-1: #4d5600; --edge-2: #7d8c00; --edge-3: #a8bd00; }
-:root.light .is-kobui   { --edge-1: #1f3d27; --edge-2: #3a6b44; --edge-3: #55996a; }
-:root.light .is-stalkr  { --edge-1: #1a4a15; --edge-2: #2f8f22; --edge-3: #6d9c00; }
+   Light theme keeps its own derivation rather than reusing the dark one:
+   a bright brand hue sits near 1.2:1 on white and a 1px rim in it simply
+   vanishes, which is the exact problem the old per-palette light
+   overrides existed to solve. Mixing toward black restores the contrast
+   while keeping the hue recognisably the project's. */
+/* The default the three stops resolve to when a page has no accent of its
+   own — a draft that never got one, or one of the hand-written pages that
+   predate them. It has to exist: the stops feed color-mix(), an undefined one
+   makes the whole gradient invalid, and .box--edge's real border is
+   transparent, so the card would lose its edge entirely rather than fall back
+   to grey. Derived from --accent, which each theme sets for itself. */
+:root {
+  --edge-1: color-mix(in srgb, var(--accent) 62%, #000);
+  --edge-2: var(--accent);
+  --edge-3: color-mix(in srgb, var(--accent) 62%, #fff);
+}
+
+.is-custom {
+  --edge-2: var(--edge-brand, var(--accent));
+  --edge-1: color-mix(in srgb, var(--edge-brand, var(--accent)) 62%, #000);
+  --edge-3: color-mix(in srgb, var(--edge-brand, var(--accent)) 62%, #fff);
+}
+
+:root.light .is-custom {
+  --edge-2: color-mix(in srgb, var(--edge-brand, var(--accent)) 72%, #000);
+  --edge-1: color-mix(in srgb, var(--edge-brand, var(--accent)) 45%, #000);
+  --edge-3: color-mix(in srgb, var(--edge-brand, var(--accent)) 88%, #000);
+}
 
 /* The inner wash is darker-than-panel in light mode instead of lighter, so
    it needs less of itself: a grey shading a white card reads at roughly half
@@ -965,8 +1030,9 @@ body {
 :root.light .link-box,
 :root.light .pager a { --glow-strength: 15%; }
 
-/* Comfy's olive is the loudest of the four on white — the strength that
-   makes lava read as a warm corner makes olive read as a stain. */
+/* An accent card washes its own hue across the face, and on white that reads
+   at roughly twice the strength it does on near-black: at 15% a yellow-green
+   brand turns the corner into a stain rather than a warm edge. */
 :root.light .box--edge { --glow-strength: 6%; }
 
 /* ===========================================================
@@ -1288,8 +1354,9 @@ a:focus-visible,
 }
 /* .field__label styling comes from the shared caption rule. */
 
-/* Deliberately empty — the owner fills these in. The inset well gives the
-   blank a shape, so it reads as a slot to fill, not as a broken render. */
+/* One fact per inset well — name, contact address, place. The well is what
+   holds the shape while a field is still blank, so a half-filled Impressum
+   reads as slots waiting for an answer rather than as a broken render. */
 .field__value {
   display: flex;
   align-items: center;
@@ -1303,9 +1370,8 @@ a:focus-visible,
 }
 
 /* ---- Vault: private document list ----
-   Downloadable files as hairline-separated rows, the same rhythm as .spec on
-   the about page — the whole row is the link, name on the left, type and size
-   on the right.
+   Downloadable files as hairline-separated rows — the whole row is the link,
+   name on the left, type and size on the right.
 
    Neither the names nor the sizes are written into the HTML. The whole list
    comes from /api/vault/items, which answers only to an authenticated
@@ -1413,11 +1479,30 @@ a:focus-visible,
   font-size: var(--fs-meta);
 }
 
-/* Sign out is an action, not a destination, so it is set apart from the four
-   navigation links rather than sitting in line as a fifth one. */
-.site-nav__signout {
-  margin-left: auto;
-  color: var(--fg-mute);
+/* Sign out is an action, not a destination, so it is not a fifth nav link:
+   it is an .icon-btn sitting immediately left of the theme toggle, in the
+   bar's right-hand pair of controls. Injected by script.js only when a
+   session is live, which is why there is no markup for it in any page.
+
+   The header's own gap is sized for nav-to-controls, not icon-to-icon, so
+   this cancels it exactly — the two boxes end up edge to edge and their tap
+   padding becomes the space between the icons, which is how the pair reads
+   as one group. Exactly, not more: a deeper pull would slide the two hit
+   areas over each other and hand half the door's target to the toggle. The
+   nav's margin-right:auto still does the pushing, so nothing else moves, and
+   the toggle keeps the .icon-btn right-edge offset that lands the pair on
+   the layout spine. */
+.site-header__signout {
+  margin-right: calc(var(--space) * -2);   /* == .site-header's gap */
+}
+
+/* The toggle's icon is sized through its [data-theme-icon] wrapper because
+   script.js swaps it; this one is written once and never replaced, so the
+   svg is styled directly and matches at 16px. */
+.site-header__signout svg {
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
 /* ---- Admin panel (admin.html) ----
@@ -1633,6 +1718,318 @@ a:focus-visible,
   font-size: var(--fs-meta);
 }
 
+/* ---- The page editor ----
+   Everything below is namespaced .pe-*, and it is the one place in the panel
+   that is not a table. The form is laid out in the order the page renders —
+   identity at the top, bands in the middle, the repo link at the bottom —
+   so what is filled in top to bottom is what a reader sees top to bottom.
+   Same house rules as everywhere else: 1px borders, radius 0, no shadow,
+   tokens only, no literal rem font sizes. */
+.pe { max-width: 52rem; margin: 0 auto; }
+
+/* Sticky action bar. The four things you do to a page, always reachable,
+   so a long page never means scrolling back up to save. */
+.pe-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) * 0.75);
+  padding: var(--space) 0;
+  margin-bottom: var(--stack-md);
+  background: var(--bg);
+  border-bottom: var(--bw) solid var(--line);
+}
+
+.pe-bar__spacer { flex: 1; }
+.pe-bar__state { color: var(--fg-mute); font-size: var(--fs-meta); }
+.pe-bar__state[data-dirty="1"] { color: var(--accent); }
+
+/* ---- a card. One per region of the page, in page order. ---- */
+.pe-card {
+  border: var(--bw) solid var(--line);
+  background: var(--panel);
+  padding: calc(var(--space) * 2);
+  margin-bottom: var(--gap);
+}
+
+.pe-card__label,
+.pe-band__kind {
+  display: block;
+  margin-bottom: var(--stack-sm);
+  color: var(--fg-mute);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pe-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--gap);
+}
+
+.pe-field { display: block; }
+.pe-field--wide { grid-column: 1 / -1; }
+
+.pe-field__label {
+  display: block;
+  margin-bottom: calc(var(--space) * 0.5);
+  color: var(--fg-mute);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pe-field__hint {
+  display: block;
+  margin-top: calc(var(--space) * 0.5);
+  color: var(--fg-mute);
+  font-size: var(--fs-meta);
+}
+
+/* The title is the biggest thing on the page it makes, so it is the
+   biggest thing in the form. */
+.pe-input--title {
+  font-size: var(--fs-subtitle);
+  padding: calc(var(--space) * 0.75) var(--space);
+}
+
+textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
+
+.pe-check {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) * 0.75);
+  color: var(--fg);
+  font-size: var(--fs-meta);
+  cursor: pointer;
+}
+
+.pe-check input { accent-color: var(--accent); }
+
+/* ---- the home-page slot picker: the bento, in miniature ---- */
+.pe-slots {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 3.25rem);
+  gap: calc(var(--space) * 0.5);
+  grid-template-areas:
+    "feature feature feature tall"
+    "smallA  smallA  smallB  tall";
+  max-width: 26rem;
+}
+
+.pe-slots--lg { grid-template-rows: repeat(2, 5rem); max-width: 34rem; }
+
+.pe-slot {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: calc(var(--space) * 0.5);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-alt);
+  color: var(--fg-mute);
+  font-family: inherit;
+  font-size: var(--fs-meta);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--motion), color var(--motion);
+}
+
+.pe-slot:hover { border-color: var(--border-hover); color: var(--fg); }
+.pe-slot:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+
+/* Held by another project — clicking offers a swap rather than an error. */
+.pe-slot[data-taken] { color: var(--fg); border-style: dashed; }
+
+.pe-slot[aria-pressed="true"] {
+  border-color: var(--accent);
+  border-style: solid;
+  color: var(--fg-strong);
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel-alt));
+}
+
+.pe-slot__name { color: var(--fg-mute); font-size: var(--fs-meta); }
+.pe-slot--feature { grid-area: feature; }
+.pe-slot--tall    { grid-area: tall; }
+.pe-slot--smallA  { grid-area: smallA; }
+.pe-slot--smallB  { grid-area: smallB; }
+
+/* A cell in the Home editor wears the project's own accent, so the map
+   reads as the bento it controls rather than as four grey boxes. */
+.pe-slot__dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border: var(--bw) solid var(--line);
+  background: var(--edge-brand, var(--line));
+  vertical-align: baseline;
+  margin-right: calc(var(--space) * 0.5);
+}
+
+/* ---- band cards ---- */
+.pe-band { border-left: 2px solid var(--line); }
+.pe-band--folded { border-left-color: var(--accent); }
+
+.pe-band__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space);
+  flex-wrap: wrap;
+  margin-bottom: var(--stack-md);
+  padding-bottom: var(--space);
+  border-bottom: var(--bw) solid var(--line-soft);
+}
+
+.pe-band__head .admin-input { flex: 1; min-width: 12rem; }
+
+/* ---- a media row: the same two shapes the page renders ---- */
+.pe-row {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  gap: var(--gap);
+  padding: var(--stack-sm) 0;
+  border-top: var(--bw) solid var(--line-soft);
+}
+
+.pe-row--below { grid-template-columns: minmax(0, 1fr); }
+
+.pe-thumb {
+  display: block;
+  width: 100%;
+  border: var(--bw) solid var(--line);
+  background: var(--panel-alt);
+  object-fit: cover;
+  aspect-ratio: 16 / 9;
+}
+
+.pe-row__meta {
+  margin-top: calc(var(--space) * 0.5);
+  color: var(--fg-mute);
+  font-size: var(--fs-meta);
+  word-break: break-all;
+}
+
+.pe-row__fields { display: grid; gap: calc(var(--space) * 0.75); }
+
+.pe-radios {
+  display: flex;
+  gap: var(--gap);
+  align-items: center;
+  color: var(--fg-mute);
+  font-size: var(--fs-meta);
+}
+
+.pe-adders {
+  display: flex;
+  gap: calc(var(--space) * 0.75);
+  flex-wrap: wrap;
+  margin: var(--stack-md) 0 var(--gap);
+}
+
+.pe-adders .admin-btn { font-size: var(--fs-body); padding: var(--space) calc(var(--space) * 2); }
+
+.pe-drop {
+  margin-top: var(--stack-sm);
+  padding: calc(var(--space) * 1.5);
+  border: var(--bw) dashed var(--line);
+  color: var(--fg-mute);
+  font-size: var(--fs-meta);
+  text-align: center;
+}
+
+.pe-annot {
+  margin: 0 0 var(--gap);
+  padding: var(--space) calc(var(--space) * 1.5);
+  border-left: 2px solid var(--accent);
+  color: var(--fg-mute);
+  font-size: var(--fs-meta);
+}
+
+/* Inline link styling lives on .reading, which this column is not. */
+.pe-annot a,
+.site-footer a { color: var(--accent); }
+
+.pe-hidden { display: none; }
+
+/* ---- colour picker ----
+   Square everywhere, 1px borders, no rounding — the OS colour dialog is
+   none of those things, which is why this is built rather than borrowed.
+   Saturation/value square on the left, hue strip on the right, hex field
+   and the colours already in use underneath. */
+.pe-color { display: flex; gap: var(--gap); align-items: flex-start; flex-wrap: wrap; }
+
+.pe-color__sv {
+  position: relative;
+  width: 9rem;
+  height: 6rem;
+  border: var(--bw) solid var(--line);
+  cursor: crosshair;
+  touch-action: none;
+  background-image:
+    linear-gradient(to top, #000, transparent),
+    linear-gradient(to right, #fff, transparent);
+  background-color: var(--pick-hue, #ff1e2f);
+}
+
+.pe-color__hue {
+  position: relative;
+  width: 1.25rem;
+  height: 6rem;
+  border: var(--bw) solid var(--line);
+  cursor: crosshair;
+  touch-action: none;
+  background-image: linear-gradient(to bottom,
+    #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
+}
+
+/* Two nested borders so the handle stays visible on a light patch and on
+   a dark one without either colour being chosen for it. */
+.pe-color__knob {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -5px 0 0 -5px;
+  border: 1px solid #000;
+  outline: 1px solid #fff;
+  pointer-events: none;
+}
+
+.pe-color__knob--hue { left: 0; width: 100%; height: 5px; margin: -3px 0 0 0; }
+
+.pe-color__side { display: grid; gap: calc(var(--space) * 0.75); }
+
+.pe-color__hex {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-transform: lowercase;
+  max-width: 9rem;
+}
+
+.pe-color__presets { display: flex; gap: calc(var(--space) * 0.5); flex-wrap: wrap; }
+
+.pe-color__preset {
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.pe-color__preset:hover { border-color: var(--fg-strong); }
+.pe-color__preset:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+
+/* The point of the picker: the actual card rim, live. */
+.pe-color__demo { width: 12rem; padding: var(--space) calc(var(--space) * 1.25); }
+.pe-color__demo .project-box__name { font-size: var(--fs-body); }
+
+/* ---- section nav ---- */
+.admin-tab small { display: block; font-size: var(--fs-meta); color: var(--fg-mute); text-transform: none; letter-spacing: 0; }
+
 @media (max-width: 768px) {
   .admin-tab {
     padding: calc(var(--space) * 1.25);
@@ -1640,6 +2037,12 @@ a:focus-visible,
 
   .admin-form {
     grid-template-columns: 1fr;
+  }
+
+  /* The thumbnail rail is 11rem of a 360px screen; below that the row is
+     the picture and the words stacked, like the band it makes. */
+  .pe-row {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -1918,7 +2321,14 @@ a:focus-visible,
   transform: translateY(-0.3em);
 }
 
-.project__section p {
+/* A band's prose, capped at the reading measure whether the band is an open
+   section or a folded <details>. The second selector is what makes folding a
+   presentational choice rather than a layout one: a text band that is folded
+   used to inherit the wide rail meant for screenshots, so ticking "Foldable"
+   in the panel silently widened the paragraphs by seven rem. Same words, same
+   measure, one of them closed. */
+.project__section p,
+.reveal__body > p {
   font-size: var(--fs-body);
   max-width: var(--measure);
   color: var(--text-muted);
@@ -2487,11 +2897,11 @@ code {
    read as the same document. The only card left is the one thing that is
    genuinely a set of links. */
 /* This page's rail is wider than a project page's, and derived rather than
-   picked: the opening is prose beside a data sheet, so the page has to be
-   exactly one --measure of text plus the sheet plus the gap between them.
-   Capping it at --measure-wide instead crushed the paragraph column to about
-   forty characters. The bands below inherit the same width, so the page still
-   has one right edge for its rules and one for its text. */
+   picked: a .mediarow is a fixed 20rem of picture plus the words beside it, so
+   the page has to be exactly one --measure of text plus that rail plus the gap
+   between them. Capping it at --measure-wide instead crushed the paragraph
+   column to about forty characters. The bands all inherit the same width, so
+   the page still has one right edge for its rules and one for its text. */
 .about {
   display: flex;
   flex-direction: column;
@@ -2506,16 +2916,10 @@ code {
   border-top: var(--border-width) solid var(--border);
 }
 
-/* The opening: prose left, at-a-glance sheet right. On a serif the two want
-   different measures, so this is a real two-track grid rather than the old
-   1.5fr/1fr split that let the paragraph run to whatever was left over. */
-.about__top {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 20rem);
-  gap: calc(var(--space) * 3) calc(var(--space) * 5);
-  align-items: start;
-}
-
+/* The opening. It used to be a two-track grid — prose left, an "At a glance"
+   sheet right — repeating four facts the first two paragraphs already state.
+   The sheet is gone and with it the grid: the lede is one column of text on
+   the reading measure, like the lede of every project page. */
 .about__lead {
   display: flex;
   flex-direction: column;
@@ -2547,43 +2951,9 @@ code {
   gap: var(--gap);
 }
 
-/* ---- Data-sheet rows: label left, value right, hairline between ---- */
-.spec {
-  display: flex;
-  flex-direction: column;
-}
-
-.spec__row {
-  display: flex;
-  align-items: baseline;
-  gap: calc(var(--space) * 2);
-  padding: calc(var(--space) * 1.25) 0;
-  border-bottom: var(--border-width) solid var(--line-soft);
-}
-
-.spec__row:first-child { padding-top: 0; }
-
-.spec__row:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
-}
-
-.spec__key {
-  flex: 0 0 auto;
-  font-size: var(--fs-caption);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--fg-mute);
-}
-
-.spec__val {
-  margin-left: auto;
-  min-width: 0;
-  text-align: right;
-  font-size: var(--fs-body);
-  line-height: 1.4;
-  color: var(--text);
-}
+/* The .spec data-sheet rows that lived here (label left, value right, hairline
+   between) went with the "At a glance" box — About was the only page that ever
+   used them, and .datarow is the site's remaining way to show hard facts. */
 
 /* ===========================================================
    Footer (shared) — legal + credit, nothing else
@@ -2843,9 +3213,17 @@ code {
     margin-right: calc(var(--space) * -1.25);   /* see the desktop rule */
   }
 
-  .icon-btn [data-theme-icon] {
+  .icon-btn [data-theme-icon],
+  .site-header__signout svg {
     width: 18px;
     height: 18px;
+  }
+
+  /* Same value as the desktop rule, restated: .icon-btn's tap-target margin
+     above is the same specificity and further down the file, so it wins by
+     order and the door drifts away from the toggle without this. */
+  .site-header__signout {
+    margin-right: calc(var(--space) * -2);
   }
 
   /* Keeps its own horizontal scroll (it is wider than a phone), but must
@@ -2861,20 +3239,25 @@ code {
     flex: none;
   }
 
-  .bento {
-    grid-template-columns: repeat(2, 1fr);
+  /* Every box is the full width down here, so the map was already one column
+     wearing two — and the order it spelled out is the order the markup is
+     in. Dropping it is what stops the count variants above from needing four
+     phone-sized copies of themselves: there is nothing left to vary.
+
+     [data-projects] is carried, not decoration: the five maps above are
+     attribute-qualified and outrank a bare .bento even from inside a media
+     query. Without it this rule loses and the phone gets the seven-column
+     desktop grid. The grid-area reset is explicit for the same reason — and
+     because leaning on an unmatched area name falling back to auto placement
+     is a rule nobody should have to know. */
+  .bento[data-projects] {
+    grid-template-columns: 1fr;
     grid-template-rows: none;                  /* let stacked boxes size to content */
     grid-auto-rows: minmax(110px, auto);
-    grid-template-areas:
-      "name    name"
-      "comfy   comfy"
-      "kobui   kobui"
-      "ignite  ignite"
-      "stalkr  stalkr"
-      "about   about"
-      "github  github"
-      "buttons buttons";
+    grid-template-areas: none;
   }
+
+  .bento > * { grid-area: auto; }
 
   /* Let the link boxes keep a tappable height instead of being crushed
      into the short auto-row; the stack grows to fit them. */
@@ -2887,10 +3270,6 @@ code {
   }
 
   .pager__next { text-align: left; }
-
-  .about__top {
-    grid-template-columns: 1fr;
-  }
 
   /* ---- Subpage reading flow on a phone ----
      Nothing in this query used to touch a project page's content at all: the
@@ -2939,22 +3318,25 @@ code {
 }
 
 @media (max-width: 480px) {
-  .bento {
-    grid-template-columns: 1fr;
-    grid-template-rows: none;
-    grid-template-areas:
-      "name"
-      "comfy"
-      "kobui"
-      "ignite"
-      "stalkr"
-      "about"
-      "github"
-      "buttons";
-  }
+  /* The bento rule that used to be here restated the 768px one column for
+     one column. The query above already stacks; there is nothing left to say.
 
-  /* At this width the four nav items plus their padding no longer fit on one
+     At this width the four nav items plus their padding no longer fit on one
      row; shrink the horizontal padding rather than the type or the 44px
      height, both of which are doing real work. */
   .site-nav a { padding: 0 calc(var(--space) * 0.5); }
+
+  /* Signed in there is a second control in the bar, and at this width the
+     four links plus two 40px targets do not fit one row — measured, not
+     guessed: they overflow a 375px screen by about 40px. The bar takes the
+     second row back rather than paying for the fit by squashing the links
+     into each other or pulling the toggle off the layout's right edge.
+     Scoped to .has-signout (set by script.js) so a signed-out visitor —
+     which is nearly everyone — keeps the single-row bar unchanged. */
+  .site-header.has-signout {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .site-header.has-signout .site-nav { flex: 1 0 100%; }
 }

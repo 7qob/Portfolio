@@ -44,6 +44,18 @@ Prefer the script. It carries the full list, and it also hands `pages/` and
 `assets/up/` back to uid 1000 after the recursive `chown` — which a bare rsync
 does not do, and which publishing needs.
 
+`index.html` and `projects.html` are deliberately **not** excluded. They are
+rsynced as before, but they are no longer the pages visitors get once anything
+has been published: nginx serves `/pages/index.html` and `/pages/projects.html`
+first for those two URLs (the `location = /` blocks in the server config), and
+the rsynced copies are the template the renderer splices project cards into
+plus the fallback for a Pi that has never published. Overwriting them is
+therefore how you update the template, which is what you want — the generated
+copies live in `pages/`, which `--delete` still cannot touch.
+
+The compose file mounts the rsynced `index.html` into the container read-only
+as `HOME_TEMPLATE`. If you moved the webroot, move that mount with it.
+
 ---
 
 ## Part 2 — Cloudflare Tunnel (this moves the domain)
@@ -245,23 +257,28 @@ because it is the property the old setup did not have.
 
 ### 3.7 Upload the documents
 
-Via WinSCP, into `/var/lib/kira1q/vault-files/` — **not** into `/var/www`,
-**not** into `~/Portfolio`, and never into the git repo:
+Through the admin panel: **Documents** tab → pick the PDF on the item's row.
+The service checks the bytes are a real PDF, stores it as `<slug>.pdf` under
+`/var/lib/kira1q/vault-files/`, and the row flips from "missing" to its size.
+New document (a fresh semester's report): create it with the form above the
+table, then upload onto the new row. Re-uploading replaces the file in place.
 
-```
-/var/lib/kira1q/vault-files/cv.pdf
-/var/lib/kira1q/vault-files/zeugnisse.pdf
-```
+For this to work the compose file mounts vault-files **read-write** (it was
+`:ro` before the panel could upload) and the directory must be owned by
+uid 1000 — `setup-pi.sh` already does that (`chown 1000:1000`, mode 700).
+
+The by-hand fallback still works if the panel is ever unreachable — WinSCP
+into `/var/lib/kira1q/vault-files/`, **not** into `/var/www`, **not** into
+`~/Portfolio`, and never into the git repo:
 
 ```bash
 sudo chown 1000:1000 /var/lib/kira1q/vault-files/*
 sudo chmod 640 /var/lib/kira1q/vault-files/*
 ```
 
-The filenames must match what the admin panel lists under **Documents**;
-`cv.pdf` and `zeugnisse.pdf` are seeded for you. A document whose file is
-absent shows as "Not uploaded" rather than a broken download, which is also
-how you tell a failed upload from a successful one.
+A document whose file is absent shows as "Not uploaded" in the vault rather
+than a broken download, which is also how you tell a failed upload from a
+successful one.
 
 If you are migrating from the old setup, delete the copies under the web root
 once the new ones work:

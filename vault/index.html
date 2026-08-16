@@ -33,9 +33,10 @@
     links to; see deploy/nginx-kira1q.dev.conf.
 
     The documents themselves are NOT in this repo and must never be. They
-    are uploaded straight to /var/www/kira1q.dev/vault/files/ on the Pi.
-    Until a file is there, script.js renders its row as unavailable rather
-    than as a dead download.
+    are uploaded through the admin panel's Documents tab and stored in
+    /var/lib/kira1q/vault-files/ on the Pi — outside the web root, streamed
+    only through the API's session check. Until a file is there, script.js
+    renders its row as unavailable rather than as a dead download.
   -->
 
   <!-- The site's one navigation. Byte-identical on every page except for

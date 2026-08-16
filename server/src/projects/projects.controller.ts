@@ -59,7 +59,9 @@ export class ProjectsController {
       actorId: actor.id,
       actorName: actor.username,
       action: 'project.create',
-      target: dto.slug,
+      // The slug the service settled on, which is not always the one asked
+      // for — a title alone derives one, and a collision numbers it.
+      target: created.slug,
       ip: clientIp(req),
     });
 
@@ -81,6 +83,28 @@ export class ProjectsController {
       action: 'project.update',
       target: `project:${id}`,
       detail: Object.keys(dto).join(','),
+      ip: clientIp(req),
+    });
+
+    return { ok: true };
+  }
+
+  /**
+   * Re-render everything already published, without publishing anything new.
+   *
+   * Which cell of the bento a project holds, and the order the index and the
+   * pagers follow, are decisions about the site rather than about one page —
+   * they are made in the Home page section, looking at all four cells at
+   * once, and this is what writes them out.
+   */
+  @Post('render')
+  render(@CurrentUser() actor: AuthenticatedUser, @Req() req: Request): { ok: true } {
+    this.projects.renderPublished();
+
+    this.audit.record({
+      actorId: actor.id,
+      actorName: actor.username,
+      action: 'project.render',
       ip: clientIp(req),
     });
 

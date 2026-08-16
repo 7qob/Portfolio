@@ -61,6 +61,16 @@ export const config = {
      */
     pagesDir: env('PAGES_DIR', join(process.cwd(), 'site', 'pages')),
     mediaDir: env('MEDIA_DIR', join(process.cwd(), 'site', 'assets', 'up')),
+
+    /**
+     * The hand-written home page, mounted read-only. Publish rewrites only
+     * the region between its two project markers, so this file — not a
+     * template language, not a copy of the markup in TypeScript — stays the
+     * definition of what the home page is. Used until PAGES_DIR/index.html
+     * exists, after which the generated page is its own base and a hand edit
+     * made on the Pi survives the next publish.
+     */
+    homeTemplate: env('HOME_TEMPLATE', join(process.cwd(), 'site', 'index.html')),
   },
 
   session: {
