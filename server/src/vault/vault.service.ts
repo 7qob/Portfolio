@@ -1,5 +1,19 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { createReadStream, existsSync, statSync, type Stats } from 'node:fs';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  createReadStream,
+  existsSync,
+  renameSync,
+  statSync,
+  unlinkSync,
+  writeFileSync,
+  type Stats,
+} from 'node:fs';
 import { basename, join, resolve, sep } from 'node:path';
 
 import { config } from '../config';
@@ -70,6 +84,71 @@ export class VaultService {
     return this.database.db.prepare('SELECT * FROM vault_items WHERE id = ?').get(id) as
       | VaultItemRow
       | undefined;
+  }
+
+  /**
+   * A new document row, born without a file. The filename is derived from the
+   * slug here and again on every upload — the client never chooses it, same
+   * rule as the media store. The row shows as "missing" until a PDF lands.
+   */
+  createItem(input: { slug: string; title: string; description: string | null }): VaultItemRow {
+    try {
+      const info = this.database.db
+        .prepare(
+          `INSERT INTO vault_items (slug, title, description, filename, sort_order)
+           VALUES (?, ?, ?, ?, (SELECT COALESCE(MAX(sort_order), 0) + 10 FROM vault_items))`,
+        )
+        .run(input.slug, input.title, input.description, `${input.slug}.pdf`);
+      return this.findById(Number(info.lastInsertRowid))!;
+    } catch (err) {
+      if (err instanceof Error && err.message.includes('UNIQUE')) {
+        throw new ConflictException('A document with that slug already exists.');
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * Stores the uploaded PDF as <slug>.pdf. The bytes decide what the file is:
+   * anything that does not start with %PDF- is refused, whatever the upload
+   * claimed. Write-then-rename, so a concurrent download never reads half a
+   * file — re-uploading replaces the old one in place under the same name,
+   * which is fine because downloads are no-store end to end.
+   */
+  saveFile(row: VaultItemRow, buffer: Buffer): void {
+    if (buffer.length < 5 || buffer.toString('latin1', 0, 5) !== '%PDF-') {
+      throw new BadRequestException('That file is not a PDF.');
+    }
+
+    const filename = `${row.slug}.pdf`;
+    const path = this.resolvePath(filename);
+    const tmp = path + '.tmp';
+    writeFileSync(tmp, buffer);
+    renameSync(tmp, path);
+
+    this.database.db
+      .prepare(
+        `UPDATE vault_items
+            SET filename = ?, mime = 'application/pdf', updated_at = datetime('now')
+          WHERE id = ?`,
+      )
+      .run(filename, row.id);
+  }
+
+  /**
+   * Removes the row and its file. The download log survives it — entries keep
+   * the denormalised title and their item id goes NULL, exactly what the
+   * ON DELETE SET NULL in the schema is for.
+   */
+  deleteItem(row: VaultItemRow): void {
+    try {
+      const path = this.resolvePath(row.filename);
+      if (existsSync(path)) unlinkSync(path);
+    } catch {
+      this.logger.warn(`Could not remove vault file ${row.filename}`);
+    }
+
+    this.database.db.prepare('DELETE FROM vault_items WHERE id = ?').run(row.id);
   }
 
   private toView(row: VaultItemRow): VaultItemView {

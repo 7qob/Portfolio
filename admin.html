@@ -111,7 +111,24 @@
       </section>
 
       <section class="box box--static admin-panel" id="panel-documents" role="tabpanel" aria-labelledby="tab-documents" data-panel="documents" hidden>
-        <p class="admin-note">Files are uploaded to the Pi by hand. What you edit here is how they are labelled and whether they are shown.</p>
+        <h2 class="box__label">New document</h2>
+
+        <form class="admin-form" id="create-document-form">
+          <div class="auth-field">
+            <label class="auth-field__label" for="new-document-slug">Slug (stored as &lt;slug&gt;.pdf)</label>
+            <input class="auth-field__input" id="new-document-slug" name="slug" type="text" required
+                   autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="48"
+                   pattern="[a-z0-9][a-z0-9\-]*[a-z0-9]|[a-z0-9]">
+          </div>
+          <div class="auth-field">
+            <label class="auth-field__label" for="new-document-title">Title (what the vault list shows)</label>
+            <input class="auth-field__input" id="new-document-title" name="title" type="text" required maxlength="120">
+          </div>
+          <button class="auth-submit" type="submit">Create document</button>
+        </form>
+
+        <h2 class="box__label admin-subhead">Documents</h2>
+        <p class="admin-note">Upload the PDF straight from its row — choosing a file replaces what is there. Only real PDFs are accepted, and the stored name comes from the slug, never from the upload.</p>
         <div class="admin-scroll"><table class="admin-table" id="documents-table"></table></div>
       </section>
 
@@ -129,7 +146,7 @@
               <label class="auth-field__label" for="new-project-slug">Slug (becomes project-&lt;slug&gt;.html)</label>
               <input class="auth-field__input" id="new-project-slug" name="slug" type="text" required
                      autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="48"
-                     pattern="[a-z0-9][a-z0-9-]*[a-z0-9]|[a-z0-9]">
+                     pattern="[a-z0-9][a-z0-9\-]*[a-z0-9]|[a-z0-9]">
             </div>
             <div class="auth-field">
               <label class="auth-field__label" for="new-project-title">Title</label>

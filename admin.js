@@ -424,6 +424,29 @@ function loadDownloads() {
 
 function loadDocuments() {
   var table = document.getElementById("documents-table");
+  var form = document.getElementById("create-document-form");
+
+  if (form && !form.dataset.bound) {
+    form.dataset.bound = "1";
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var body = { slug: form.slug.value.trim(), title: form.title.value.trim() };
+      if (!body.slug || !body.title) return;
+
+      api("/admin/vault-items", { method: "POST", body: body })
+        .then(function (res) {
+          return res.json().then(function (b) {
+            if (!res.ok) throw new Error(b.message || "Could not create the document.");
+            return b;
+          });
+        })
+        .then(function () {
+          form.reset();
+          reload("documents");
+        })
+        .catch(function (err) { alert(err.message); });
+    });
+  }
 
   api("/admin/vault-items")
     .then(function (r) { return r.json(); })
@@ -443,25 +466,64 @@ function loadDocuments() {
         shown.type = "checkbox";
         shown.checked = item.visible;
 
-        return [
-          titleInput,
-          item.filename,
-          item.available ? "yes" : "missing",
-          shown,
-          orderInput,
-          button("Save", "admin-btn--accent", function () {
-            api("/admin/vault-items/" + item.id, {
-              method: "PATCH",
-              body: {
-                title: titleInput.value.trim(),
-                visible: shown.checked,
-                sortOrder: Number(orderInput.value)
-              }
-            }).then(function (res) {
+        var actions = el("span", "admin-actions");
+
+        actions.appendChild(button("Save", "admin-btn--accent", function () {
+          api("/admin/vault-items/" + item.id, {
+            method: "PATCH",
+            body: {
+              title: titleInput.value.trim(),
+              visible: shown.checked,
+              sortOrder: Number(orderInput.value)
+            }
+          }).then(function (res) {
+            if (!res.ok) return res.json().then(function (b) { alert(b.message || "Failed."); });
+            reload("documents");
+          });
+        }));
+
+        // Choosing a file uploads it immediately, replacing what is on disk.
+        // The row's slug decides the stored name; the picked file's own name
+        // is never sent anywhere.
+        var pdfInput = el("input", "admin-input");
+        pdfInput.type = "file";
+        pdfInput.accept = "application/pdf";
+        pdfInput.addEventListener("change", function () {
+          if (!pdfInput.files.length) return;
+          pdfInput.disabled = true;
+
+          var fd = new FormData();
+          fd.append("file", pdfInput.files[0]);
+
+          api("/admin/vault-items/" + item.id + "/file", { method: "POST", body: fd })
+            .then(function (res) {
+              if (!res.ok) return res.json().then(function (b) { throw new Error(b.message || "Upload failed."); });
+              reload("documents");
+            })
+            .catch(function (err) {
+              alert(err.message);
+              pdfInput.disabled = false;
+              pdfInput.value = "";
+            });
+        });
+        actions.appendChild(pdfInput);
+
+        actions.appendChild(button("Delete", "", function () {
+          if (!confirm("Delete " + item.title + "? The file comes off the Pi with it; past downloads stay in the log.")) return;
+          api("/admin/vault-items/" + item.id, { method: "DELETE" })
+            .then(function (res) {
               if (!res.ok) return res.json().then(function (b) { alert(b.message || "Failed."); });
               reload("documents");
             });
-          })
+        }));
+
+        return [
+          titleInput,
+          item.filename,
+          item.available ? "yes · " + formatBytes(item.sizeBytes) : "missing",
+          shown,
+          orderInput,
+          actions
         ];
       });
     })

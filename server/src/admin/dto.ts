@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
   Length,
+  Matches,
   Max,
   Min,
 } from 'class-validator';
@@ -61,6 +62,28 @@ export class UpdateUserDto {
   note?: string;
 }
 
+/**
+ * The slug becomes the stored filename (<slug>.pdf), so its alphabet is
+ * deliberately the same as a project slug's: lowercase, digits, inner
+ * hyphens. Nothing a path could be built from.
+ */
+export class CreateVaultItemDto {
+  @IsString()
+  @Matches(/^[a-z0-9](?:[a-z0-9-]{0,46}[a-z0-9])?$/, {
+    message: 'slug must be lowercase letters, digits and hyphens',
+  })
+  slug!: string;
+
+  @IsString()
+  @Length(1, 120)
+  title!: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(0, 500)
+  description?: string;
+}
+
 export class UpdateVaultItemDto {
   @IsOptional()
   @IsString()
@@ -84,9 +107,9 @@ export class UpdateVaultItemDto {
   sortOrder?: number;
 
   /**
-   * Editable because a file can be re-uploaded under a different name, but
-   * still a bare filename. Uploading is not possible through the panel, so
-   * this only ever points at something already placed on the Pi by hand.
+   * Still editable for the by-hand escape hatch (a file placed on the Pi over
+   * SSH), but the normal path is the panel's upload, which derives the name
+   * from the slug server-side and never consults this field.
    */
   @IsOptional()
   @IsString()

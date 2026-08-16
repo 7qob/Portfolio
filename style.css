@@ -1918,7 +1918,14 @@ a:focus-visible,
   transform: translateY(-0.3em);
 }
 
-.project__section p {
+/* A band's prose, capped at the reading measure whether the band is an open
+   section or a folded <details>. The second selector is what makes folding a
+   presentational choice rather than a layout one: a text band that is folded
+   used to inherit the wide rail meant for screenshots, so ticking "Foldable"
+   in the panel silently widened the paragraphs by seven rem. Same words, same
+   measure, one of them closed. */
+.project__section p,
+.reveal__body > p {
   font-size: var(--fs-body);
   max-width: var(--measure);
   color: var(--text-muted);

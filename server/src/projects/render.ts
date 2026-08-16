@@ -493,9 +493,12 @@ export function renderProjectPage(
     (b) => b.type !== 'datarow' && b.type !== 'files' && b.type !== 'links',
   );
   const datarows = project.blocks.filter((b): b is DatarowBlock => b.type === 'datarow');
-  const tails = project.blocks.filter(
-    (b): b is FilesBlock | LinksBlock => b.type === 'files' || b.type === 'links',
-  );
+  // Downloads before links regardless of author order — the fixed shape the
+  // panel promises is "facts strip, downloads, links, pager".
+  const tails = [
+    ...project.blocks.filter((b): b is FilesBlock => b.type === 'files'),
+    ...project.blocks.filter((b): b is LinksBlock => b.type === 'links'),
+  ];
 
   const status = project.status
     ? ` <span class="status">${esc(project.status)}</span>`

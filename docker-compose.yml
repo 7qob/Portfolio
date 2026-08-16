@@ -27,9 +27,11 @@ services:
       # accounts or logs.
       - /var/lib/kira1q/data:/data
 
-      # The documents, read-only: this service serves them and has no reason
-      # to be able to change or delete them.
-      - /var/lib/kira1q/vault-files:/vault-files:ro
+      # The documents. Writable since the panel's Documents tab took over
+      # uploads: the service stores <slug>.pdf here itself (magic bytes
+      # checked, name derived server-side). Still outside the web root, still
+      # only ever streamed through a session check.
+      - /var/lib/kira1q/vault-files:/vault-files
 
       # The two writable holes in an otherwise read-only container: where
       # Publish renders project pages, and where the panel's uploads land.
@@ -49,7 +51,7 @@ services:
       - /var/www/kira1q.dev/pages:/site/pages
       - /var/www/kira1q.dev/assets/up:/site/assets/up
 
-    # Nothing in here writes outside the four mounts above.
+    # Nothing in here writes outside the mounts above.
     read_only: true
     tmpfs:
       - /tmp

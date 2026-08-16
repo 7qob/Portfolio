@@ -22,8 +22,7 @@
     "skipLibCheck": true,
     "declaration": false,
     "sourceMap": false,
-    "removeComments": false,
-    "incremental": true
+    "removeComments": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
