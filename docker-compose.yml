@@ -19,6 +19,8 @@ services:
       PORT: "8080"
       DB_PATH: /data/app.db
       VAULT_FILES_DIR: /vault-files
+      PAGES_DIR: /site/pages
+      MEDIA_DIR: /site/assets/up
 
     volumes:
       # The database. Lives on the host so pulling a new image never touches
@@ -29,7 +31,25 @@ services:
       # to be able to change or delete them.
       - /var/lib/kira1q/vault-files:/vault-files:ro
 
-    # Nothing in here writes outside the two mounts above.
+      # The two writable holes in an otherwise read-only container: where
+      # Publish renders project pages, and where the panel's uploads land.
+      # Unlike vault files these belong inside the web root, because both are
+      # ordinary public assets that nginx serves directly.
+      #
+      # Both host directories MUST exist and be owned by uid 1000 (the `node`
+      # user in the image) before the first `up -d`. Docker creates a missing
+      # bind-mount source as root:root, and the container would then fail
+      # every publish and every upload with EACCES. setup-pi.sh creates them;
+      # if you brought this up by hand, so must you:
+      #
+      #   sudo install -d -o 1000 -g 1000 -m 755 \
+      #     /var/www/kira1q.dev/pages /var/www/kira1q.dev/assets/up
+      #
+      # 755 is what lets www-data read what uid 1000 wrote.
+      - /var/www/kira1q.dev/pages:/site/pages
+      - /var/www/kira1q.dev/assets/up:/site/assets/up
+
+    # Nothing in here writes outside the four mounts above.
     read_only: true
     tmpfs:
       - /tmp
