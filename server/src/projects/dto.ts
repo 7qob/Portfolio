@@ -12,6 +12,8 @@ import {
   Min,
 } from 'class-validator';
 
+import { HOME_SLOTS } from './blocks';
+
 /**
  * The slug becomes `project-<slug>.html` on disk, so its alphabet is the
  * page-name regex's alphabet and nothing more. Lowercase letters, digits and
@@ -19,14 +21,20 @@ import {
  */
 const SLUG = /^[a-z0-9](?:[a-z0-9-]{0,46}[a-z0-9])?$/;
 
+/**
+ * Creating a page asks for a title and nothing else: the slug is derived from
+ * it server-side, and stays editable in the form until the page is published.
+ * A slug may still be sent, for a caller that wants to choose one.
+ */
 export class CreateProjectDto {
-  @IsString()
-  @Matches(SLUG, { message: 'slug must be lowercase letters, digits and hyphens' })
-  slug!: string;
-
   @IsString()
   @Length(1, 120)
   title!: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(SLUG, { message: 'slug must be lowercase letters, digits and hyphens' })
+  slug?: string;
 }
 
 /**
@@ -51,9 +59,36 @@ export class UpdateProjectDto {
   @IsIn(['WIP', 'Featured'])
   status?: string | null;
 
+  /**
+   * Which cell of the home bento this project holds, or null for none. Only
+   * the four names exist: the areas are a fixed map in style.css, so a fifth
+   * would render into a grid area nothing defines.
+   */
   @IsOptional()
-  @IsIn(['comfy', 'ignite', 'kobui', 'stalkr'])
-  palette?: string | null;
+  @IsIn(HOME_SLOTS as readonly string[])
+  homeSlot?: string | null;
+
+  /**
+   * The one colour a project carries. Checked again in the renderer before it
+   * is interpolated into a style attribute — this decorator says the value is
+   * well-formed today, not that the row it lands in still is tomorrow.
+   */
+  @IsOptional()
+  @Matches(/^#[0-9a-fA-F]{6}$/, { message: 'accent must be a #rrggbb colour' })
+  accent?: string | null;
+
+  /**
+   * Rendered as the one link under the article. Narrowed to GitHub rather
+   * than to "a URL": this field has exactly one job, and an allowlist of one
+   * host is the cheapest way to keep it that way.
+   */
+  @IsOptional()
+  @IsString()
+  @Length(0, 200)
+  @Matches(/^(|https:\/\/github\.com\/.*)$/, {
+    message: 'repoUrl must start with https://github.com/',
+  })
+  repoUrl?: string | null;
 
   @IsOptional()
   @IsString()
