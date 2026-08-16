@@ -13,9 +13,13 @@ import {
   Post,
   Query,
   Req,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import type { Request } from 'express';
+import { memoryStorage } from 'multer';
 
 import { AdminGuard, AuthGuard } from '../auth/auth.guard';
 import { SessionService } from '../auth/session.service';
@@ -27,7 +31,16 @@ import type { AuthenticatedUser } from '../common/types';
 import { UsersService } from '../users/users.service';
 import { VaultService } from '../vault/vault.service';
 import { AdminService } from './admin.service';
-import { CreateUserDto, PageQueryDto, UpdateUserDto, UpdateVaultItemDto } from './dto';
+import {
+  CreateUserDto,
+  CreateVaultItemDto,
+  PageQueryDto,
+  UpdateUserDto,
+  UpdateVaultItemDto,
+} from './dto';
+
+/** School PDFs are single-digit megabytes; 32 MB is generous without inviting abuse. */
+const MAX_DOCUMENT_BYTES = 32 * 1024 * 1024;
 
 /**
  * Everything here is behind both guards. AuthGuard establishes who is
@@ -206,6 +219,87 @@ export class AdminController {
   @Get('vault-items')
   vaultItems() {
     return { rows: this.vault.listAll() };
+  }
+
+  @Post('vault-items')
+  createVaultItem(
+    @Body() dto: CreateVaultItemDto,
+    @CurrentUser() actor: AuthenticatedUser,
+    @Req() req: Request,
+  ) {
+    const row = this.vault.createItem({
+      slug: dto.slug,
+      title: dto.title,
+      description: dto.description ?? null,
+    });
+
+    this.audit.record({
+      actorId: actor.id,
+      actorName: actor.username,
+      action: 'vault.create',
+      target: dto.slug,
+      ip: clientIp(req),
+    });
+
+    return { id: row.id };
+  }
+
+  /**
+   * The PDF itself, uploaded through the panel instead of carried to the Pi
+   * by hand. The bytes are checked (%PDF-) and the stored name is derived
+   * from the slug server-side — the upload's own filename is never used.
+   */
+  @Post('vault-items/:id/file')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: MAX_DOCUMENT_BYTES },
+    }),
+  )
+  uploadVaultFile(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @CurrentUser() actor: AuthenticatedUser,
+    @Req() req: Request,
+  ): { ok: true } {
+    if (!file) throw new BadRequestException('No file was sent.');
+
+    const item = this.vault.findById(id);
+    if (!item) throw new NotFoundException('No such document.');
+
+    this.vault.saveFile(item, file.buffer);
+
+    this.audit.record({
+      actorId: actor.id,
+      actorName: actor.username,
+      action: 'vault.upload',
+      target: item.slug,
+      detail: `${file.buffer.length} bytes`,
+      ip: clientIp(req),
+    });
+
+    return { ok: true };
+  }
+
+  @Delete('vault-items/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteVaultItem(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() actor: AuthenticatedUser,
+    @Req() req: Request,
+  ): void {
+    const item = this.vault.findById(id);
+    if (!item) throw new NotFoundException('No such document.');
+
+    this.vault.deleteItem(item);
+
+    this.audit.record({
+      actorId: actor.id,
+      actorName: actor.username,
+      action: 'vault.delete',
+      target: item.slug,
+      ip: clientIp(req),
+    });
   }
 
   @Patch('vault-items/:id')

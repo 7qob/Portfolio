@@ -133,7 +133,9 @@ Rules the implementation enforces — keep them enforced:
   (PNG/JPEG/WebP/GIF/MP4/JSON/PDF, magic bytes verified server-side); files
   are stored as `<sha256[0:16]>.<ext>` under `MEDIA_DIR` and served from
   `assets/up/`. The client never chooses a filename. Vault documents are
-  separate and still go to the Pi by hand.
+  separate: the Documents tab creates items and uploads their PDFs
+  (magic-byte checked, stored as `<slug>.pdf` under `VAULT_FILES_DIR`, which
+  is therefore mounted rw); WinSCP to the Pi remains only as a fallback.
 - Image/video dimensions are measured in the browser before upload and become
   the `width`/`height` attributes; the `reveal` band's "N clips · X MB" hint
   is computed from real sizes, never typed.

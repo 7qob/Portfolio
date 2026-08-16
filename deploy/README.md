@@ -245,23 +245,28 @@ because it is the property the old setup did not have.
 
 ### 3.7 Upload the documents
 
-Via WinSCP, into `/var/lib/kira1q/vault-files/` — **not** into `/var/www`,
-**not** into `~/Portfolio`, and never into the git repo:
+Through the admin panel: **Documents** tab → pick the PDF on the item's row.
+The service checks the bytes are a real PDF, stores it as `<slug>.pdf` under
+`/var/lib/kira1q/vault-files/`, and the row flips from "missing" to its size.
+New document (a fresh semester's report): create it with the form above the
+table, then upload onto the new row. Re-uploading replaces the file in place.
 
-```
-/var/lib/kira1q/vault-files/cv.pdf
-/var/lib/kira1q/vault-files/zeugnisse.pdf
-```
+For this to work the compose file mounts vault-files **read-write** (it was
+`:ro` before the panel could upload) and the directory must be owned by
+uid 1000 — `setup-pi.sh` already does that (`chown 1000:1000`, mode 700).
+
+The by-hand fallback still works if the panel is ever unreachable — WinSCP
+into `/var/lib/kira1q/vault-files/`, **not** into `/var/www`, **not** into
+`~/Portfolio`, and never into the git repo:
 
 ```bash
 sudo chown 1000:1000 /var/lib/kira1q/vault-files/*
 sudo chmod 640 /var/lib/kira1q/vault-files/*
 ```
 
-The filenames must match what the admin panel lists under **Documents**;
-`cv.pdf` and `zeugnisse.pdf` are seeded for you. A document whose file is
-absent shows as "Not uploaded" rather than a broken download, which is also
-how you tell a failed upload from a successful one.
+A document whose file is absent shows as "Not uploaded" in the vault rather
+than a broken download, which is also how you tell a failed upload from a
+successful one.
 
 If you are migrating from the old setup, delete the copies under the web root
 once the new ones work:
