@@ -16,8 +16,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='.5' y='.5' width='31' height='31' fill='%230e0e0e' stroke='%232a2a2a'/%3E%3Crect x='9' y='9' width='14' height='14' fill='%23ff1e2f'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
 
-  <!-- Apply the saved theme before first paint, so a light-mode visitor
-       never sees a dark flash when moving between pages. -->
+  <!-- Saved theme, applied before first paint so a light visitor sees no flash. -->
   <script>
     try {
       if (localStorage.getItem("theme") === "light") {
@@ -26,13 +25,9 @@
     } catch (e) {}
   </script>
 </head>
-<!-- .is-home locks the page to one screen on desktop (see the media query in
-     style.css). Only this page carries it — subpages scroll normally. -->
+<!-- .is-home locks the page to one screen on desktop; subpages scroll. -->
 <body class="is-home">
 
-  <!-- The site's one navigation. Byte-identical on every page except for
-       which link carries aria-current, so "where can I go" never depends on
-       "where am I". Sticky on mobile — see .site-header in style.css. -->
   <header class="site-header">
     <nav class="site-nav" aria-label="Main">
       <a href="index.html" aria-current="page">Home</a>
@@ -47,16 +42,9 @@
     </button>
   </header>
 
-  <!-- Bento grid: this is the page's content, not a nav landmark — wrapping
-       the hero, the about copy and the contribution graph in <nav> made the
-       landmark useless to a screen reader. The header nav is the landmark.
-
-       data-projects is how many project cards sit between the two markers
-       below. It picks the grid's area map (style.css, "Bento grid"), so the
-       grid stays full at four projects, at one, and at none. Both it and the
-       cards are written by the admin panel's Publish — this file is the
-       template that gets spliced, and everything outside the markers is
-       hand-written and never read by the renderer. -->
+  <!-- data-projects = how many cards sit between the markers below. It picks
+       the grid area map in style.css; Publish rewrites both. Everything
+       outside the markers is hand-written and never read by the renderer. -->
   <main class="bento" data-projects="0">
 
     <section class="box area-name" aria-labelledby="lbl-name">
@@ -88,16 +76,10 @@
 
     <section class="box area-github" aria-labelledby="lbl-github">
       <h2 class="box__label" id="lbl-github"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>GitHub</h2>
-      <!-- Heatmap. Data: github-contributions-api.jogruber.de (third-party,
-           no token, no auth). script.js fills .gh__chart and .gh__meta.
-           The shells are in the markup rather than created wholesale by JS so
-           the box owns its height before the fetch resolves — otherwise the
-           bento visibly reflows when a slow third party finally answers. -->
       <div class="gh" id="gh" data-gh-user="kiraa1q">
         <div class="gh__chart" data-gh-chart>
           <p class="gh__status" data-gh-status>Loading activity…</p>
         </div>
-        <p class="gh__meta" data-gh-meta hidden></p>
       </div>
     </section>
 
@@ -132,11 +114,6 @@
         </span>
       </a>
 
-      <!-- Relative and same-tab: the Vault is an internal page, not an
-           outbound link. The old absolute https://kira1q.dev/vault broke on
-           file:// and on the LAN, and 404s until the Pi serves the domain.
-           It is password-protected server-side (nginx Basic Auth) — see
-           deploy/nginx-kira1q.dev.conf. -->
       <a class="link-box" href="vault/index.html">
         <span class="link-box__caption">Private</span>
         <span class="link-box__label">
@@ -150,11 +127,6 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </span>
       </a>
-
-      <!-- The theme toggle used to be a fourth box here. It is a site-wide
-           setting, not a destination, so it never belonged next to "my GitHub
-           profile" and "my CV" — it lives in the header now, on every page
-           rather than only this one. -->
 
     </section>
 

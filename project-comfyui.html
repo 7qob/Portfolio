@@ -16,8 +16,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='.5' y='.5' width='31' height='31' fill='%230e0e0e' stroke='%232a2a2a'/%3E%3Crect x='9' y='9' width='14' height='14' fill='%23ff1e2f'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
 
-  <!-- Apply the saved theme before first paint, so a light-mode visitor
-       never sees a dark flash when moving between pages. -->
+  <!-- Saved theme, applied before first paint so a light visitor sees no flash. -->
   <script>
     try {
       if (localStorage.getItem("theme") === "light") {
@@ -28,15 +27,6 @@
 </head>
 <body>
 
-  <!-- ===================================================================
-       PROJECT PAGE — see project-template.html for the swap checklist.
-       Everything project-specific on this page is: the .is-comfy class
-       below, the <title>, the <h1>, the article content, the repo link
-       and the pager. No CSS is involved.
-       =================================================================== -->
-  <!-- The site's one navigation. Byte-identical on every page except for
-       which link carries aria-current, so "where can I go" never depends on
-       "where am I". Sticky on mobile — see .site-header in style.css. -->
   <header class="site-header">
     <nav class="site-nav" aria-label="Main">
       <a href="index.html">Home</a>
@@ -96,21 +86,11 @@
         <div class="note"><code>tools/sanitize.py</code> generates the public copy from the private working file, stripping <strong>LoRA names and strengths, prompts, absolute paths and seeds</strong> — the published workflow is the structure, not anyone's settings.</div>
       </section>
 
-      <!-- The <figure> self-hides if its image is missing (see initFigures in
-           script.js), so the page is never scarred by a missing file. -->
       <figure class="figure">
         <img src="assets/graph.png" alt="The ComfyUI node graph: a Models column of five LoRA slots under one Master Strength control, feeding Stage 1 (Base, 1152×1728) and Stage 2 (Refine, latent upscale) with an rgthree Compare node between the two outputs." loading="lazy" decoding="async">
         <figcaption>The full workflow — Models and LoRA stack on the left, Base and Refine stages on the right, joined by the Compare node.</figcaption>
       </figure>
 
-      <!-- Same band as the About page's setup section, and closed for the same
-           reason: 16 MB is not something to spend before it is asked for. This
-           clip is an MP4 rather than a GIF because 1920x1080 of readable node
-           text is 16 MB encoded and would be several times that as a GIF. It
-           carries no native controls — a pause button and a fullscreen button,
-           drawn in the site's own stroke, and a progress rule that appears
-           only in fullscreen. The file has an audio track; the element is
-           muted, which is also what lets it autoplay at all. -->
       <details class="reveal">
         <summary class="reveal__summary">
           <h2 class="section-label">Walkthrough</h2>

@@ -1,20 +1,17 @@
 /**
  * block[] -> HTML. Pure functions, no Nest, no I/O.
  *
- * The output is a plain static page: it loads style.css and script.js and
- * nothing else, works over file://, and makes zero API calls — exactly like
- * the hand-written pages it stands beside. Every class emitted here already
+ * The output is a plain static page: style.css and script.js and nothing else,
+ * works over file://, makes zero API calls. Every class emitted here already
  * exists in style.css; this file adds no CSS and expects none.
  *
- * Security stance: every author-supplied value passes through esc() before it
- * can reach the page. The only markup an author can produce is [text](url)
- * and `code`, applied AFTER escaping, with the href checked against SAFE_HREF
- * — so no raw HTML from the form ever reaches a visitor, and neither does a
- * javascript: link. "An admin typed it" is not the same as "it is well-formed".
- * The one style attribute this file emits is re-checked here against the hex
- * regex rather than trusted from the record, for the same reason.
+ * Security stance: every author-supplied value passes through esc() first. The
+ * only markup an author can produce is [text](url) and `code`, applied AFTER
+ * escaping and with the href checked against SAFE_HREF. The one style attribute
+ * is re-tested against the hex regex here rather than trusted from the record —
+ * the DTO checked what arrived over HTTP, this checks what is about to reach a
+ * public page, and there is a database between those two moments.
  */
-
 import { ACCENT_HEX, Block, Chip, HOME_SLOTS, MediaBlock, SAFE_HREF, TextBlock } from './blocks';
 
 export interface MediaRef {
@@ -26,7 +23,6 @@ export interface MediaRef {
   height: number | null;
 }
 
-/** Must throw when the id is unknown — publish checks first, this is backstop. */
 export type MediaLookup = (id: number) => MediaRef;
 
 export interface PageProject {
@@ -48,20 +44,11 @@ export interface Neighbour {
 }
 
 export interface RenderOptions {
-  /**
-   * '' for published pages (relative, file://-safe, same as the hand-written
-   * pages), '/' for the preview endpoint, whose own URL lives under /api/.
-   */
   assetPrefix?: string;
 }
 
-/** The markers renderHome() writes between, and nothing outside them. */
 export const HOME_START = '<!-- projects:start -->';
 export const HOME_END = '<!-- projects:end -->';
-
-// ---------------------------------------------------------------------------
-// Escaping and the two inline forms
-// ---------------------------------------------------------------------------
 
 const ESC: Record<string, string> = {
   '&': '&amp;',
@@ -75,11 +62,6 @@ export function esc(value: string): string {
   return value.replace(/[&<>"']/g, (c) => ESC[c] ?? c);
 }
 
-/**
- * Prose fields only. Escape first, then exactly two transforms on the escaped
- * text: `code` and [label](url). An unsafe url leaves the whole thing as
- * literal text rather than guessing at intent.
- */
 export function inline(value: string): string {
   let out = esc(value);
   out = out.replace(/`([^`\n]+)`/g, '<code>$1</code>');
@@ -103,12 +85,6 @@ function formatBytes(bytes: number): string {
   return (u > 0 && value < 10 ? value.toFixed(1) : String(Math.round(value))) + ' ' + units[u];
 }
 
-/**
- * Markup is built at its own natural indentation and placed by whatever
- * contains it. Without this every fragment would have to know how deeply it
- * was going to be nested, which is how the per-type renderers ended up with
- * their indentation baked in and drifting.
- */
 function indent(html: string, pad: string): string {
   return html
     .split('\n')
@@ -116,21 +92,14 @@ function indent(html: string, pad: string): string {
     .join('\n');
 }
 
-// ---------------------------------------------------------------------------
-// SVG catalogue. Server-side constants copied verbatim from the hand-written
-// pages — never author input. Chip icons are addressed by name from the form.
-// ---------------------------------------------------------------------------
-
 const SVG_ATTRS =
   'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
 
-/** Attribute order follows the hand-written pages: xmlns, size, then the rest. */
 function svg(paths: string, size?: number): string {
   const dims = size ? ` width="${size}" height="${size}"` : '';
   return `<svg xmlns="http://www.w3.org/2000/svg"${dims} ${SVG_ATTRS}>${paths}</svg>`;
 }
 
-/** Chip icons, keyed by the name the admin form offers. */
 export const CHIP_ICONS: Record<string, string> = {
   nodes:
     '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/>',
@@ -169,7 +138,6 @@ const ICON_STAR = svg('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 2
 
 const ICON_FOLDER = svg('<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>', 14);
 
-/** Written relative to the frame that holds it; indent() places it. */
 const CLIP_CONTROLS = `<button class="clip-btn clip-btn--play" type="button" data-clip-toggle aria-label="Pause clip">
   <span data-clip-icon="pause">
     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="9" y1="4" x2="9" y2="20"/><line x1="15" y1="4" x2="15" y2="20"/></svg>
@@ -187,11 +155,6 @@ const CLIP_CONTROLS = `<button class="clip-btn clip-btn--play" type="button" dat
   </span>
 </button>
 <div class="clip-track" data-clip-track aria-hidden="true"><span class="clip-track__fill" data-clip-fill></span></div>`;
-
-// ---------------------------------------------------------------------------
-// Page shell — byte-for-byte the same head, header and footer as the
-// hand-written pages, so a generated page is indistinguishable in the browser.
-// ---------------------------------------------------------------------------
 
 const FAVICON =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='.5' y='.5' width='31' height='31' fill='%230e0e0e' stroke='%232a2a2a'/%3E%3Crect x='9' y='9' width='14' height='14' fill='%23ff1e2f'/%3E%3C/svg%3E";
@@ -215,8 +178,7 @@ function head(title: string, ogType: string, p: string): string {
   <link rel="icon" href="${FAVICON}">
   <link rel="stylesheet" href="${p}style.css">
 
-  <!-- Apply the saved theme before first paint, so a light-mode visitor
-       never sees a dark flash when moving between pages. -->
+  <!-- Saved theme, applied before first paint so a light visitor sees no flash. -->
   <script>
     try {
       if (localStorage.getItem("theme") === "light") {
@@ -230,10 +192,7 @@ function head(title: string, ogType: string, p: string): string {
 }
 
 function header(p: string): string {
-  return `  <!-- The site's one navigation. Byte-identical on every page except for
-       which link carries aria-current, so "where can I go" never depends on
-       "where am I". Sticky on mobile — see .site-header in style.css. -->
-  <header class="site-header">
+  return `  <header class="site-header">
     <nav class="site-nav" aria-label="Main">
       <a href="${p}index.html">Home</a>
       <a href="${p}projects.html" aria-current="page">Projects</a>
@@ -250,8 +209,7 @@ function header(p: string): string {
 }
 
 function footer(p: string): string {
-  return `  <!-- Legal + credit only. Navigation is in the header. -->
-  <footer class="site-footer">
+  return `  <footer class="site-footer">
     <span class="site-footer__meta">&copy; <span id="year"></span> kiraa1q &middot; v1.0.0</span>
     <a href="${p}impressum.html">Impressum</a>
     <a href="https://github.com/kiraa1q" target="_blank" rel="noopener">GitHub<svg class="footer-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></a>
@@ -268,8 +226,6 @@ function chipList(chips: Chip[], pad: string): string {
   const items = chips
     .map((c) => {
       const paths = c.icon ? CHIP_ICONS[c.icon] : undefined;
-      // .chip svg sizes these to 14px anyway; the attributes are there so the
-      // chip row does not jump while the stylesheet is still loading.
       const icon = paths ? svg(paths, 14) : '';
       return `  <li class="chip">${icon}${esc(c.label)}</li>`;
     })
@@ -277,31 +233,11 @@ function chipList(chips: Chip[], pad: string): string {
   return indent(`<ul class="chips">\n${items}\n</ul>`, pad) + '\n';
 }
 
-/**
- * The project's colour, as a class and an inline custom property.
- *
- * `.is-custom` derives the shade and the tint from `--edge-brand` with
- * color-mix, once, for both themes — which is what replaced four hand-written
- * palettes of three hex values each. The value is re-tested here rather than
- * trusted: the DTO checked what arrived over HTTP, this checks what is about
- * to be interpolated into a style attribute on a public page, and those are
- * different moments with a database in between.
- */
 function accentAttrs(accent: string | null): { cls: string; style: string } {
   if (!accent || !ACCENT_HEX.test(accent)) return { cls: '', style: '' };
   return { cls: ' is-custom', style: ` style="--edge-brand:${accent.toLowerCase()}"` };
 }
 
-// ---------------------------------------------------------------------------
-// The two bands
-// ---------------------------------------------------------------------------
-
-/**
- * Every top-level block on a project page is a band: a hairline along the top,
- * a heading, and its content. `collapsible` picks which of the two shells that
- * band wears — an ordinary <section>, or the <details> that keeps everything
- * inside it (bytes included) behind one click.
- */
 function band(opts: {
   id: string;
   heading: string;
@@ -341,8 +277,6 @@ function renderTextBand(b: TextBlock, id: string): string {
     heading: b.heading,
     inner: b.body.map((par) => `<p>${inline(par)}</p>`).join('\n'),
     collapsible: b.collapsible,
-    // A folded text band is prose with no .mediarow__text of its own to carry
-    // the reading class, so it takes it directly.
     bodyClass: ' reading',
   });
 }
@@ -369,9 +303,6 @@ ${row.body.map((par) => `    <p>${inline(par)}</p>`).join('\n')}
   </div>`;
 
       if (m.mime === 'video/mp4') {
-        // The MP4 shape: a frame wrapping the video, the two clip buttons and
-        // the progress track — initClipToggles() drives these off the
-        // data-clip-* attributes, unchanged.
         const frame = `<video class="mediarow__media" src="${mediaSrc(m, p)}"${dims(m)} autoplay loop muted playsinline preload="none" aria-label="${esc(row.alt)}"></video>
 ${CLIP_CONTROLS}`;
         return `<div class="mediarow${wide}">
@@ -382,9 +313,6 @@ ${text}
 </div>`;
       }
 
-      // The image/GIF shape: a bare lazy <img> as a direct child of the row.
-      // Inside a closed <details> it has no layout box, so nothing is
-      // downloaded until the band is opened.
       return `<div class="mediarow${wide}">
   <img class="mediarow__media" src="${mediaSrc(m, p)}"${dims(m)} loading="lazy" decoding="async" alt="${esc(row.alt)}">
 ${text}
@@ -397,8 +325,6 @@ ${text}
     heading: b.heading,
     inner: rows,
     collapsible: b.collapsible,
-    // Computed from the real files on disk, never typed by the author —
-    // someone on mobile data is entitled to know before they tap.
     hint: `${n} clip${n === 1 ? '' : 's'} &middot; ${formatBytes(totalBytes)}`,
   });
 }
@@ -408,11 +334,6 @@ function renderBlock(b: Block, index: number, media: MediaLookup, p: string): st
   return b.type === 'text' ? renderTextBand(b, id) : renderMediaBand(b, id, media, p);
 }
 
-/**
- * The repository, as the last thing before the pager. A .linklist with one
- * item rather than a new block type: the shape of the page should not depend
- * on how many links a project happens to have, and this needs no new CSS.
- */
 function repoLink(url: string): string {
   const label = url.replace(/^https:\/\//i, '').replace(/\/+$/, '');
   return `    <nav class="linklist" aria-labelledby="lbl-repo">
@@ -429,10 +350,6 @@ function repoLink(url: string): string {
     </nav>
 `;
 }
-
-// ---------------------------------------------------------------------------
-// Whole pages
-// ---------------------------------------------------------------------------
 
 export function renderProjectPage(
   project: PageProject,
@@ -469,8 +386,6 @@ ${chipList(project.chips, '    ')}  </div>
 
 `;
 
-  // The fixed tail, enforced by code rather than by discipline: the bands the
-  // author wrote, then the repository, then the pager.
   if (project.repoUrl) html += repoLink(project.repoUrl);
 
   if (prev || next) {
@@ -499,62 +414,53 @@ ${prevLink}${nextLink}    </nav>
   return html;
 }
 
-/**
- * The card a project wears on both index pages. Same parts everywhere — the
- * stretched link, the arrow, the label, the name, the chips, the blurb — so a
- * project is recognisably the same object on the bento and on projects.html.
- */
-function projectCard(
-  proj: PageProject,
-  opts: { tag: 'li' | 'section'; extraClass: string; large: boolean; wrapBody: boolean; p: string },
-): string {
+/** A bento cell: the project as a card, on the home page only. */
+function projectCard(proj: PageProject, opts: { area: string; large: boolean; p: string }): string {
   const id = `p-${esc(proj.slug)}`;
   const accent = accentAttrs(proj.accent);
-  const featured = proj.status === 'Featured';
-  const label = featured ? `${ICON_STAR}Featured` : `${ICON_FOLDER}Project`;
-  const wip = proj.status === 'WIP' ? `\n        <span class="status">WIP</span>` : '';
+  const label = proj.status === 'Featured' ? `${ICON_STAR}Featured` : `${ICON_FOLDER}Project`;
+  const wip = proj.status === 'WIP' ? `\n          <span class="status">WIP</span>` : '';
   const blurb = proj.cardBlurb ?? proj.lede ?? '';
   const nameClass = `project-box__name${opts.large ? ' project-box__name--lg' : ''}`;
+  const body = `${chipList(proj.chips, '          ')}          <p class="box__text">${inline(blurb)}</p>`;
 
-  // On the bento the label is the labelling element (it holds the id and the
-  // card's name is a plain span); on projects.html the name is the heading.
-  const bento = opts.tag === 'section';
-  const labelId = bento ? ` id="${id}"` : '';
-  const name = bento
-    ? `        <span class="${nameClass}">${esc(proj.title)}</span>`
-    : `        <h2 class="${nameClass}" id="${id}">${esc(proj.title)}</h2>`;
-
-  const body = `${chipList(proj.chips, '        ')}        <p class="box__text">${inline(blurb)}</p>`;
-
-  return `      <${opts.tag} class="box box--link box--edge${accent.cls}${opts.extraClass}"${accent.style} aria-labelledby="${id}">
+  return `      <section class="box box--link box--edge${accent.cls} area-${opts.area}"${accent.style} aria-labelledby="${id}">
         <a class="stretched-link" href="${opts.p}project-${esc(proj.slug)}.html" aria-label="${esc(proj.title)} — project page"></a>
         <span class="box-arrow" aria-hidden="true">
           ${ICON_BOX_ARROW}
         </span>
-        <h2 class="box__label"${labelId}>${label}</h2>
+        <h2 class="box__label" id="${id}">${label}</h2>
         <div class="project-box__head">
-${name}${wip}
+          <span class="${nameClass}">${esc(proj.title)}</span>${wip}
         </div>
-${opts.wrapBody ? `        <div class="box__body">\n${indent(body, '  ')}\n        </div>` : body}
-      </${opts.tag}>`;
+        <div class="box__body">
+${body}
+        </div>
+      </section>`;
+}
+
+/**
+ * A row on the projects index: the same band every other subpage is built from
+ * — hairline, heading, content — with the project's colour in the seam.
+ */
+function projectRow(proj: PageProject, p: string): string {
+  const accent = accentAttrs(proj.accent);
+  const status = proj.status ? ` <span class="status">${esc(proj.status)}</span>` : '';
+  const blurb = proj.cardBlurb ?? proj.lede ?? '';
+
+  return `      <li class="project-row${accent.cls}"${accent.style}>
+        <a class="stretched-link" href="${p}project-${esc(proj.slug)}.html" aria-label="${esc(proj.title)} — project page"></a>
+        <span class="box-arrow" aria-hidden="true">
+          ${ICON_BOX_ARROW}
+        </span>
+        <h2 class="section-label" id="p-${esc(proj.slug)}">${esc(proj.title)}${status}</h2>
+${chipList(proj.chips, '        ')}        <p>${inline(blurb)}</p>
+      </li>`;
 }
 
 export function renderProjectsIndex(projects: PageProject[], opts: RenderOptions = {}): string {
   const p = opts.assetPrefix ?? '';
-
-  const cards = projects
-    .map((proj) =>
-      projectCard(proj, {
-        tag: 'li',
-        // Featured and WIP cards take a full row so they sit level; the plain
-        // ones share it — the same split the hand-written grid used.
-        extraClass: proj.status ? ' is-wide' : '',
-        large: proj.status === 'Featured',
-        wrapBody: false,
-        p,
-      }),
-    )
-    .join('\n\n');
+  const rows = projects.map((proj) => projectRow(proj, p)).join('\n\n');
 
   let html = head('Projects', 'website', p);
   html += '\n';
@@ -567,23 +473,11 @@ export function renderProjectsIndex(projects: PageProject[], opts: RenderOptions
 
   <main class="page-body" aria-labelledby="page-title">
 
-    <ul class="project-grid">
+    <ul class="project-list">
 
-${cards}
+${rows}
 
     </ul>
-
-    <nav class="linklist" aria-labelledby="lbl-links">
-      <h2 class="section-label" id="lbl-links">Elsewhere</h2>
-      <ul>
-        <li>
-          <a href="https://github.com/kiraa1q" target="_blank" rel="noopener">
-            <span class="linklist__label">More on GitHub</span>
-            ${ICON_EXTERNAL}
-          </a>
-        </li>
-      </ul>
-    </nav>
   </main>
 
 `;
@@ -592,14 +486,9 @@ ${cards}
 }
 
 /**
- * The home page, which is hand-written everywhere except its project cards.
- *
- * Two edits and no others: the region between the two markers becomes one
- * card per slotted project, and the bento's data-projects count becomes the
- * number of them — that attribute is what selects the grid's area map, so
- * three projects reflow into a full grid instead of leaving a hole. The hero,
- * the about card, the contribution graph and the link stack are never read,
- * never parsed and never touched. Publishing is a splice, not a re-render.
+ * The home page is a splice, not a render: only the region between the two
+ * markers and the data-projects count are rewritten. Everything else in
+ * index.html is hand-written and never parsed.
  */
 export function renderHome(template: string, projects: PageProject[], opts: RenderOptions = {}): string {
   const p = opts.assetPrefix ?? '';
@@ -613,32 +502,17 @@ export function renderHome(template: string, projects: PageProject[], opts: Rend
     );
   }
 
-  // The cells are filled in canonical order rather than by name, and the
-  // caller hands them over already sorted that way. A project that holds
-  // smallB while smallA is empty therefore lands in smallA: the count-keyed
-  // area maps in style.css fill the grid for N projects, and they can do that
-  // only if the N cells in use are the first N. Which cell a project holds is
-  // still its own — it is what orders them here — it just closes up rather
-  // than leaving a hole in the bento.
+  // Cells are filled in canonical order: the count-keyed area maps in style.css
+  // can only fill the grid if the N cells in use are the first N, so a project
+  // holding smallB with smallA empty closes up rather than leaving a hole.
   const cards = projects
-    .map((proj, i) =>
-      projectCard(proj, {
-        tag: 'section',
-        extraClass: ` area-${HOME_SLOTS[i] ?? 'feature'}`,
-        large: i === 0,
-        wrapBody: true,
-        p,
-      }),
-    )
+    .map((proj, i) => projectCard(proj, { area: HOME_SLOTS[i] ?? 'feature', large: i === 0, p }))
     .join('\n\n');
 
   const before = template.slice(0, start + HOME_START.length);
   const after = template.slice(end);
   const html = cards ? `${before}\n\n${cards}\n\n    ${after}` : `${before}\n    ${after}`;
 
-  // Anchored on the opening tag, so the count cannot be rewritten anywhere
-  // else a similar attribute might appear. A replacer function, because a
-  // string replacement would read $& and friends out of the card markup.
   return html.replace(
     /(<main class="bento"[^>]*\bdata-projects=")\d+(")/,
     (_match, head: string, tail: string) => `${head}${projects.length}${tail}`,

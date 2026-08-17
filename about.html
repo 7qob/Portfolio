@@ -16,8 +16,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='.5' y='.5' width='31' height='31' fill='%230e0e0e' stroke='%232a2a2a'/%3E%3Crect x='9' y='9' width='14' height='14' fill='%23ff1e2f'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
 
-  <!-- Apply the saved theme before first paint, so a light-mode visitor
-       never sees a dark flash when moving between pages. -->
+  <!-- Saved theme, applied before first paint so a light visitor sees no flash. -->
   <script>
     try {
       if (localStorage.getItem("theme") === "light") {
@@ -28,9 +27,6 @@
 </head>
 <body>
 
-  <!-- The site's one navigation. Byte-identical on every page except for
-       which link carries aria-current, so "where can I go" never depends on
-       "where am I". Sticky on mobile — see .site-header in style.css. -->
   <header class="site-header">
     <nav class="site-nav" aria-label="Main">
       <a href="index.html">Home</a>
@@ -53,10 +49,6 @@
   <main class="page-body" aria-labelledby="page-title">
     <div class="about">
 
-      <!-- The lede, and the only block above the first seam. It used to be
-           prose beside an "At a glance" sheet that repeated the same four
-           facts in a box — the box is gone, and the page opens with the one
-           thing someone came here to read. -->
       <div class="about__lead reading">
         <p>My name is Matti Näf. I'm 17, a computer science student in Bern, Switzerland, and in my third year at the IMS — the Informatikmittelschule.</p>
         <p>Most of what I have built so far is something I wanted for myself first: whatever I was curious about at the time, or whatever made my own day a little easier. That is where everything under <a href="projects.html">projects</a> came from — a reverse proxy so my own LLM server can be reached from outside without being left open (Ignite), a chat frontend that never leaves my machine (Kobui), a dashboard for the Minecraft server on my Raspberry Pi (Stalkr), and a ComfyUI workflow I kept tuning until it was worth reusing.</p>
@@ -64,11 +56,8 @@
         <p>What I would really like to do professionally is <strong>machine learning, security tooling and design</strong>. Right now I'm looking for a <strong>Praktikum</strong> in that direction.</p>
       </div>
 
-      <!-- Closed on purpose, and it is not a styling choice. These four clips
-           are 48 MB between them; inside a closed <details> a loading="lazy"
-           image has no layout box, so none of it is fetched until the section
-           is opened. It is also the pause button an animated GIF does not
-           have — the motion starts when the reader asks for it. -->
+      <!-- Closed on purpose: inside a closed <details> a loading=lazy image has
+           no layout box, so none of these 48 MB is fetched until it is opened. -->
       <details class="reveal">
         <summary class="reveal__summary">
           <h2 class="section-label">My setup</h2>
@@ -130,10 +119,6 @@
         <p>I've always done sport and I still do. It makes me feel free and light — running as fast as I can is a feeling I don't think I'll ever lose. The competitive side of me grew up in that environment before it turned up anywhere else.</p>
       </section>
 
-      <!-- Two photographs rather than two more paragraphs: this is the one
-           part of the page that is easier to show than to describe. Same
-           .mediarow the setup clips use, so the picture keeps to the fixed
-           left rail and the words land on one reading measure beside it. -->
       <section class="project__section" aria-labelledby="lbl-outdoors">
         <h2 class="section-label" id="lbl-outdoors">Skiing and hiking</h2>
         <p>Both are occasional rather than weekly — I get to them when the season and the weekend agree — but they are the two I like doing most.</p>
@@ -166,10 +151,6 @@
         <p>I watch anime because it doesn't have to resemble real life. It reads more like an alternate universe, and in some of them I can picture myself living.</p>
       </section>
 
-      <!-- The levels as a full-width band rather than a card: the level is the
-           interesting part, and this puts it under the language instead of
-           pushing it to a far right edge. The prose above it is what the
-           levels cannot say — which of them is going anywhere. -->
       <section class="project__section" aria-labelledby="lbl-langs">
         <h2 class="section-label" id="lbl-langs">Languages</h2>
         <p>Learning languages has been a passive thing for me so far. I took an Italian course for two years and have forgotten most of it since, for the simple reason that I never used it afterwards. Lately it has been Mandarin — far enough to express myself, and maybe one day to talk to native speakers. Without books or a structured plan I haven't got as far with it as I would have liked, but Chinese is the one that really interests me.</p>

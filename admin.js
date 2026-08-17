@@ -1,15 +1,9 @@
-// Admin panel. Loaded only by admin.html, so the home page never carries it.
-//
-// Relies on api(), isOffline() and formatBytes() from script.js, loaded first.
-//
-// One rule runs through the whole file: every value from the API is written
-// with textContent, never innerHTML. Half of what is shown here — user-agent
-// strings, usernames from failed logins — is text an attacker chose and the
-// server stored verbatim, exactly as it should. This is the page where that
-// stops being inert, so it is treated as text end to end. In the page editor
-// it matters twice over: what is typed there round-trips through the API and
-// then becomes a PUBLIC page, and the server escapes it all over again.
+/* Admin panel only. It shares api() and isOffline() with script.js, which every
+   page loads first.
 
+   Use textContent, never innerHTML, for anything the server stored: this panel
+   displays usernames and user-agent strings from failed logins, which is
+   attacker-chosen text held verbatim, as it should be. */
 document.addEventListener("DOMContentLoaded", function () {
   var gate = document.getElementById("admin-gate");
   var body = document.getElementById("admin-body");
@@ -30,8 +24,6 @@ document.addEventListener("DOMContentLoaded", function () {
       return res.json();
     })
     .then(function (data) {
-      // A signed-in non-admin gets told plainly rather than shown empty
-      // tables that would 403 one by one.
       if (!data.user || data.user.role !== "admin") {
         gate.textContent = "This area is for administrators. You are signed in as " + data.user.username + ".";
         return;
@@ -49,11 +41,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
-// ---------------------------------------------------------------------------
-// Tabs. Two strips: the four sections, and the telemetry tables nested inside
-// Access. Each strip only ever touches its own tabs and its own panels.
-// ---------------------------------------------------------------------------
-
 var loaded = {};
 
 function initTabs(strip, guard) {
@@ -66,8 +53,6 @@ function initTabs(strip, guard) {
       selectTab(tabs, tab);
     });
 
-    // Arrow keys move between tabs, which is what the tablist role promises.
-    // Without this the role is a lie to a screen reader.
     tab.addEventListener("keydown", function (e) {
       var i = tabs.indexOf(tab);
       var next = null;
@@ -100,8 +85,6 @@ function selectTab(tabs, active) {
   loadPanel(active.getAttribute("data-panel"));
 }
 
-// Fetched on first view rather than all at once on load, so opening the panel
-// costs one request instead of seven.
 function loadPanel(name) {
   if (loaded[name]) return;
   loaded[name] = true;
@@ -125,10 +108,6 @@ function reload(name) {
   loadPanel(name);
 }
 
-// ---------------------------------------------------------------------------
-// Rendering helpers
-// ---------------------------------------------------------------------------
-
 function el(tag, className, text) {
   var node = document.createElement(tag);
   if (className) node.className = className;
@@ -136,9 +115,6 @@ function el(tag, className, text) {
   return node;
 }
 
-// Builds a table from plain values. Cells are textContent throughout; a cell
-// may also be given a prepared element, which is how the action buttons get in
-// without ever concatenating markup.
 function renderTable(table, headers, rows, buildRow) {
   table.textContent = "";
 
@@ -184,8 +160,6 @@ function button(label, className, onClick) {
   return b;
 }
 
-// SQLite writes UTC without a zone marker; the Z makes the browser read it as
-// UTC rather than local, which is a two-hour lie in Bern in summer.
 function when(value) {
   if (!value) return "—";
   var d = new Date(String(value).replace(" ", "T") + "Z");
@@ -193,8 +167,6 @@ function when(value) {
   return d.toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" });
 }
 
-// A full user-agent is 150 characters of noise in a table cell. The whole
-// string stays available on hover.
 function shortAgent(value) {
   if (!value) return "—";
   var text = String(value);
@@ -209,7 +181,6 @@ function fail(table, error) {
   });
 }
 
-// One shape for "the server said no": read the body, use its message.
 function ok(res, fallback) {
   if (res.ok) return res.status === 204 ? null : res.json().catch(function () { return null; });
   return res.json().then(
@@ -217,11 +188,6 @@ function ok(res, fallback) {
     function () { throw new Error(fallback); }
   );
 }
-
-// ---------------------------------------------------------------------------
-// Access — the overview, the accounts, and the four tables nobody opens on
-// purpose.
-// ---------------------------------------------------------------------------
 
 function loadAccess() {
   loadOverview();
@@ -345,9 +311,6 @@ function createUser(form, out) {
     });
 }
 
-// The one place a password is ever visible. It exists in this response and
-// nowhere else — the server stored only its hash — so the copy explains that
-// rather than leaving it to be discovered later.
 function showSecret(host, username, password, title) {
   if (!host) return;
 
@@ -452,10 +415,6 @@ function loadAudit() {
     })
     .catch(function (e) { fail(table, e); });
 }
-
-// ---------------------------------------------------------------------------
-// Files — two stores, deliberately separate.
-// ---------------------------------------------------------------------------
 
 function loadFiles() {
   var picker = document.getElementById("media-upload");
@@ -570,9 +529,6 @@ function loadDocuments() {
             .catch(function (err) { alert(err.message); });
         }));
 
-        // Choosing a file uploads it immediately, replacing what is on disk.
-        // The row's slug decides the stored name; the picked file's own name
-        // is never sent anywhere.
         var pdfInput = el("input", "admin-input");
         pdfInput.type = "file";
         pdfInput.accept = "application/pdf";
@@ -615,11 +571,6 @@ function loadDocuments() {
     .catch(function (e) { fail(table, e); });
 }
 
-// ---------------------------------------------------------------------------
-// Projects — the list, and the editor in its place.
-// ---------------------------------------------------------------------------
-
-// Must match the icon catalogue in the server's renderer.
 var CHIP_ICONS = ["nodes", "image", "python", "rust", "proxy", "stream",
                   "cloud", "react", "typescript", "kobold", "node"];
 
@@ -709,12 +660,6 @@ function slotLabel(slot) {
   return found || "not shown";
 }
 
-// ---------------------------------------------------------------------------
-// Home page — the four cells, and the order the index and the pagers follow.
-// A decision about the home page, made looking at all four cells at once,
-// which is why it is not a field on one project.
-// ---------------------------------------------------------------------------
-
 function loadHomePage() {
   var host = document.getElementById("home-editor");
 
@@ -744,7 +689,6 @@ function buildHomeEditor(host, rows) {
     republish(function () { reload("home"); loaded.projects = false; loadProjectsTable(); });
   }
 
-  // --- bar ------------------------------------------------------------------
   var bar = el("div", "pe-bar");
   var state = el("span", "pe-bar__state");
   var unplaced = placed.filter(function (p) { return !(p.publishedAt && p.visible); }).length;
@@ -764,7 +708,6 @@ function buildHomeEditor(host, rows) {
     "The bento has four project cells. Only published, listed pages appear in them. Everything else on the " +
     "home page — the hero, the about card, the GitHub graph, the link stack — is hand-written and untouched by this."));
 
-  // --- the four cells -------------------------------------------------------
   var cells = el("section", "pe-card");
   cells.appendChild(el("span", "pe-card__label", "The four cells"));
 
@@ -791,9 +734,6 @@ function buildHomeEditor(host, rows) {
     cell.appendChild(el("span", "pe-slot__name", holder ? holder.title : "empty"));
     if (slot[2]) cell.appendChild(el("span", "pe-slot__name", slot[2]));
 
-    // Clicking a cell is the same act as choosing from its dropdown: it
-    // scrolls to it and opens it, rather than being a second way to do the
-    // same thing that behaves subtly differently.
     cell.addEventListener("click", function () {
       var select = document.getElementById("slot-" + slot[0]);
       if (select) { select.focus(); }
@@ -826,8 +766,6 @@ function buildHomeEditor(host, rows) {
       var id = Number(select.value);
       var previous = holder;
 
-      // Emptying a cell is a write on whoever was in it; filling one is a
-      // write on the project moving in, and the server does the swap.
       var call = id
         ? api("/admin/projects/" + id, { method: "PUT", body: { homeSlot: slot[0] } })
         : previous
@@ -851,7 +789,6 @@ function buildHomeEditor(host, rows) {
     "so there is no hole."));
   host.appendChild(cells);
 
-  // --- order ----------------------------------------------------------------
   var order = el("section", "pe-card");
   order.appendChild(el("span", "pe-card__label", "Order on projects.html"));
   order.appendChild(el("p", "pe-field__hint",
@@ -869,9 +806,6 @@ function buildHomeEditor(host, rows) {
     var moved = next.splice(index, 1)[0];
     next.splice(index + delta, 0, moved);
 
-    // Every row is renumbered from its new position rather than two rows
-    // trading numbers: pages created before this table existed all sit on
-    // sort_order 0, and swapping 0 for 0 moves nothing.
     Promise.all(next.map(function (row, i) {
       if (row.sortOrder === i * 10) return null;
       return api("/admin/projects/" + row.id, { method: "PUT", body: { sortOrder: i * 10 } })
@@ -918,11 +852,6 @@ function buildHomeEditor(host, rows) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Uploads. Dimensions are measured in the browser before the file leaves it —
-// exact numbers, no server-side image library — and ride along as form fields.
-// ---------------------------------------------------------------------------
-
 function measureFile(file) {
   return new Promise(function (resolve) {
     var url = URL.createObjectURL(file);
@@ -968,8 +897,6 @@ function mediaLabel(m) {
   return name + dims + size;
 }
 
-// An MP4 shows its own first frame; anything else is an image. Both wear the
-// same frame, so a row card looks like the band it renders.
 function mediaThumb(m, width) {
   var node;
   if (m && m.mime === "video/mp4") {
@@ -991,10 +918,6 @@ function mediaThumb(m, width) {
   return node;
 }
 
-// A thumbnail, the file's real numbers, a select of what is already uploaded
-// and a file input that uploads immediately and selects the result.
-// `mediaRows` is the editor's shared list, so an upload made in one band is
-// offered in every other one opened afterwards.
 function mediaPicker(mediaRows, currentId, accept, onPick) {
   var root = el("div");
   var preview = el("div");
@@ -1062,10 +985,6 @@ function mediaPicker(mediaRows, currentId, accept, onPick) {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Small form helpers, all el()-based.
-// ---------------------------------------------------------------------------
-
 function peField(labelText, control, hint, wide) {
   var wrap = el("label", "pe-field" + (wide ? " pe-field--wide" : ""));
   wrap.appendChild(el("span", "pe-field__label", labelText));
@@ -1125,8 +1044,6 @@ function splitParas(value) {
   return value.split(/\n\s*\n/).map(function (s) { return s.trim(); }).filter(Boolean);
 }
 
-// Title -> slug, the same shape the server derives. Kept in the panel so the
-// field fills in as the title is typed rather than after the first save.
 function slugify(title) {
   return title
     .normalize("NFD")
@@ -1137,15 +1054,6 @@ function slugify(title) {
     .slice(0, 48)
     .replace(/-+$/, "");
 }
-
-// ---------------------------------------------------------------------------
-// The colour picker.
-//
-// HSV rather than a hex field alone: picking "a bit darker" by typing hex is
-// guesswork. And built rather than borrowed, because the OS colour dialog is
-// rounded, shadowed and in the wrong typeface — it is the one control on the
-// site that would arrive wearing someone else's design.
-// ---------------------------------------------------------------------------
 
 function hsvToRgb(h, s, v) {
   var c = v * s, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = v - c;
@@ -1207,7 +1115,6 @@ function buildColorPicker(initial, presets, title, onChange) {
   side.appendChild(presetRow);
   side.appendChild(el("span", "pe-field__hint", "One colour. The rim's shade and tint are derived from it, in both themes."));
 
-  // The point of the picker: the actual card rim, live.
   var demo = el("div", "box box--edge box--link is-custom pe-color__demo");
   demo.appendChild(el("span", "box__label", "Featured"));
   var demoHead = el("div", "project-box__head");
@@ -1222,9 +1129,6 @@ function buildColorPicker(initial, presets, title, onChange) {
 
   var state = { h: 0, s: 1, v: 1 };
 
-  // Nothing is announced while the picker is being seeded from the stored
-  // colour: opening the editor is not an edit, and the first thing this does
-  // is repaint itself from a hex it was handed.
   var ready = false;
 
   function paint(pushHex) {
@@ -1269,9 +1173,6 @@ function buildColorPicker(initial, presets, title, onChange) {
 
   hex.addEventListener("input", fromHex);
 
-  // Seed from the field, not from a default: the stored colour is the hex the
-  // project already has, and repainting it from an arbitrary HSV would
-  // silently rewrite it the moment the editor opened.
   fromHex();
   ready = true;
 
@@ -1285,11 +1186,6 @@ function buildColorPicker(initial, presets, title, onChange) {
   };
 }
 
-// ---------------------------------------------------------------------------
-// The editor. A page-shaped column in the order the page renders: identity at
-// the top, bands in the middle, the repo link at the bottom.
-// ---------------------------------------------------------------------------
-
 var editorDirty = false;
 
 function markDirty(on) {
@@ -1300,7 +1196,6 @@ function markDirty(on) {
   if (on) state.textContent = "Unsaved changes";
 }
 
-// Returns false to cancel the navigation that asked.
 function guardUnsaved() {
   if (!editorDirty) return true;
   return confirm("This page has unsaved changes. Leave them behind?");
@@ -1357,13 +1252,9 @@ function buildProjectEditor(host, record, mediaRows, allProjects) {
   var column = el("div", "pe");
   host.appendChild(column);
 
-  // Any edit anywhere in the column is an unsaved change. One listener rather
-  // than one per field: a form this long grows a field every few weeks, and
-  // the one that gets forgotten is the one that loses someone's work.
   column.addEventListener("input", function () { markDirty(true); });
   column.addEventListener("change", function () { markDirty(true); });
 
-  // --- the bar --------------------------------------------------------------
   var bar = el("div", "pe-bar");
   var state = el("span", "pe-bar__state");
   state.id = "pe-state";
@@ -1395,8 +1286,6 @@ function buildProjectEditor(host, record, mediaRows, allProjects) {
   }));
 
   bar.appendChild(button("Preview ↗", "", function () {
-    // Opened synchronously so the click still counts as a user gesture —
-    // window.open after the async save would be popup-blocked.
     var tab = window.open("about:blank", "_blank");
     saveProject().then(function () {
       var url = "/api/admin/projects/" + record.id + "/preview";
@@ -1442,7 +1331,6 @@ function buildProjectEditor(host, record, mediaRows, allProjects) {
     "The form is in the order the page renders: identity at the top, bands in the middle, the repo link at the " +
     "bottom. What you fill in top to bottom is what a reader sees top to bottom."));
 
-  // --- head -----------------------------------------------------------------
   var head = el("section", "pe-card");
   head.appendChild(el("span", "pe-card__label", "The project"));
   var grid = el("div", "pe-grid");
@@ -1478,8 +1366,6 @@ function buildProjectEditor(host, record, mediaRows, allProjects) {
   grid.appendChild(peField("Description", ledeArea,
     "One text, two jobs: the opening line of the project page and the blurb on both index cards.", true));
 
-  // Card text, hidden behind its own tick — the one Description is all that
-  // matters until someone asks for two.
   var blurbWrap = el("div", "pe-field pe-field--wide");
   var blurbToggle = peCheck("Use a shorter text on the cards", !!record.cardBlurb);
   var blurbArea = peArea(record.cardBlurb, 2, 300);
@@ -1502,8 +1388,6 @@ function buildProjectEditor(host, record, mediaRows, allProjects) {
   var statusSelect = peSelect([["", "—"], ["WIP", "WIP"], ["Featured", "Featured"]], record.status);
   grid.appendChild(peField("Status", statusSelect, null, false));
 
-  // Accent. The presets are the colours already in use, so a new project can
-  // be made to sit next to the others without matching hex by eye.
   var inUse = [];
   allProjects.forEach(function (p) {
     if (p.accent && p.id !== record.id && inUse.indexOf(p.accent) === -1) inUse.push(p.accent);
@@ -1518,7 +1402,6 @@ function buildProjectEditor(host, record, mediaRows, allProjects) {
   accentWrap.appendChild(accent.root);
   grid.appendChild(accentWrap);
 
-  // Chips.
   var chipsWrap = el("div", "pe-field pe-field--wide");
   chipsWrap.appendChild(el("span", "pe-field__label", "Chips"));
   var chipsHost = el("div", "admin-actions");
@@ -1568,7 +1451,6 @@ function buildProjectEditor(host, record, mediaRows, allProjects) {
   head.appendChild(grid);
   column.appendChild(head);
 
-  // --- bands ----------------------------------------------------------------
   var placement = el("p", "pe-annot");
   placement.appendChild(document.createTextNode(
     "One card per band, in the order they appear on the page. Foldable wraps that band in the closed <details> " +
@@ -1635,7 +1517,6 @@ function buildProjectEditor(host, record, mediaRows, allProjects) {
   column.appendChild(el("p", "pe-annot",
     "Those three are the whole catalogue. A project page is a description, some words, and some pictures."));
 
-  // --- save -----------------------------------------------------------------
   function saveProject() {
     var body = {
       title: titleInput.value.trim(),
@@ -1662,8 +1543,6 @@ function buildProjectEditor(host, record, mediaRows, allProjects) {
   }
 }
 
-// Which of the two adders made this band, remembered by what is in it rather
-// than stored: a band of MP4s is a video band, anything else is pictures.
 function bandKind(block, mediaRows) {
   if (block.type === "text") return "text";
   var rows = block.rows || [];
@@ -1678,8 +1557,6 @@ function bandKind(block, mediaRows) {
 
 var rowSeq = 0;
 
-// One card per band: a head with the kind, the heading, the Foldable tick and
-// the reorder / remove controls, then the band's own fields.
 function buildBandCard(block, kind, mediaRows, controls) {
   var root = el("section", "pe-card pe-band");
   var isText = kind === "text";
@@ -1732,7 +1609,6 @@ function buildBandCard(block, kind, mediaRows, controls) {
     };
   }
 
-  // --- media band -----------------------------------------------------------
   var accept = kind === "video" ? "video/mp4" : "image/png,image/jpeg,image/webp,image/gif";
   var rowsHost = el("div");
   root.appendChild(rowsHost);
@@ -1750,9 +1626,6 @@ function buildBandCard(block, kind, mediaRows, controls) {
     var left = el("div");
     var fields = el("div", "pe-row__fields");
 
-    // An MP4 defaults to text below — a 16:9 clip wants the full width —
-    // and an image to text beside. Either can be overridden per row, and
-    // once it has been, uploading another file does not undo the choice.
     var layout = row.layout || (kind === "video" ? "below" : "beside");
     var layoutTouched = !!row.layout;
 
@@ -1809,9 +1682,6 @@ function buildBandCard(block, kind, mediaRows, controls) {
     radios.appendChild(rowDown);
     radios.appendChild(rowKill);
 
-    // Built after the radios, because picking a file is what sets the layout
-    // on a row nobody has overridden yet — and it does that on construction,
-    // for a row loaded from the server as much as for a fresh upload.
     var picker = mediaPicker(mediaRows, row.mediaId, accept, function (m) {
       if (!m || layoutTouched) return;
       setLayout(m.mime === "video/mp4" ? "below" : "beside");

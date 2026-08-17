@@ -16,8 +16,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='.5' y='.5' width='31' height='31' fill='%230e0e0e' stroke='%232a2a2a'/%3E%3Crect x='9' y='9' width='14' height='14' fill='%23ff1e2f'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
 
-  <!-- Apply the saved theme before first paint, so a light-mode visitor
-       never sees a dark flash when moving between pages. -->
+  <!-- Saved theme, applied before first paint so a light visitor sees no flash. -->
   <script>
     try {
       if (localStorage.getItem("theme") === "light") {
@@ -28,15 +27,6 @@
 </head>
 <body>
 
-  <!-- ===================================================================
-       PROJECT PAGE — see project-template.html for the swap checklist.
-       Everything project-specific on this page is: the .is-ignite class
-       below, the <title>, the <h1>, the article content, the repo link
-       and the pager. No CSS is involved.
-       =================================================================== -->
-  <!-- The site's one navigation. Byte-identical on every page except for
-       which link carries aria-current, so "where can I go" never depends on
-       "where am I". Sticky on mobile — see .site-header in style.css. -->
   <header class="site-header">
     <nav class="site-nav" aria-label="Main">
       <a href="index.html">Home</a>
@@ -79,11 +69,6 @@
         <div class="note note--accent">Ignite is still being built and the repository is not public yet, so this page is deliberately short — it will grow with the project rather than describe something that does not exist. The other three link straight to their source.</div>
       </section>
 
-      <!-- Same band as every other project page. The clip has not been
-           recorded yet, and that is safe to ship: closed, nothing is
-           requested, and if the file is still missing when someone opens it,
-           initFigures() takes the whole band off the page rather than leaving
-           a section that opens onto nothing. -->
       <details class="reveal">
         <summary class="reveal__summary">
           <h2 class="section-label">Walkthrough</h2>

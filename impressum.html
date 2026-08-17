@@ -16,8 +16,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='.5' y='.5' width='31' height='31' fill='%230e0e0e' stroke='%232a2a2a'/%3E%3Crect x='9' y='9' width='14' height='14' fill='%23ff1e2f'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
 
-  <!-- Apply the saved theme before first paint, so a light-mode visitor
-       never sees a dark flash when moving between pages. -->
+  <!-- Saved theme, applied before first paint so a light visitor sees no flash. -->
   <script>
     try {
       if (localStorage.getItem("theme") === "light") {
@@ -28,9 +27,6 @@
 </head>
 <body>
 
-  <!-- The site's one navigation. Byte-identical on every page except for
-       which link carries aria-current, so "where can I go" never depends on
-       "where am I". Sticky on mobile — see .site-header in style.css. -->
   <header class="site-header">
     <nav class="site-nav" aria-label="Main">
       <a href="index.html">Home</a>
@@ -56,9 +52,7 @@
       <h2 class="box__label" id="lbl-angaben"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>Angaben</h2>
 
       <!-- A contact address and a place, and deliberately nothing more: no
-           street, no postcode, no phone number. The Datenschutz section below
-           points at "die oben genannte Kontaktadresse", so that one field has
-           to hold something for the paragraph to mean anything. -->
+           street, no postcode, no phone number. -->
       <dl class="field-list">
 
         <div class="field">
@@ -79,11 +73,6 @@
       </dl>
     </section>
 
-    <!-- Written now rather than left as an empty well, because unlike the
-         fields above this is not personal data to be filled in — it is a
-         factual description of what the login area actually records. It was
-         added when the vault moved from one shared password to per-person
-         accounts: that change is what started storing other people's data. -->
     <section class="box box--static box--narrow reading" aria-labelledby="lbl-daten">
       <h2 class="box__label" id="lbl-daten"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Datenschutz</h2>
 

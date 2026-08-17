@@ -6,12 +6,10 @@
   <meta name="robots" content="noindex, nofollow, noarchive">
   <title>Admin · kiraa1q</title>
 
-  <!-- No Open Graph, and noarchive on top of noindex. Nothing about this page
-       should ever appear in a link preview or a cache. -->
-
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='.5' y='.5' width='31' height='31' fill='%230e0e0e' stroke='%232a2a2a'/%3E%3Crect x='9' y='9' width='14' height='14' fill='%23ff1e2f'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
 
+  <!-- Saved theme, applied before first paint so a light visitor sees no flash. -->
   <script>
     try {
       if (localStorage.getItem("theme") === "light") {
@@ -43,16 +41,10 @@
 
   <main class="page-body" aria-labelledby="page-title">
 
-    <!-- Everything below is hidden until /api/auth/me confirms an admin
-         session. That is a courtesy to stop a flash of empty tables, not a
-         security control — every endpoint behind these panels is guarded on
-         the server, so revealing this markup by hand achieves nothing. -->
     <p class="box__text" id="admin-gate">Checking your session…</p>
 
     <div id="admin-body" hidden>
 
-      <!-- Four sections, not eight tabs. Six of the eight were tables nobody
-           opens on purpose; they are one click deeper now, under Access. -->
       <div class="admin-tabs" role="tablist" aria-label="Admin sections" id="admin-sections">
         <button class="admin-tab" role="tab" type="button" id="tab-projects" aria-selected="true"  aria-controls="panel-projects" data-panel="projects">Projects<small>write and publish pages</small></button>
         <button class="admin-tab" role="tab" type="button" id="tab-home"     aria-selected="false" aria-controls="panel-home"     data-panel="home" tabindex="-1">Home page<small>what sits where</small></button>
@@ -60,13 +52,6 @@
         <button class="admin-tab" role="tab" type="button" id="tab-access"   aria-selected="false" aria-controls="panel-access"   data-panel="access" tabindex="-1">Access<small>accounts and telemetry</small></button>
       </div>
 
-      <!-- ===================================================================
-           PROJECTS — the page list, and the editor in its place.
-
-           Everything inside the editor is built by admin.js with textContent.
-           Nothing typed into this form is ever parsed as markup by this page,
-           and the server escapes it all over again before it renders.
-           =================================================================== -->
       <section class="admin-panel" id="panel-projects" role="tabpanel" aria-labelledby="tab-projects" data-panel="projects">
 
         <div class="pe" id="projects-list">
@@ -98,19 +83,10 @@
 
       </section>
 
-      <!-- ===================================================================
-           HOME PAGE — where a project sits on the bento, and the order the
-           index and the pagers follow. Built by admin.js.
-           =================================================================== -->
       <section class="admin-panel" id="panel-home" role="tabpanel" aria-labelledby="tab-home" data-panel="home" hidden>
         <div class="pe" id="home-editor"></div>
       </section>
 
-      <!-- ===================================================================
-           FILES — two stores, deliberately separate. Uploads are public and
-           content-addressed; vault documents sit outside the web root and are
-           streamed only after a session check.
-           =================================================================== -->
       <section class="admin-panel" id="panel-files" role="tabpanel" aria-labelledby="tab-files" data-panel="files" hidden>
         <div class="pe">
 
@@ -156,11 +132,6 @@
         </div>
       </section>
 
-      <!-- ===================================================================
-           ACCESS — what used to be Overview, Accounts, Logins, Sessions,
-           Downloads and Audit. The last four are behind a nested strip
-           because none of them is something you open on purpose.
-           =================================================================== -->
       <section class="admin-panel" id="panel-access" role="tabpanel" aria-labelledby="tab-access" data-panel="access" hidden>
         <div class="pe">
 
@@ -196,8 +167,6 @@
               </div>
             </form>
 
-            <!-- The generated password lands here, once. It is not stored in
-                 plaintext anywhere, so this is the only time it can be read. -->
             <div class="admin-secret" id="new-credentials" hidden></div>
 
             <div class="admin-scroll"><table class="admin-table" id="users-table"></table></div>

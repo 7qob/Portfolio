@@ -73,8 +73,14 @@ measure column it was before.
   than two right edges, something added its own.
 - **Every top-level block in an article is a band**: hairline along the top,
   `--stack-md` of air under it, `--stack-lg` to the next band. That is
-  `.project__section`, `.figure`, `.datarow` and `.linklist`. The lede is the
-  only block above the first seam.
+  `.project__section`, `.project-row`, `.reveal`, `.figure`, `.datarow` and
+  `.linklist`. The lede is the only block above the first seam.
+- **The projects index is bands too, not cards.** One `.project-row` per
+  project — seam, name, chips, blurb, corner arrow — on the same
+  `--measure-wide` rail as a project page, so the list and the page it opens
+  read as one document. The row's seam carries the project's own accent the
+  way `.page-head--project` does. The old two-column `.project-grid` and its
+  `is-wide` split are gone; cards live on the bento home page only.
 - **Five type sizes, all from `--fs-*` tokens**: `--fs-name`, `--fs-subtitle`,
   `--fs-heading`, `--fs-lede`, `--fs-body`, plus `--fs-caption` for labels. A
   literal `rem` value in a rule is a bug.
@@ -125,7 +131,9 @@ description, some words and some pictures.
 render.ts`): `project-<slug>.html` per published project, a regenerated
 `projects.html`, and `index.html` — the home page. Pagers are derived from
 `sort_order`, so neighbouring pages re-render on every publish and the chain
-never goes stale.
+never goes stale. `projectRow()` renders the index, `projectCard()` renders the
+bento cells, and they are separate on purpose — the index is bands, the home
+page is cards.
 
 The home page is a **splice, not a render**. `renderHome()` reads the template,
 replaces the region between `<!-- projects:start -->` and
@@ -187,6 +195,18 @@ generated copies first for those two URLs (`location = /` in
 `deploy/nginx-kira1q.dev.conf`); the rsynced ones are the template and the
 never-published fallback.
 
+## Comments
+
+The front end carries **few comments on purpose**. What stays is what you would
+have to guess at while changing a value: the token annotations in `:root`, the
+knobs (`--edge-mix`, `data-projects`, the gradient's angle and stops, the fixed
+20rem `.mediarow` rail), the traps (a `minmax(0,1fr)` floor breaking the desktop
+lock, an undefined gradient stop voiding the border), and the invariants
+(escaping in `render.ts`, the vault list being empty for a reason). What went is
+the archaeology — how a rule used to look and why it changed. Do not restore it;
+that is what `git log` is for. New comments follow the same test: would someone
+adjusting this line get it wrong without you.
+
 ## Things that will bite you
 
 - **The repo is public.** No secret, no database, no vault document may ever
@@ -210,6 +230,10 @@ never-published fallback.
   install on a Node version without prebuilds unless Python is present.
 - **Commits carry no AI attribution.** Author is `kiraa1q`, no
   `Co-Authored-By` trailer, no mention of Claude anywhere.
+- **A markup change in the renderer needs a Publish to take effect.** The
+  generated `projects.html` on the Pi was written by the renderer that shipped
+  before it. After deploying the band-list index, publish once so the live page
+  stops asking for `.project-grid`, which no longer exists in `style.css`.
 
 ## Deployment
 

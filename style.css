@@ -1,8 +1,8 @@
-/* ===========================================================
-   Portfolio scaffold — shared styles
-   Retro / KISS / classic. Dark theme. 1px borders, no radius.
-   =========================================================== */
-   
+/* ==== kira1q.dev — one stylesheet, no build step ====
+   Retro/KISS: 1px borders, border-radius 0, no shadows — depth comes from the
+   border and the panel/background contrast. Spacing off --space and --gap;
+   reading flow off --stack-*. Type sizes only from the --fs-* tokens. */
+
 /* ---- Design system tokens ---- */
 :root {
   --bg:          #0e0e0e;   /* page                              */
@@ -10,9 +10,6 @@
   --panel-alt:   #141414;   /* nested surfaces / inset wells     */
   --line:        #2a2a2a;   /* card + element borders            */
   --line-soft:   #202020;   /* dividers inside a card            */
-  /* Times is a thin-stemmed face; light-on-dark it renders lighter than a
-     mono or a sans at the same value, so body and caption tones sit a step
-     brighter here than the palette they replaced. */
   --fg:          #d2d2d2;   /* body text                         */
   --fg-strong:   #efefef;   /* headings, name                    */
   --fg-mute:     #8a8a8a;   /* section eyebrows, captions        */
@@ -20,18 +17,12 @@
 
   --bw:          1px;
 
-  /* Legacy aliases — existing rules reference these names.
-     Eyebrows/captions are switched to --fg-mute at their own rules;
-     --text-muted therefore carries the body tone. */
   --bg-raised:    var(--panel);
   --text:         var(--fg-strong);
   --text-muted:   var(--fg);
   --border:       var(--line);
   --border-hover: #3a3a3a;          /* hover border */
 
-  /* Type scale (rem-based). Sized for a serif: Times has a small x-height,
-     so every step sits above what the old mono/sans pairing needed to read
-     at the same apparent size. */
   --fs-name:      1.75rem;   /* hero name, page h1         */
   --fs-subtitle:  1.5rem;    /* project name in a card     */
   --fs-heading:   1.25rem;   /* project / section titles   */
@@ -40,27 +31,9 @@
   --fs-caption:   0.75rem;   /* uppercase section labels   */
   --fs-meta:      0.7rem;    /* dates / status / meta       */
 
-  /* Reading measure. Two edges on a page, not eight. Subpages used to cap text
-     at 54, 60, 66, 68, 72 and 80ch in different rules while tables, figures and
-     the facts row ran edge to edge — every block started at the same left edge
-     and stopped somewhere else, which is what made them feel cluttered. Prose
-     gets --measure; only things that genuinely need the pixels (screenshots,
-     tabular data) reach --measure-wide.
-
-     NOT in `ch`. A ch unit resolves against the font size of the element it is
-     written on, so one shared `66ch` token produced a different width on every
-     block that was not at body size — the lede, set a step larger, stopped 74px
-     further right than the paragraphs under it. That is the same ragged edge
-     this token exists to remove, just harder to see. rem resolves against the
-     root for every element, so the cap is one number everywhere. 34rem is
-     ~66 characters of Times at --fs-body. */
   --measure:      34rem;
   --measure-wide: 41rem;
 
-  /* A card is its own context: the bento sizes boxes by the grid, not by the
-     text, and body copy in one wants to be a touch narrower than a full
-     reading column so a wide box does not turn into a paragraph. Left in ch
-     because it has exactly one user, .box__text, always at --fs-body. */
   --measure-card: 60ch;
 
   --border-width: var(--bw);
@@ -68,25 +41,15 @@
   --space:        8px;
   --gap:          calc(var(--space) * 2);   /* single knob for all inter-box spacing */
 
-  /* Vertical rhythm for reading flow. --gap stays the knob for grids (.bento,
-     .project-grid); these three are for stacked bands of text. */
   --stack-lg:     calc(var(--space) * 5);    /* 40px — between bands   */
   --stack-md:     calc(var(--space) * 2.5);  /* 20px — inside a band   */
   --stack-sm:     var(--space);              /*  8px — label to content */
 
   --motion:       120ms ease;               /* color / border-color transitions */
 
-  /* No --shadow token, deliberately. Every box used to carry
-     `0 2px 8px rgba(0,0,0,.55)`, which fought the whole point of the design:
-     a 1px line and a soft drop shadow are two different visual languages, and
-     the shadow was the one nobody asked for. Depth here comes from the border
-     and the panel/bg contrast, nothing else. */
-
   --font: "Times New Roman", Times, serif;
 }
 
-/* Light theme — toggled via the Dark/Bright button (adds .light on <html>).
-   Only primitives are overridden; the aliases above re-resolve through var(). */
 :root.light {
   --bg:           #f4f4f4;
   --panel:        #ffffff;
@@ -112,46 +75,19 @@
   padding: 0;
 }
 
-/* `hidden` means hidden, whatever else this sheet says about the element.
-   The browser's own [hidden]{display:none} is only a class's worth of
-   specificity, so any rule here that gives such an element a display beats
-   it and the attribute silently stops working. That happened three times:
-   .figure (screenshot 404 fallback), .gh__meta (the stats line, meant to
-   stay away until the GitHub fetch answers) and .doc-list. Each was patched
-   with its own [hidden] rule; this is that patch, once, for everything —
-   including whatever gets a display added to it later. The one !important
-   in the file, and the case it exists for. */
 [hidden] {
   display: none !important;
 }
 
-/* Same 18px as before on a default browser, but expressed relatively so a
-   visitor who has raised their base font size still gets a bigger site.
-   A px value here would silently override that preference. */
 html {
   font-size: 112.5%;
 }
 
-/* Subpages scroll like a normal document; the home page is locked to one
-   screen on desktop — see "One-screen home page" further down.
-
-   That lock existed once before and was removed, for a reason worth keeping
-   written down: it paired `height:100dvh; overflow:hidden` with boxes that
-   scrolled behind `scrollbar-width:none`. On a 1366×640 laptop it silently
-   ate 47px of the hero, 32px of Ignite and 76px of the About box — the
-   paragraph saying I'm looking for a Praktikum. No scrollbar, no fade, no way
-   for the reader to know there was more. The lock is back because a one-screen
-   bento is the point of the design; what is NOT back is the invisibility.
-   Every scroll region now shows a real scrollbar and a fade edge whenever it
-   actually has more to show. Clipping is fine. Silent clipping is not. */
 body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font);
   line-height: 1.55;
-  /* No -webkit-font-smoothing: antialiased here. On a serif this thins the
-     stems further on a dark background, which is the opposite of what light
-     text on #0e0e0e needs — the default rendering keeps them solid. */
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
@@ -160,30 +96,7 @@ body {
   gap: var(--gap);
 }
 
-/* ===========================================================
-   Site header — the site's one navigation
-   ===========================================================
-   This replaces three partial navigations with a single complete one:
-
-     - the per-page back arrow (only ever went "up" one level, and from the
-       home bento it went to a page you had never seen),
-     - the footer nav (12.6px type, 23px tall, and on mobile it sat 2076px
-       down a 2158px page — you had to scroll the entire site to navigate),
-     - "the bento boxes are the nav" (which never included Projects at all).
-
-   One bar, identical on every page, so where you can go never depends on
-   where you are. Every state — resting, hover, current — keeps the SAME
-   geometry and changes only colour; that rule is inherited from the old
-   footer nav, where giving the active item a thicker border shifted the
-   whole row by a pixel on every page change.
-
-   Deliberately small. The bar is chrome, not content: at 44px tall with
-   0.85rem links and a bordered 44px button it was the loudest object on
-   every page and the first thing your eye landed on, above the actual work.
-   It is now a 30px typographic strip — small caps, hairline rules, no
-   boxes — so the bento is what you see first. The tap-target height it gave
-   up is handed back in the mobile breakpoint, where a finger needs it and
-   the bar has a full row to itself anyway. */
+/* ==== Site header — the site's one navigation ==== */
 .site-header {
   display: flex;
   align-items: center;
@@ -191,12 +104,6 @@ body {
   border-bottom: var(--border-width) solid var(--border);
 }
 
-/* The bar used to open with a "kiraa1q" wordmark. It is gone: the page
-   title, the favicon and the hero all already say whose site this is, so
-   the wordmark was the third answer to a question nobody asked twice — and
-   it was the one bold, full-contrast object in a strip whose whole job is
-   to stay quiet. Nothing was lost navigationally either; it linked to the
-   home page, which is what HOME does. */
 .site-nav {
   display: flex;
   align-items: center;
@@ -204,17 +111,9 @@ body {
   margin-right: auto;   /* nav anchors left, the toggle sits hard right */
 }
 
-/* With the wordmark gone the nav opens the bar, so the first link's text —
-   not its padding — should sit on the page's left edge. That puts HOME on
-   the same vertical line as the bento's left column and the footer's credit,
-   which is the spine the whole layout is built on. Same at the other end. */
 .site-nav a:first-child { padding-left: 0; }
 .site-nav a:last-child  { padding-right: 0; }
 
-/* Small caps at --fs-caption: the nav now matches the box labels (ABOUT ME,
-   PROJECT, GITHUB) instead of shouting over them, and the letter-spacing is
-   what keeps 11px type readable. The 1px underline replaces the old 2px one
-   so the marker is a hairline like every other rule on the site. */
 .site-nav a {
   display: inline-flex;
   align-items: center;
@@ -246,11 +145,6 @@ body {
   outline-offset: -2px;
 }
 
-/* ---- Generic box ----
-   No overflow handling and no scrollbar-hiding: a box is exactly as tall as
-   what is in it. The old `overflow:hidden auto` + `scrollbar-width:none` pair
-   was what made the clipping above invisible — it created a scroll container
-   and then removed the only evidence that it had scrolled. */
 .box {
   position: relative;
   isolation: isolate;   /* keeps the inner glow (z-index:-1) inside the card */
@@ -271,15 +165,6 @@ body {
   border-color: var(--border-hover);
 }
 
-/* ---- Box body: the part of a card that is allowed to scroll ----
-   A card's identity — its label, the project name, the status badge, the
-   corner arrow — stays pinned; everything below it lives in here. That split
-   is what makes the one-screen lock readable: a box scrolled halfway down
-   still says which project it belongs to.
-
-   Inherits .box's own gap so wrapping the content changed no spacing. On its
-   own this is just a flex column — it only becomes a scroll container inside
-   the desktop lock below, so mobile is completely unaffected. */
 .box__body {
   display: flex;
   flex-direction: column;
@@ -288,27 +173,7 @@ body {
   min-height: 0;
 }
 
-/* ===========================================================
-   Inner corner wash — the border hover, on the inside
-   ===========================================================
-   The gradient border (.box--edge, below) lights the bottom-right corner of
-   the RIM on hover. This is the same event drawn on the FACE: a soft wash
-   bleeding in from that same corner, same trigger, same 260ms fade. The two
-   read as one gesture — the corner warms up, rim and all — instead of a
-   coloured outline sitting on a flat card.
-
-   Same corner, same colour source: a project card washes in its own
-   --edge-2, an ordinary card in --border-hover, which is the exact colour
-   its border is travelling to. That is what keeps this from being a new
-   effect: it is the border hover, given some area.
-
-   Drawn as ::after with z-index:-1 rather than as an extra background layer,
-   because .box--edge already spends both of its background slots on the
-   panel face and the rim gradient. The pseudo-element sits above the card's
-   own background and below its text; .box carries `isolation: isolate` so
-   that negative index stays inside the card instead of falling through to
-   the page background. inset:0 is the padding box, so the wash stops at the
-   border and never muddies the rim. */
+/* ==== Inner corner wash — the border hover, on the inside ==== */
 .box,
 .link-box,
 .pager a {
@@ -324,12 +189,6 @@ body {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  /* Softer than it first shipped, in both senses. Weaker: the peak strength
-     is roughly half. And gentler: the wash is larger (120%/105% instead of
-     90%/80%) and fades out at 75% instead of 60%, with a mid stop at a
-     third of the strength so the ramp curves away instead of running out in
-     a straight line — a small tint spread over more of the card, rather
-     than a bright corner with a visible edge to it. */
   background: radial-gradient(
     120% 105% at 100% 100%,
     color-mix(in srgb, var(--glow) var(--glow-strength), transparent) 0%,
@@ -340,8 +199,6 @@ body {
   transition: opacity 260ms ease;   /* in step with the rim's --edge-mix fade */
 }
 
-/* Exactly the states that lift the border — including keyboard focus on a
-   stretched link, where the card itself is never hovered. */
 .box:hover::after,
 .box--link:focus-visible::after,
 .box:has(.stretched-link:focus-visible)::after,
@@ -362,9 +219,6 @@ body {
 
 /* ---- Shared type roles -------------------------------------------------- */
 
-/* Section captions: TOOLS, ABOUT ME, etc. One rule for every box label.
-   Serif capitals need more tracking than mono capitals did — set solid at
-   0.05em they close up into a block. */
 .box__label,
 .link-box__caption,
 .field__label,
@@ -411,37 +265,16 @@ body {
   font-size: 1.25em;   /* name reads a touch larger, like the reference */
 }
 
-/* Accent discipline: amber stays on the name only. Inline emphasis inside
-   body copy keeps the italic but drops to --fg-strong (no amber). */
 .box__text .accent {
   color: var(--fg-strong);
 }
 
-/* ---- Reading text: the one place prose lives ----
-   `.reading` goes on the container that holds a subpage's body copy — the
-   project <article>, the about lead, the impressum text. Everything inside it
-   is prose, so the rules below can address it once. This replaces three
-   hand-kept eight-selector lists (line-height, inline-link colour, inline-link
-   hover) that had to be edited in step and had already drifted: six of the
-   eight selectors were being overridden further down the file anyway.
-   `.box__text` and `.link-box__note` stay named explicitly because they live
-   inside home-page boxes, not inside a .reading container. */
 .box__text,
 .link-box__note,
 .reading {
   line-height: 1.7;
 }
 
-/* Inline links inside that same body copy. Nothing on the site linked from
-   within a sentence until now — every other link is a whole box, a nav item
-   or a .linklist row, each of which sets its own colour — so an <a> in a
-   paragraph fell through to the browser default and rendered blue, then
-   purple once visited. Those are the only two colours on the page nobody
-   chose. Underline in --accent rather than colouring the text: it marks the
-   link without punching a bright word into the middle of a grey paragraph.
-   Every <a> inside a .reading container is an inline prose link — the link
-   list and the pager are siblings of it, not children, precisely so this can
-   stay a one-selector rule. */
 .box__text a,
 .link-box__note a,
 .page-head__lede a,
@@ -471,17 +304,10 @@ body {
   color: var(--text-muted);
 }
 
-/* A box holding real paragraphs rather than a card's one-line description —
-   the Datenschutz text on the Impressum is the only one. A card's 8px gap is
-   right for a label above a sentence and much too tight between paragraphs of
-   running prose, where the space between them is the only thing marking where
-   one ends. */
 .box.reading {
   gap: var(--stack-md);
 }
 
-/* …and its paragraphs are the reading column, so they run to the box rather
-   than stopping a few characters short of it the way a card's text does. */
 .box.reading .box__text {
   max-width: none;
 }
@@ -532,22 +358,6 @@ body {
   white-space: nowrap;
 }
 
-/* Leading mark on tech chips. Everything is drawn in the site's own stroke
-   language — currentColor, no fills, no brand colours — because a chip is a
-   line of 11px text and a full-colour logo at that size is mush that also
-   fights the palette.
-
-   Two kinds of mark share this rule:
-     LANGUAGES (Rust, TypeScript, Python, Node.js, React) carry their real
-       logo's SILHOUETTE, redrawn as strokes: the cog, the TS square, the
-       two snakes, the hexagon, the atom. Shape is doing the work — you read
-       "Rust" from the cog, not from letterforms you cannot resolve.
-     TOOLS (ComfyUI, Krea 2, Cloudflare Tunnel, SSE, …) keep generic marks,
-       because a node graph or a tunnel has no logo worth abstracting.
-
-   14px, not 12: the language marks carry interior detail (teeth, letters,
-   the snake interlock) that 12px flattened into a blob. Chips without an
-   icon are unaffected. */
 .chip svg {
   flex: 0 0 14px;
   width: 14px;
@@ -587,8 +397,6 @@ body {
 
 .project-box__head .status { margin-left: auto; }
 
-/* Stretched link: makes the whole box clickable without wrapping the
-   content in an <a> (so the GitHub link below can stay a real link). */
 .stretched-link {
   position: absolute;
   inset: 0;
@@ -599,39 +407,36 @@ body {
   outline-offset: -2px;   /* keep the focus ring inside the clipped box */
 }
 
-/* ===========================================================
-   Bento grid (index.html)
-   7 columns × 5 rows, mapped 1:1 to the paper sketch.
-   =========================================================== */
+/* ==== Home page type scale (index.html) ==== */
+/* The home page is the one page locked to a screen, so every pixel of type is a
+   pixel a box has to scroll. One step down the scale, tokens only — the reading
+   pages keep the full size. */
+.is-home {
+  --fs-name:      1.5rem;
+  --fs-subtitle:  1.3125rem;
+  --fs-heading:   1.125rem;
+  --fs-lede:      1rem;
+  --fs-body:      0.9375rem;
+  --fs-caption:   0.6875rem;
+}
+
+.is-home .box__text,
+.is-home .link-box__note {
+  line-height: 1.55;
+}
+
+/* ==== Bento grid (index.html) ==== */
+/* Height-locked to one screen on desktop; boxes scroll internally instead.
+   data-projects (0-4) picks the area map below — Publish rewrites it. */
 .bento {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  /* Plain 1fr, not minmax(0, 1fr). That explicit 0 floor was the mechanism
-     behind the clipping: it let a row shrink below its own content, and the
-     box then hid the overflow behind a suppressed scrollbar. 1fr resolves to
-     minmax(auto, 1fr), and since .box is no longer a scroll container the
-     auto minimum is the content's height — so a row can share leftover space
-     on a tall screen but can never be shorter than what it holds. */
-  grid-template-rows: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);   /* plain 1fr — a minmax(0,1fr) floor breaks the desktop lock */
   gap: var(--gap);
   flex: 1;
 }
 
-/* ---- Five maps, one per project count ----
-   The four project cells used to be named after the four projects, which is
-   why adding a fifth project meant editing this file: the map, the .area-*
-   class and the card markup all had to be written by hand. The cells are
-   named after their shape instead — feature is the wide one, tall is the two
-   row column, smallA and smallB are the one-liners — and index.html carries
-   data-projects, written by Publish, saying how many are placed.
-
-   Every count gets its own map because a hole is worse than a rearrangement:
-   the whole point of the bento is that it is one screen with nothing loose in
-   it. The non-project boxes take the space back as the projects give it up,
-   so the grid is full at four, at one and at none.
-
-   Publish fills the cells in this order — feature, tall, smallA, smallB — and
-   compacts them, so the Nth map never has to cope with a gap in the middle. */
+/* One area map per project count, so the grid never renders a hole. */
 .bento[data-projects="4"] {
   grid-template-areas:
     "name   name   feature feature feature feature buttons"
@@ -658,8 +463,6 @@ body {
     "github github feature feature tall tall buttons";
 }
 
-/* One: it takes the whole band, which is the right amount of room for the
-   only project on the page. */
 .bento[data-projects="1"] {
   grid-template-areas:
     "name   name   feature feature feature feature buttons"
@@ -668,9 +471,6 @@ body {
     "github github feature feature feature feature buttons";
 }
 
-/* None — a fresh install, or everything unpublished at once. The three boxes
-   that are left spread across the width rather than leaving four columns of
-   nothing next to them. */
 .bento[data-projects="0"] {
   grid-template-areas:
     "name   name   name   name   name   name   buttons"
@@ -698,149 +498,38 @@ body {
   --gh-l4: var(--accent);
 }
 
-/* The cell size is a variable rather than a literal because this box has a
-   hard vertical constraint the others don't: seven weekday rows are either
-   all visible or the graph is lying. The scroller hides its scrollbars (a
-   scrollbar across a heatmap looks like a bug), so a clipped row would be
-   exactly the silent loss the one-screen lock is supposed to avoid — the grid
-   shrinks to fit instead, under "One-screen home page" below.
-
-   --gh-months-h is the month-label strip. The weekday column pads itself by
-   the same amount, which is what keeps "Mon" level with the Monday row.
-
-   --gh-fs is its own step rather than --fs-meta (0.7rem ≈ 11px): these labels
-   sit in an 8px grid row, and the shared meta size overflowed its row and
-   collided with the row below it. */
+/* The gap is the only fixed dimension left: the cells are sized to the card at
+   runtime, so the grid is flush with the border whatever shape the box is. */
 :root {
-  --gh-cell:     10px;
-  --gh-gap:      3px;
-  --gh-months-h: 12px;
-  --gh-fs:       9px;
+  --gh-gap: 3px;
 }
 
-/* Chart on top, stats + legend sharing one row underneath. .gh is also the
-   tooltip's positioning context. */
 .gh {
   position: relative;
   flex: 1;
   min-height: 0;
   display: flex;
-  flex-direction: column;
-  gap: calc(var(--space) * 0.75);
 }
 
-/* Weekday labels sit OUTSIDE the scroller, so they hold still while the year
-   scrolls past them. */
 .gh__chart {
   flex: 1;
+  min-width: 0;
   min-height: 0;
   display: flex;
-  gap: calc(var(--space) * 0.75);
 }
 
-.gh__days {
-  display: grid;
-  grid-template-rows: repeat(7, var(--gh-cell));
-  gap: var(--gh-gap);
-  padding-top: var(--gh-months-h);
-  font-size: var(--gh-fs);
-  line-height: var(--gh-cell);
-  color: var(--fg-mute);
-}
-
-/* The graph scrolls horizontally inside its box (the page never scrolls).
-   Scrollbar hidden for a cleaner look; JS anchors it to the recent weeks. */
-.gh__scroll {
+/* flex:1 + the default stretch is what fills the card in both axes — a
+   percentage height would resolve to nothing wherever the chart is auto. */
+.gh-cells {
   flex: 1;
   min-width: 0;
-  overflow: auto;
-  scrollbar-width: none;        /* Firefox */
-  -ms-overflow-style: none;     /* old Edge / IE */
-}
-
-.gh__scroll::-webkit-scrollbar {  /* Chrome / Safari / new Edge */
-  display: none;
-}
-
-.gh__inner {
-  width: max-content;
-}
-
-/* Same column track as the heatmap below it, so a label lands on its week.
-   Labels span four columns and are allowed to overflow — a month name is
-   wider than one 10px cell and clipping it to the track would render "J". */
-.gh__months {
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: var(--gh-cell);
-  gap: var(--gh-gap);
-  height: var(--gh-months-h);
-  font-size: var(--gh-fs);
-  line-height: 1;
-  color: var(--fg-mute);
-}
-
-.gh__month {
-  white-space: nowrap;
-}
-
-.gh-cells {
-  display: grid;
-  grid-auto-flow: column;
-  grid-template-rows: repeat(7, var(--gh-cell));
-  grid-auto-columns: var(--gh-cell);
+  grid-auto-flow: column;                        /* a column is a week */
+  grid-template-columns: repeat(var(--gh-weeks, 53), 1fr);
+  grid-template-rows: repeat(7, 1fr);
   gap: var(--gh-gap);
 }
 
-/* Stats and legend on one line: the box is height-locked, so these two earn
-   their place by sharing a row rather than taking one each.
-
-   flex:none and nowrap are load-bearing, not tidiness. This row is a sibling
-   of the chart in a height-capped column: when it was allowed to wrap it grew
-   to 66px inside a 101px box, and the chart — which cannot shrink below its
-   seven fixed grid rows — was clipped to three. The stats text ellipses
-   instead, because losing the tail of a sentence is recoverable and losing
-   four weekdays off the graph is not. */
-.gh__meta {
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space);
-  min-width: 0;
-  font-size: var(--gh-fs);
-  line-height: 1.4;
-  white-space: nowrap;
-  color: var(--fg-mute);
-}
-
-.gh__stats {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.gh__legend {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.gh__legend .gh-cell {
-  display: block;
-}
-
-.gh__legend > i:first-of-type {
-  margin-left: calc(var(--space) * 0.5);
-}
-
-.gh__legend > i:last-of-type {
-  margin-right: calc(var(--space) * 0.5);
-}
-
-/* Hover readout. Sits above the cell it describes and never intercepts the
-   pointer, or moving across the grid would flicker it against itself. */
 .gh__tip {
   position: absolute;
   z-index: 5;
@@ -883,9 +572,8 @@ body {
 }
 
 .gh-cell {
-  width: var(--gh-cell);
-  height: var(--gh-cell);
-  border-radius: 2px;
+  min-width: 0;
+  min-height: 0;
   background: var(--gh-l0);
 }
 
@@ -896,34 +584,13 @@ body {
 
 .gh-cell--pad { background: transparent; }
 
-/* ===========================================================
-   Project identity — gradient border ("edge")
-   ===========================================================
-   Each project owns one three-stop gradient. At rest it is not shown at all:
-   the card wears the site's ordinary 1px --border like every other box, and
-   the colour only appears on hover, over a short segment of the bottom-right
-   corner. The palettes are picked for contrast against #1a1a1a AND #fff,
-   since a 1px rim has no area to carry a weak colour.
+/* ==== Project identity — gradient border ("edge") ==== */
 
-   Technique: two background layers on the same element —
-     layer 1  flat panel colour, clipped to the padding box (the card face)
-     layer 2  the gradient, clipped to the border box (the 1px rim)
-   The border itself is transparent, so only the rim of layer 2 shows.
-   No pseudo-element, no extra markup, works with border-radius: 0.
-
-   Add the class + one of the .is-* palettes below:
-     <article class="box box--edge is-ignite">                      */
-
-/* One registered percentage drives the whole effect: 0% = every stop resolves
-   to the ordinary --border, so the card is indistinguishable from any other
-   box. 100% = neutral stops lift to --border-hover and the last ~30% of the
-   diagonal takes the project's colour. Registering it is what makes it
-   interpolatable; without @property support (Firefox < 128) the var()
-   fallbacks below keep the rest state correct and the colour simply snaps in
-   on hover instead of fading. Without those fallbacks an unregistered
-   --edge-mix would make the whole gradient invalid at computed-value time,
-   and since the border itself is transparent the card would lose its
-   border entirely. */
+/* One knob for the whole effect: 0% = every stop resolves to --border and the
+   card looks ordinary, 100% = the project's colour arrives. 135deg with stops
+   at 68/82/92/100% puts it on the bottom-right corner and nowhere else.
+   Keep the var() fallbacks: without @property support an unregistered
+   --edge-mix voids the gradient, and the real border is transparent. */
 @property --edge-mix {
   syntax: "<percentage>";
   inherits: true;
@@ -932,10 +599,6 @@ body {
 
 .box--edge {
   border-color: transparent;
-  /* 135deg, so the stop range 68%->100% lands on the bottom-right corner:
-     the accent is the lower half of the right rim plus the right half of the
-     bottom rim, and nothing else. A colour that ran the full perimeter would
-     read as a highlight box; a short corner segment reads as an accent. */
   background-image:
     linear-gradient(var(--panel), var(--panel)),
     linear-gradient(
@@ -953,26 +616,17 @@ body {
   transition: --edge-mix 260ms ease;
 }
 
-/* A project card washes in its own colour instead of the neutral grey, so
-   rim and face light up in the same hue. Weaker than the neutral wash:
-   --border-hover is a grey two steps off the panel, while #ff4d00 at the
-   same strength would turn the corner into a highlight box. */
 .box--edge {
   --glow: var(--edge-2);
   --glow-strength: 9%;
 }
 
-/* Only on cards that are actually links — the accent is hover feedback, and
-   on a static card it would promise a click. Keyboard users get it too: the
-   stretched link taking focus is the same trigger. */
 .box--edge.box--link:hover,
 .box--edge:has(.stretched-link:hover),
 .box--edge:has(.stretched-link:focus-visible) {
   --edge-mix: 100%;
 }
 
-/* .box:hover / .box--static:hover would repaint the border grey and kill the
-   gradient — outrank both instead of relying on source order. */
 .box.box--edge,
 .box.box--edge:hover,
 .box.box--edge:focus-within,
@@ -980,37 +634,19 @@ body {
   border-color: transparent;
 }
 
-/* The accent still appears — it is feedback, not decoration — it just
-   arrives without the fade. */
 @media (prefers-reduced-motion: reduce) {
   .box--edge { transition: none; }
 }
 
-/* ---- Per-project accent, from one hex ----
-   The four .is-comfy / .is-ignite / .is-kobui / .is-stalkr palettes were
-   three hand-picked hex values each, which is why adding a project meant
-   editing the stylesheet. A page now carries one custom property inline —
-   --edge-brand, a validated #rrggbb — and the shade and tint are derived
-   here with color-mix, so the rim still gains depth across the corner
-   without anyone choosing three colours.
-
-   Light theme keeps its own derivation rather than reusing the dark one:
-   a bright brand hue sits near 1.2:1 on white and a 1px rim in it simply
-   vanishes, which is the exact problem the old per-palette light
-   overrides existed to solve. Mixing toward black restores the contrast
-   while keeping the hue recognisably the project's. */
-/* The default the three stops resolve to when a page has no accent of its
-   own — a draft that never got one, or one of the hand-written pages that
-   predate them. It has to exist: the stops feed color-mix(), an undefined one
-   makes the whole gradient invalid, and .box--edge's real border is
-   transparent, so the card would lose its edge entirely rather than fall back
-   to grey. Derived from --accent, which each theme sets for itself. */
 :root {
   --edge-1: color-mix(in srgb, var(--accent) 62%, #000);
   --edge-2: var(--accent);
   --edge-3: color-mix(in srgb, var(--accent) 62%, #fff);
 }
 
+/* Per-project accent from one hex: --edge-brand is set inline by the renderer,
+   the shade and tint are derived here. The :root defaults above must stay — an
+   undefined stop makes the whole gradient invalid. */
 .is-custom {
   --edge-2: var(--edge-brand, var(--accent));
   --edge-1: color-mix(in srgb, var(--edge-brand, var(--accent)) 62%, #000);
@@ -1023,29 +659,19 @@ body {
   --edge-3: color-mix(in srgb, var(--edge-brand, var(--accent)) 88%, #000);
 }
 
-/* The inner wash is darker-than-panel in light mode instead of lighter, so
-   it needs less of itself: a grey shading a white card reads at roughly half
-   the strength it takes to lift a near-black one. */
 :root.light .box,
 :root.light .link-box,
 :root.light .pager a { --glow-strength: 15%; }
 
-/* An accent card washes its own hue across the face, and on white that reads
-   at roughly twice the strength it does on near-black: at 15% a yellow-green
-   brand turns the corner into a stain rather than a warm edge. */
 :root.light .box--edge { --glow-strength: 6%; }
 
-/* ===========================================================
-   Clickable nav boxes
-   =========================================================== */
+/* ==== Clickable nav boxes ==== */
 .box--link {
   text-decoration: none;
   color: inherit;
   cursor: pointer;
 }
 
-/* Keyboard focus gets the same highlight as hover.
-   (.box:hover already covers the mouse-hover case for these boxes.) */
 .box--link:focus-visible {
   color: var(--fg-strong);
   border-color: var(--border-hover);
@@ -1058,11 +684,7 @@ a:focus-visible,
   outline-offset: 2px;
 }
 
-/* ===========================================================
-   Navigation arrow — top-right marker on boxes that link out
-   =========================================================== */
-/* Sits in the top-right corner with the same inset as the caption.
-   Decorative (aria-hidden) and click-through so the box stays the link. */
+/* ==== Navigation arrow — top-right marker on boxes that link out ==== */
 .box-arrow {
   position: absolute;
   top: calc(var(--space) * 2);
@@ -1088,7 +710,9 @@ a:focus-visible,
 .box:hover .box-arrow,
 .box--link:focus-visible .box-arrow,
 .link-box:hover .box-arrow,
-.link-box:focus-visible .box-arrow {
+.link-box:focus-visible .box-arrow,
+.project-row:hover .box-arrow,
+.project-row:has(.stretched-link:focus-visible) .box-arrow {
   color: var(--text);
   opacity: 1;
   transform: translateX(2px);            /* arrow-right -> right */
@@ -1106,6 +730,7 @@ a:focus-visible,
   .box--link:focus-visible .box-arrow,
   .link-box:hover .box-arrow,
   .link-box:focus-visible .box-arrow,
+  .project-row:hover .box-arrow,
   .box:hover .box-arrow--external,
   .box--link:focus-visible .box-arrow--external,
   .link-box:hover .box-arrow--external,
@@ -1114,11 +739,7 @@ a:focus-visible,
   }
 }
 
-/* ===========================================================
-   Links column — 5 standalone link boxes
-   =========================================================== */
-/* Container holds the column's grid-area but is borderless; each child
-   box carries its own border. The 5 boxes divide the height evenly. */
+/* ==== Links column — 5 standalone link boxes ==== */
 .box-stack {
   display: flex;
   flex-direction: column;
@@ -1127,10 +748,6 @@ a:focus-visible,
   min-width: 0;
 }
 
-/* Each box is itself the clickable element (<a> or <button>). Styled like
-   the other bento boxes; flex:1 so all five share the column equally.
-   Content is top-aligned so the caption sits in the top-left corner,
-   matching the GITHUB / TOOLS / TECHSTACK boxes. */
 .link-box {
   position: relative;
   isolation: isolate;   /* see the inner-wash block near .box */
@@ -1172,8 +789,6 @@ a:focus-visible,
   color: var(--text-muted);
 }
 
-/* Feather icon slot (~20px). Collapses if ever left empty so the label
-   stays flush-left. */
 .link-box__icon {
   flex: 0 0 20px;
   width: 20px;
@@ -1188,8 +803,6 @@ a:focus-visible,
   display: none;
 }
 
-/* Feather icons are stroked outlines — keep fill off and let stroke
-   follow currentColor (e.g. when the light theme changes --text). */
 .link-box__icon svg {
   width: 100%;
   height: 100%;
@@ -1209,25 +822,9 @@ a:focus-visible,
   outline-offset: 2px;
 }
 
-/* ===========================================================
-   Subpages (projects / about / impressum)
-   ===========================================================
-   Every subpage is the same three-part shell:
+/* ==== Subpages (projects / about / impressum) ==== */
 
-     .page-head    masthead — back arrow, title, theme toggle.
-                   1px bottom rule, mirroring the footer's top rule.
-     .page-body    the only scroll region (the body itself never scrolls).
-     .site-footer  identical to the home page.
-
-   Content boxes reuse .box, so a subpage card and a bento cell are the
-   same object: same border, padding, label and artwork behaviour. Cards
-   that aren't links add .box--static to drop the hover affordance.
-   =========================================================== */
-
-/* ---- Page title block ----
-   Just a title and one line about the page. It used to be a three-part
-   masthead (back arrow · title · theme toggle); both controls moved into the
-   site header, so this is now purely typographic. */
+/* Every subpage is the same shell: .page-head, .page-body, .site-footer. */
 .page-head {
   display: flex;
   flex-direction: column;
@@ -1244,9 +841,6 @@ a:focus-visible,
   color: var(--fg-strong);
 }
 
-/* One muted line under the title: what this page holds. On the same measure as
-   every other piece of reading text — it used to run to 80ch, which put its
-   right edge past everything below it for no reason anyone could see. */
 .page-head__lede {
   font-size: var(--fs-body);
   line-height: 1.4;
@@ -1254,10 +848,6 @@ a:focus-visible,
   color: var(--text-muted);
 }
 
-/* ---- Page body ----
-   No longer its own scroll region — the document scrolls, so this is just a
-   content column. That also removed a nested scroll container that swallowed
-   wheel events and hid its own scrollbar. */
 .page-body {
   display: grid;
   grid-auto-rows: min-content;   /* rows hug their content — boxes never get squashed */
@@ -1265,9 +855,6 @@ a:focus-visible,
   gap: var(--gap);
 }
 
-/* ---- Static content box: a .box that is not a link ----
-   Without this the hover state promises a click that never happens. The
-   inner wash is part of that same promise, so it opts out here too. */
 .box--static:hover {
   color: var(--text);
   border-color: var(--border);
@@ -1277,19 +864,10 @@ a:focus-visible,
   opacity: 0;
 }
 
-/* Reading-width box (impressum, login, vault). The box tracks the text measure
-   rather than sitting a few characters wider than the copy inside it. */
 .box--narrow {
   max-width: var(--measure);
 }
 
-/* ---- Theme toggle ----
-   The last item in the site header. It used to be a 44px bordered square
-   with a panel fill — a button-shaped object sitting next to plain text
-   links, which made a site-wide preference look like the most important
-   control in the bar. Now it is just the icon: no border, no fill, muted
-   like the nav links and brightening on hover exactly as they do. It grows
-   back to a real tap target in the mobile breakpoint. */
 .icon-btn {
   flex: 0 0 auto;
   display: inline-flex;
@@ -1297,9 +875,6 @@ a:focus-visible,
   justify-content: center;
   min-height: 30px;
   padding: 0 calc(var(--space) * 0.5);
-  /* The padding is tap area, not indent: pulling it back out on the right
-     lands the icon itself on the page's right edge, in line with the bento
-     and the footer — the same spine the first nav link sits on. */
   margin-right: calc(var(--space) * -0.5);
   border: 0;
   border-radius: var(--radius);
@@ -1320,8 +895,6 @@ a:focus-visible,
   stroke: currentColor;
 }
 
-/* The toggle's icon is swapped by script.js, so its svg is styled via the
-   wrapper rather than directly. */
 .icon-btn [data-theme-icon] svg {
   width: 100%;
   height: 100%;
@@ -1354,9 +927,6 @@ a:focus-visible,
 }
 /* .field__label styling comes from the shared caption rule. */
 
-/* One fact per inset well — name, contact address, place. The well is what
-   holds the shape while a field is still blank, so a half-filled Impressum
-   reads as slots waiting for an answer rather than as a broken render. */
 .field__value {
   display: flex;
   align-items: center;
@@ -1369,29 +939,12 @@ a:focus-visible,
   color: var(--text);
 }
 
-/* ---- Vault: private document list ----
-   Downloadable files as hairline-separated rows — the whole row is the link,
-   name on the left, type and size on the right.
-
-   Neither the names nor the sizes are written into the HTML. The whole list
-   comes from /api/vault/items, which answers only to an authenticated
-   session, so an unauthenticated visitor receives a page with nothing in it
-   rather than a page that names the documents behind the password. Sizes are
-   read off the real files, so the page can never claim 412 KB when it is 3 MB,
-   and a document that has not been uploaded yet gets .doc--missing instead of
-   rendering as a dead download. Same principle as .figure hiding itself when
-   its screenshot 404s. */
 .doc-list {
   list-style: none;
   display: flex;
   flex-direction: column;
 }
 
-/* ---- Sign-in form (login.html) ----
-   Same vocabulary as everything else: 1px lines, square corners, no fills.
-   An input here is a bordered box that gains the accent on focus, so it reads
-   as the same family as .box and .gh__retry rather than a browser default
-   dropped into the page. */
 .auth-form {
   display: flex;
   flex-direction: column;
@@ -1424,8 +977,6 @@ a:focus-visible,
   transition: border-color var(--motion);
 }
 
-/* :focus, not only :focus-visible. A text field that gives no sign it is
-   focused is a field people type into by accident and out of by accident. */
 .auth-field__input:focus {
   outline: none;
   border-color: var(--accent);
@@ -1464,8 +1015,6 @@ a:focus-visible,
   cursor: default;
 }
 
-/* Carries the accent rather than a red of its own — the palette has one
-   attention colour and a second would just be noise. */
 .auth-error {
   border-left: 2px solid var(--accent);
   padding-left: calc(var(--space) * 1.5);
@@ -1479,37 +1028,16 @@ a:focus-visible,
   font-size: var(--fs-meta);
 }
 
-/* Sign out is an action, not a destination, so it is not a fifth nav link:
-   it is an .icon-btn sitting immediately left of the theme toggle, in the
-   bar's right-hand pair of controls. Injected by script.js only when a
-   session is live, which is why there is no markup for it in any page.
-
-   The header's own gap is sized for nav-to-controls, not icon-to-icon, so
-   this cancels it exactly — the two boxes end up edge to edge and their tap
-   padding becomes the space between the icons, which is how the pair reads
-   as one group. Exactly, not more: a deeper pull would slide the two hit
-   areas over each other and hand half the door's target to the toggle. The
-   nav's margin-right:auto still does the pushing, so nothing else moves, and
-   the toggle keeps the .icon-btn right-edge offset that lands the pair on
-   the layout spine. */
 .site-header__signout {
   margin-right: calc(var(--space) * -2);   /* == .site-header's gap */
 }
 
-/* The toggle's icon is sized through its [data-theme-icon] wrapper because
-   script.js swaps it; this one is written once and never replaced, so the
-   svg is styled directly and matches at 16px. */
 .site-header__signout svg {
   width: 16px;
   height: 16px;
   display: block;
 }
 
-/* ---- Admin panel (admin.html) ----
-   Dense on purpose. This is the one page that exists to be read rather than
-   looked at, so it drops the generous spacing the rest of the site uses and
-   goes for rows you can scan. Still 1px lines and square corners — it is the
-   same site, not a dashboard bolted on. */
 .admin-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -1534,8 +1062,6 @@ a:focus-visible,
 
 .admin-tab:hover { color: var(--fg-strong); }
 
-/* The selected tab joins the panel below it: side and top borders, and the
-   1px of background that covers the container's bottom rule. */
 .admin-tab[aria-selected="true"] {
   border-color: var(--line);
   background: var(--panel);
@@ -1579,17 +1105,11 @@ a:focus-visible,
   color: var(--fg-mute);
 }
 
-/* Tables are wider than a phone and sometimes wider than the box. They scroll
-   inside this wrapper so the page itself never scrolls sideways. */
 .admin-scroll {
   overflow-x: auto;
   margin-top: var(--space);
 }
 
-/* --fs-meta is 0.7rem, and Times at that size in a dense table was the least
-   legible text in the project — a thin-stemmed serif has none of the clarity a
-   mono keeps at small sizes. One step up costs a little width and buys the
-   whole panel back. */
 .admin-table {
   width: 100%;
   border-collapse: collapse;
@@ -1677,7 +1197,6 @@ a:focus-visible,
   margin: calc(var(--space) * 2) 0;
 }
 
-.admin-subhead { margin-top: calc(var(--space) * 4); }
 
 .admin-note {
   margin-top: calc(var(--space) * 2);
@@ -1685,8 +1204,6 @@ a:focus-visible,
   font-size: var(--fs-meta);
 }
 
-/* The generated password. Given the accent border because it is the one thing
-   on this page that cannot be looked up again — once it is gone, it is gone. */
 .admin-secret {
   margin: calc(var(--space) * 2) 0;
   padding: calc(var(--space) * 2);
@@ -1718,17 +1235,8 @@ a:focus-visible,
   font-size: var(--fs-meta);
 }
 
-/* ---- The page editor ----
-   Everything below is namespaced .pe-*, and it is the one place in the panel
-   that is not a table. The form is laid out in the order the page renders —
-   identity at the top, bands in the middle, the repo link at the bottom —
-   so what is filled in top to bottom is what a reader sees top to bottom.
-   Same house rules as everywhere else: 1px borders, radius 0, no shadow,
-   tokens only, no literal rem font sizes. */
 .pe { max-width: 52rem; margin: 0 auto; }
 
-/* Sticky action bar. The four things you do to a page, always reachable,
-   so a long page never means scrolling back up to save. */
 .pe-bar {
   position: sticky;
   top: 0;
@@ -1789,8 +1297,6 @@ a:focus-visible,
   font-size: var(--fs-meta);
 }
 
-/* The title is the biggest thing on the page it makes, so it is the
-   biggest thing in the form. */
 .pe-input--title {
   font-size: var(--fs-subtitle);
   padding: calc(var(--space) * 0.75) var(--space);
@@ -1859,8 +1365,6 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
 .pe-slot--smallA  { grid-area: smallA; }
 .pe-slot--smallB  { grid-area: smallB; }
 
-/* A cell in the Home editor wears the project's own accent, so the map
-   reads as the bento it controls rather than as four grey boxes. */
 .pe-slot__dot {
   display: inline-block;
   width: 8px;
@@ -1956,11 +1460,6 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
 
 .pe-hidden { display: none; }
 
-/* ---- colour picker ----
-   Square everywhere, 1px borders, no rounding — the OS colour dialog is
-   none of those things, which is why this is built rather than borrowed.
-   Saturation/value square on the left, hue strip on the right, hex field
-   and the colours already in use underneath. */
 .pe-color { display: flex; gap: var(--gap); align-items: flex-start; flex-wrap: wrap; }
 
 .pe-color__sv {
@@ -1987,8 +1486,6 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
     #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
 }
 
-/* Two nested borders so the handle stays visible on a light patch and on
-   a dark one without either colour being chosen for it. */
 .pe-color__knob {
   position: absolute;
   width: 9px;
@@ -2039,8 +1536,6 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
     grid-template-columns: 1fr;
   }
 
-  /* The thumbnail rail is 11rem of a 360px screen; below that the row is
-     the picture and the words stacked, like the band it makes. */
   .pe-row {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -2104,8 +1599,6 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
   transition: transform var(--motion), opacity var(--motion), color var(--motion);
 }
 
-/* A download arrow points down, so it nudges down — every other arrow on the
-   site moves in its own direction and this one should not be the exception. */
 .doc__link:hover,
 .doc__link:focus-visible {
   color: var(--fg-strong);
@@ -2123,9 +1616,6 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
   transform: translateY(2px);
 }
 
-/* Not uploaded yet: script.js strips the href, which already makes this a
-   non-link (no focus, no pointer, no navigation). This just says so visually
-   instead of leaving a row that looks clickable and isn't. */
 .doc--missing .doc__link {
   color: var(--fg-mute);
   cursor: default;
@@ -2140,29 +1630,55 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
   }
 }
 
-/* ---- Project cards (projects page) ----
-   Two-column bento. Cards are .box, so they match the home page exactly;
-   the important ones take a full row via .is-wide. */
-.project-grid {
+/* ---- Projects index: one band per project ----
+   Same band rule as a project page, so the list and the page it opens read as
+   one document. The seam carries the project's own colour, exactly like the
+   masthead rule on .page-head--project. */
+.project-list {
   list-style: none;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--gap);
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-lg);
+  max-width: var(--measure-wide);
+  /* body's gap brings 16px; this makes the first seam a full band away from the
+     masthead rule instead of a second hairline right under it. */
+  padding-top: calc(var(--stack-lg) - var(--gap));
 }
 
-.project-grid > .is-wide {
-  grid-column: 1 / -1;
+.project-row {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-sm);
+  padding-top: var(--stack-md);
+  border-top: var(--border-width) solid var(--border);
+  transition: border-color var(--motion);
 }
 
-/* On a full-width card, margin-left:auto would strand the status badge at the
-   far edge; keep it next to the name it belongs to. */
-.project-grid .project-box__head .status {
-  margin-left: 0;
+.project-row.is-custom {
+  border-top-color: transparent;
+  background-image: linear-gradient(90deg, var(--edge-1), var(--edge-2) 45%, var(--edge-3));
+  background-size: 100% 2px;
+  background-position: top left;
+  background-repeat: no-repeat;
+  background-origin: border-box;
+  background-clip: border-box;
 }
 
-/* Capability list inside a project card: the description's enumeration,
-   broken out so it can be scanned instead of read. Capped to the same 60ch
-   measure as .box__text, so it sits in one column with the paragraph above. */
+.project-row:hover {
+  border-top-color: var(--border-hover);
+}
+
+.project-row:hover > .section-label,
+.project-row:has(.stretched-link:focus-visible) > .section-label {
+  color: var(--accent);
+}
+
+.project-row > .box-arrow {
+  top: var(--stack-md);
+  right: 0;
+}
+
 .feature-list {
   list-style: none;
   display: grid;
@@ -2174,10 +1690,6 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
   color: var(--text-muted);
 }
 
-/* Each item gets its own hairline. Six one-line items stacked with nothing
-   between them read as one grey paragraph in a serif; the rule turns the
-   list back into six separate facts without adding a bullet glyph to
-   every row. */
 .feature-list li {
   display: flex;
   gap: calc(var(--space) * 1.25);
@@ -2191,10 +1703,6 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
   color: var(--accent);
 }
 
-/* Inside a card the box's own border already does the separating, and a
-   column of hairlines running into that bottom edge reads as a table that
-   lost its frame. The rules stay for the open, borderless column of a
-   project page, where nothing else is dividing the items. */
 .box .feature-list {
   gap: calc(var(--space) * 0.5) calc(var(--space) * 3);
 }
@@ -2205,30 +1713,12 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
   gap: calc(var(--space) * 0.75);
 }
 
-/* ===========================================================
-   Project detail page (project-*.html)
-   ===========================================================
-   One column, no cards. The previous version was a two-column grid of four
-   bordered boxes wrapped around roughly thirty words, which made every page
-   look like it was still loading — and two of those boxes restated each
-   other ("STACK: React, TypeScript" next to a React chip and a TypeScript
-   chip). A short page should look deliberately short, so this is a spec
-   sheet: lede, then whatever is genuinely known, then the hard facts and the
-   links. Sections with nothing real to say are simply absent.
-
-   THE BAND RULE. Every top-level block in the article is a band: a hairline
-   along its top, --stack-md of air under that rule, and --stack-lg between one
-   band and the next. .project__section, .figure, .datarow and .linklist all
-   obey it, so the page has one seam repeated down its length instead of four
-   different ideas about how a block begins. The lede is the single block above
-   the first seam, which is what makes it read as the opening statement.
-
-   THE RAIL. The article is capped at --measure-wide; text inside it at
-   --measure. Two right edges, and the wide one is reserved for things that
-   genuinely need pixels (screenshots, tabular data). Tech chips live in the
-   page head with the title — they are identity, not content — and the facts
-   band closes the article next to the links, because a spec is something you
-   look up after reading, not something to wade through first. */
+/* ==== Project detail page (project-*.html) ==== */
+/* THE BAND RULE. Every top-level block is a band: hairline along the top,
+   --stack-md of air under it, --stack-lg to the next band. .project__section,
+   .project-row, .reveal, .datarow and .linklist all obey it.
+   THE RAIL. Article capped at --measure-wide, text at --measure. Two right
+   edges on a page, and the wide one is only for pictures and tables. */
 .page-body--project {
   display: flex;
   flex-direction: column;
@@ -2252,8 +1742,6 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
   border-top: var(--border-width) solid var(--border);
 }
 
-/* The one-sentence pitch. Distinct from body copy by size and full text
-   colour — it does not need to compete with the h1 to do that. */
 .project__lede {
   font-size: var(--fs-lede);
   line-height: 1.5;
@@ -2261,11 +1749,6 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
   color: var(--fg-strong);
 }
 
-/* Hard facts as one horizontal strip. It takes the wide measure — these are
-   short values in columns, not prose — and no heading: the <dt> captions are
-   its labels. It used to be boxed in top and bottom; under the band rule the
-   top hairline is enough, and the strip stops looking like a table that lost
-   its frame. */
 .datarow {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -2285,20 +1768,14 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
   color: var(--fg-strong);
 }
 
-/* A titled block (e.g. "What it does"). Only rendered where real content
-   exists — there is no empty-state version on purpose. The label sits just
-   under the band's rule, like a section header on a printed sheet. */
 .project__section {
   display: flex;
   flex-direction: column;
   gap: var(--stack-md);
 }
 
-/* A section heading is a heading, not a caption. Everywhere else on the site
-   .section-label marks a small box; here it opens a band of real reading, so
-   it takes the heading size and the full text colour. The accent tick before
-   it is what makes the start of a section findable when scrolling past. */
 .project__section > .section-label,
+.project-row > .section-label,
 .linklist > .section-label,
 .reveal__summary > .section-label {
   display: flex;
@@ -2311,6 +1788,7 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
 }
 
 .project__section > .section-label::before,
+.project-row > .section-label::before,
 .linklist > .section-label::before,
 .reveal__summary > .section-label::before {
   content: "";
@@ -2321,26 +1799,15 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
   transform: translateY(-0.3em);
 }
 
-/* A band's prose, capped at the reading measure whether the band is an open
-   section or a folded <details>. The second selector is what makes folding a
-   presentational choice rather than a layout one: a text band that is folded
-   used to inherit the wide rail meant for screenshots, so ticking "Foldable"
-   in the panel silently widened the paragraphs by seven rem. Same words, same
-   measure, one of them closed. */
+/* Folding is presentational: a folded band keeps the same reading measure. */
 .project__section p,
+.project-row p,
 .reveal__body > p {
   font-size: var(--fs-body);
   max-width: var(--measure);
   color: var(--text-muted);
 }
 
-/* ---- Content blocks ----
-   Everything below is content-agnostic: no rule mentions a project. A new
-   project page is written by picking blocks from this set, which is what
-   keeps swapping one project for another an HTML-only job. */
-
-/* Numbered procedure — pipeline stages, setup steps. Leading-zero counters
-   because the rest of the site is monospace and fixed-width reads better. */
 .steps {
   list-style: none;
   counter-reset: step;
@@ -2376,11 +1843,6 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
   color: var(--fg-strong);
 }
 
-/* Real tabular data (model files, ports, env keys). Wrapped in .table-wrap
-   so a wide table scrolls itself instead of the page — and the scrollbar is
-   visible when it does. It used to be hidden on both engines, which meant a
-   table wide enough to clip gave the reader no sign that the rest of it was
-   there at all. */
 .table-wrap {
   overflow-x: auto;
   scrollbar-width: thin;
@@ -2420,29 +1882,18 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
 
 .spec-table tr:last-child td { border-bottom: 0; }
 
-/* A row-label column: the header cell is empty because the values in it are
-   the labels. Give it the same muted caption treatment the <th>s get. */
 .spec-table th[scope="row"] {
   padding: calc(var(--space) * 1.5) calc(var(--space) * 3) calc(var(--space) * 1.5) 0;
   border-bottom: var(--border-width) solid var(--line-soft);
   vertical-align: top;
-  /* Column headers stay on one line; a row label is prose and may wrap, which
-     is what stops one long word setting the width of the whole column. */
   white-space: normal;
 }
 
-/* A .safetensors filename is longer than any sensible column. Inline code is
-   nowrap everywhere else on purpose — a command should not break across lines
-   mid-flag — but in a table cell that rule pushed the text out past the right
-   edge and into a scroll the reader had to discover. */
 .spec-table code {
   white-space: normal;
   overflow-wrap: anywhere;
 }
 
-/* Filenames, ports, commands. The page font is a serif, so a literal has no
-   letterform cue of its own to mark it — the tracking and the well are
-   carrying the whole distinction. */
 code {
   font-family: inherit;
   font-size: 0.95em;
@@ -2454,10 +1905,6 @@ code {
   white-space: nowrap;
 }
 
-/* Short aside — a caveat, a disclosure, a "not public yet". The left rule and
-   the muted tone already say "this is an aside"; it used to be set in italic
-   as well, and two or three italic serif lines at this line-height were the
-   hardest thing to read on the site. Italic is left to the words that earn it. */
 .note {
   max-width: var(--measure);
   padding: calc(var(--space) * 0.5) 0 calc(var(--space) * 0.5) calc(var(--space) * 3);
@@ -2471,15 +1918,6 @@ code {
 
 .note strong { color: var(--fg-strong); }
 
-/* ---- Screenshot ----
-   A figure is a band in its own right: it does not sit inside a titled
-   section, because the figcaption is already the caption and an <h2> above a
-   picture of the thing it names is one label too many. It takes the wide
-   measure — a screenshot needs pixels — while its caption stays on the text
-   measure, so the caption lines up with the prose it belongs to.
-   Sized by the image's own aspect ratio, capped so a tall screenshot cannot
-   push the rest of the page off-screen. If the file is missing, initFigures()
-   in script.js removes the whole figure rather than leaving a broken frame. */
 .figure {
   display: flex;
   flex-direction: column;
@@ -2504,53 +1942,22 @@ code {
   color: var(--fg-mute);
 }
 
-/* ---- Expandable band ----
-   A <details> wearing the same seam as every other band, for a block worth
-   offering but not worth spending the reader's screen — or their data — on
-   unasked.
-
-   The weight is the reason it exists. The setup clips on the About page are
-   48 MB of GIF between them, roughly a thousand times the rest of the site.
-   Inside a CLOSED <details> those images have no layout box at all, so a
-   loading="lazy" image never intersects the viewport and not one of those
-   bytes is fetched until someone opens the section. Nothing is being hidden
-   by that: the summary names what is behind it and states the size, the same
-   courtesy the vault list pays by reading sizes off the real files.
-
-   It is also the only honest way to ship an animated GIF. A GIF cannot be
-   paused from CSS and ignores prefers-reduced-motion completely, so the
-   motion has to be something the reader starts, not something that starts at
-   them. Closed by default is that switch.
-
-   The <details> element itself gets no display of its own on purpose — its
-   own box is what the open/closed behaviour hangs off, and nothing here needs
-   it to be a flex container. */
 .reveal__summary {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: calc(var(--space) * 1.25);
   cursor: pointer;
-  /* Both halves of removing the default triangle: the standard property, and
-     the WebKit pseudo-element that predates it and ignores it. The site draws
-     its own marker, in the same stroke as every other icon. */
   list-style: none;
 }
 
 .reveal__summary::-webkit-details-marker { display: none; }
 
-/* The label is a band heading like any other, so it is the same
-   .section-label and picks up the accent tick from the rule above. */
-
-/* What is behind the fold, in the meta size: how many clips and how many
-   megabytes. Someone on mobile data is entitled to know before they tap. */
 .reveal__hint {
   font-size: var(--fs-meta);
   color: var(--fg-mute);
 }
 
-/* Points down closed, up open. Centred rather than baseline-aligned — an
-   inline SVG has no text baseline of its own to sit on. */
 .reveal__mark {
   display: inline-flex;
   align-self: center;
@@ -2578,16 +1985,7 @@ code {
   padding-top: var(--stack-md);
 }
 
-/* ---- Media row: a clip beside the paragraph that explains it ----
-   Two tracks — the clip left, the words right. The clip's track is fixed at
-   20rem, and that number is not a taste call: the files are 480px wide, and
-   20rem is 360px at this root size, so a clip is always drawn at or under its
-   own resolution instead of being enlarged into mush. On the About page the
-   other track then lands on exactly one --measure, because that page's rail
-   was itself derived as measure + 20rem + the gap between them.
-
-   To put the clip on the right instead, this is the only edit: swap the two
-   values in grid-template-columns and give .mediarow__media `order: 1`. */
+/* Fixed 20rem picture rail, words beside it. .about derives its width from this. */
 .mediarow {
   display: grid;
   grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
@@ -2595,11 +1993,6 @@ code {
   align-items: start;
 }
 
-/* Framed exactly like a screenshot — 1px border, inset background, no radius.
-   The width/height attributes in the markup hold the 16:9 box before the file
-   arrives, so opening the section does not shove the page around underneath
-   the reader as each clip lands. The selector covers <video> as well: if
-   these ever become MP4s, only the markup changes. */
 .mediarow__media {
   display: block;
   width: 100%;
@@ -2608,17 +2001,6 @@ code {
   background: var(--panel-alt);
 }
 
-/* One clip does not fit the fixed track. The ComfyUI walkthrough is a 1280px
-   screen recording whose entire point is that the node text can be read, and
-   20rem drew it at 360 — under a third of the pixels it actually has. So this
-   modifier stacks the row: the clip takes the full rail like a screenshot,
-   because it is one that moves, and the words sit under it on the text
-   measure exactly as a figcaption does.
-
-   The condition for using it is the same one that set 20rem in the first
-   place — never draw a clip above its own resolution. Only reach for this
-   when the source file is wider than the track it would otherwise sit in; a
-   480px clip stretched to the rail is the mush the fixed track prevents. */
 .mediarow--wide {
   grid-template-columns: minmax(0, 1fr);
 }
@@ -2635,23 +2017,11 @@ code {
   max-width: var(--measure);
 }
 
-/* The frame exists only to give the pause button something to be positioned
-   against. It has no border of its own — the border stays on the media, so a
-   clip is framed identically whether or not it has a control on it. */
 .mediarow__frame {
   position: relative;
   display: block;
 }
 
-/* Two controls, and only two. A <video> with native `controls` puts a
-   scrubber, a volume slider, a timer and a fullscreen button across the bottom
-   of the clip in the browser's chrome — rounded, shadowed, and nothing like
-   anything else on this site. These are the whole of what the clip needs: a
-   way to stop it, bottom left, and a way to fill the screen with it, bottom
-   right. Same 1px border, same square corners, same stroke weight as every
-   other icon here. They sit inside the frame rather than under it so the
-   band's rhythm is untouched — the clip is still one block, not a block plus a
-   toolbar. */
 .clip-btn {
   position: absolute;
   bottom: var(--space);
@@ -2682,12 +2052,6 @@ code {
 .clip-btn span { display: block; }
 .clip-btn svg { display: block; }
 
-/* Fullscreen. The frame goes fullscreen rather than the <video> itself, which
-   is the whole trick: hand the video to the browser and it brings its own
-   chrome back, but the frame is an ordinary element, so the two buttons and
-   the rule below travel with it and stay the only interface there is.
-   Letterboxing is object-fit's job; the border comes off because at that size
-   it is a line around the screen, not around a picture. */
 .mediarow__frame:fullscreen {
   display: flex;
   align-items: center;
@@ -2702,10 +2066,6 @@ code {
   border: 0;
 }
 
-/* The timeline, and it is a 2px rule. In the page there is nothing to scrub
-   past — twenty seconds on a loop — so no bar is shown at all. Filling the
-   screen is the one case where knowing how far in you are is worth a mark,
-   and a hairline the width of the screen is the smallest honest one. */
 .clip-track {
   display: none;
   position: absolute;
@@ -2725,18 +2085,6 @@ code {
   background: var(--accent);
 }
 
-/* .mediarow__title takes the shared caption role — it names the thing in the
-   clip, which is a label's job, not a heading's. */
-
-/* ---- Link list ----
-   Where a page sends you next. It used to be a single bare .more-link left
-   floating after the last section with no rule and no label, which read as
-   something left over rather than part of the page. As a band it closes the
-   article the way the facts strip opens the close of it. One link still gets
-   the label: the shape of the page should not depend on how many repositories
-   a project happens to have.
-   It is a sibling of .reading, not a child, so the inline-prose link styling
-   never reaches these rows. */
 .linklist {
   display: flex;
   flex-direction: column;
@@ -2744,12 +2092,6 @@ code {
   max-width: var(--measure-wide);
   padding-top: var(--stack-md);
   border-top: var(--border-width) solid var(--border);
-}
-
-/* On the projects index the list closes a full-width card grid rather than a
-   reading column, so its rule has to reach the same edge the cards do. */
-.page-body > .linklist {
-  max-width: none;
 }
 
 .linklist ul {
@@ -2808,16 +2150,11 @@ code {
     transform: none;
   }
 
-  /* The marker still has to change state — a disclosure that looks identical
-     open and closed is broken, not calm — it just stops sliding there. */
   .reveal__mark {
     transition: color var(--motion);
   }
 }
 
-/* The masthead rule becomes the project's own gradient: the page is colour-
-   matched to the card it was opened from. Drawn as a background so it needs
-   no extra element. */
 .page-head--project {
   border-bottom: 0;
   background-image: linear-gradient(90deg, var(--edge-1), var(--edge-2) 45%, var(--edge-3));
@@ -2829,21 +2166,11 @@ code {
 /* Lede on a project page carries the one-line pitch — same line as the card. */
 .page-head--project .page-head__title { display: flex; align-items: baseline; gap: var(--space); }
 
-/* Tech chips belong with the title, not in the article. They name what the
-   thing is built from — that is identity, the same job the h1 is doing — and
-   reading them as a content block meant the eye crossed a row of icons before
-   it reached the first sentence of the write-up. A little more air above the
-   gradient rule now that something sits under the heading. */
 .page-head--project {
   gap: calc(var(--space) * 1.25);
   padding-bottom: var(--stack-md);
 }
 
-/* ---- Pager: previous / next project ----
-   The projects index is one click away in the footer, but someone reading
-   about Ignite most likely wants the next project, not the list.
-   margin-top:auto pins it to the bottom of the viewport on these short
-   pages, so it never floats alone in the middle of empty space. */
 .pager {
   margin-top: auto;
   display: flex;
@@ -2886,22 +2213,7 @@ code {
 .pager a:only-child { flex: 0 1 320px; }
 .pager__next:only-child { margin-left: auto; }
 
-/* ---- About page ----
-   Was a 2×2 of equal bordered cards: four boxes of the same weight, so
-   nothing on the page was the first thing to read, and the two data sheets
-   (four rows each) ran out well before the bottom of the screen while the
-   prose that people actually came for sat boxed in a corner at body size.
-
-   This is the project-page shell instead — a lede, a band of hard facts,
-   then titled sections separated by hairlines — so About and every project
-   read as the same document. The only card left is the one thing that is
-   genuinely a set of links. */
-/* This page's rail is wider than a project page's, and derived rather than
-   picked: a .mediarow is a fixed 20rem of picture plus the words beside it, so
-   the page has to be exactly one --measure of text plus that rail plus the gap
-   between them. Capping it at --measure-wide instead crushed the paragraph
-   column to about forty characters. The bands all inherit the same width, so
-   the page still has one right edge for its rules and one for its text. */
+/* One --measure of text + the .mediarow rail + the gap between them. */
 .about {
   display: flex;
   flex-direction: column;
@@ -2916,10 +2228,6 @@ code {
   border-top: var(--border-width) solid var(--border);
 }
 
-/* The opening. It used to be a two-track grid — prose left, an "At a glance"
-   sheet right — repeating four facts the first two paragraphs already state.
-   The sheet is gone and with it the grid: the lede is one column of text on
-   the reading measure, like the lede of every project page. */
 .about__lead {
   display: flex;
   flex-direction: column;
@@ -2929,8 +2237,6 @@ code {
   color: var(--text-muted);
 }
 
-/* First paragraph is the page's real headline — "About" is only a label.
-   Same size as a project page's lede, because it is one. */
 .about__lead > p:first-child {
   font-size: var(--fs-lede);
   line-height: 1.5;
@@ -2942,28 +2248,13 @@ code {
   color: var(--fg-strong);
 }
 
-/* Contact row: the page used to end in dead space under two short lists.
-   These are the same three destinations as the home page's link column, at
-   the point where someone who has just read the page wants them. */
 .about-contact {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: var(--gap);
 }
 
-/* The .spec data-sheet rows that lived here (label left, value right, hairline
-   between) went with the "At a glance" box — About was the only page that ever
-   used them, and .datarow is the site's remaining way to show hard facts. */
-
-/* ===========================================================
-   Footer (shared) — legal + credit, nothing else
-   ===========================================================
-   The footer used to BE the navigation, which is why it carried a three-track
-   centring grid, an absolutely-positioned credit line and a set of rules for
-   keeping the "Home" axis on the page's centre line. Navigation moved to the
-   header, so all of that machinery is gone; what is left is the two things a
-   footer is actually for. margin-top:auto pins it to the bottom of the
-   viewport on pages shorter than one screen. */
+/* ==== Footer (shared) — legal + credit, nothing else ==== */
 .site-footer {
   margin-top: auto;
   display: flex;
@@ -2995,10 +2286,6 @@ code {
   outline: none;
 }
 
-/* Small inline arrow beside a link's text. Static on purpose: the site's
-   arrow-nudge belongs to the primary affordances (.box-arrow, .linklist,
-   .doc__arrow), and having a fourth animated arrow system for a 13px glyph
-   in the footer was upkeep with nothing to show for it. */
 .footer-arrow {
   width: 13px;
   height: 13px;
@@ -3006,26 +2293,9 @@ code {
   stroke: currentColor;
 }
 
-/* ===========================================================
-   One-screen home page (desktop)
-   ===========================================================
-   The bento fills exactly the space between the header and the footer, and
-   the document never scrolls. Overflow does not disappear — it moves into
-   the boxes, where it is visible and reachable.
-
-   Three things have to be true for a box to scroll instead of overflowing:
-
-     1. the row must be allowed to be shorter than its content
-        -> grid-template-rows: minmax(0, 1fr)
-     2. the box must be allowed to be shorter than its content
-        -> min-height: 0 on the grid items (grid/flex children default to
-           min-height:auto, which is a content floor and silently wins)
-     3. something inside it has to own the overflow
-        -> .box__body / .link-box__note, below
-
-   Scoped to .is-home, so subpages are untouched. Scoped to min-width:769px,
-   so the mobile breakpoints — where the grid stacks into 8 rows and a lock
-   would be unusable — keep normal document scrolling. */
+/* ==== One-screen home page (desktop) ==== */
+/* The lock, in three parts: the body stops scrolling, every grid row is
+   allowed to shrink, and .box__body becomes the scroll container instead. */
 @media (min-width: 769px) {
   body.is-home {
     height: 100vh;
@@ -3033,9 +2303,6 @@ code {
     overflow: hidden;
   }
 
-  /* (1) and (2). Plain 1fr resolves to minmax(auto, 1fr), whose auto floor is
-     the content's height — the row would grow and push the footer off-screen
-     instead of letting the box scroll. */
   .is-home .bento {
     grid-template-rows: repeat(4, minmax(0, 1fr));
     min-height: 0;
@@ -3049,25 +2316,16 @@ code {
     min-height: 0;
   }
 
-  /* (3) The scroll regions. .box__body is the wrapper added to each card;
-     .link-box__note is the equivalent line in the links column, which has no
-     wrapper because the note is already the only thing under its label. */
   .is-home .box__body,
   .is-home .link-box__note {
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
-    /* Reaching the end of a box must not start scrolling something else —
-       there is nothing else to scroll, and without this the wheel event
-       propagates to the (locked) body and simply stalls. */
     overscroll-behavior: contain;
     scrollbar-width: thin;
     scrollbar-color: var(--border-hover) transparent;
   }
 
-  /* A visible scrollbar is the whole point, so it is styled to belong here
-     rather than hidden like .gh__scroll's: square (--radius is 0 everywhere),
-     drawn in the same grey the borders use, on no track at all. */
   .is-home .box__body::-webkit-scrollbar,
   .is-home .link-box__note::-webkit-scrollbar {
     width: 6px;
@@ -3089,21 +2347,9 @@ code {
     background: var(--fg-mute);
   }
 
-  /* The second affordance: the last line fades out while there is more below.
-     .has-overflow / .is-end are set by initBoxScroll() in script.js, which
-     measures the real scrollHeight — so the fade appears only on a box that
-     genuinely has more text, and switches off once you reach the bottom. A
-     mask that was always on would fade the final line of a box that had
-     nothing left to show, which is the same lie as hiding the scrollbar. */
   .is-home .box__body.has-overflow,
   .is-home .link-box__note.has-overflow {
-    /* min(2.2em, 25%) — NOT a flat 2.2em. The fade has to stay a fraction of
-       the box, because on a short screen a box body can be shorter than the
-       fade itself: at 37px tall, `100% - 2.2em` computes to a negative stop,
-       the gradient starts at transparent, and the mask hides the entire
-       paragraph. A scroll hint that erases what it is hinting at is worse
-       than no hint, so it is capped to a quarter of whatever height the box
-       actually got. */
+    /* min(), not a flat 2.2em: the fade must stay a fraction of a short box. */
     -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - min(2.2em, 25%)), transparent 100%);
     mask-image: linear-gradient(to bottom, #000 calc(100% - min(2.2em, 25%)), transparent 100%);
   }
@@ -3114,36 +2360,11 @@ code {
     mask-image: none;
   }
 
-  /* The four project cards are clickable via .stretched-link, an <a> laid
-     over the whole card. That link and this scroll region want the same
-     pixels, and the winner decides whether the wheel scrolls the text or the
-     click opens the project.
-
-     It has to be settled explicitly, because left alone it is not even
-     consistent: the fade above uses mask-image, which creates a stacking
-     context, so an OVERFLOWING body paints over the link while a
-     non-overflowing one paints under it. The card's description would be a
-     link at one window size and not at another.
-
-     Scrolling wins inside the body — a region the reader has to scroll must
-     receive the wheel, and the link is not an ancestor of it, so a wheel
-     event landing on the link scrolls nothing at all. The rest of the card
-     is untouched: the label, the project name, the status badge, the corner
-     arrow and all the space around them are still the link, which is where
-     a click is aimed anyway. Text in the body also becomes selectable,
-     which it should have been.
-
-     Only cards that actually carry a stretched link need this. .area-about
-     and the link boxes wrap their content in the anchor itself, so the body
-     is a descendant there: wheel and click both already work. */
   .is-home .box:has(.stretched-link) .box__body {
     position: relative;
     z-index: 1;
   }
 
-  /* script.js gives an overflowing region tabindex="0" — a scroll container
-     that the page cannot scroll for you has to be reachable by keyboard, and
-     a focusable thing has to show that it has focus. */
   .is-home .box__body:focus-visible,
   .is-home .link-box__note:focus-visible {
     outline: 1px solid var(--accent);
@@ -3151,42 +2372,18 @@ code {
   }
 }
 
-/* The heatmap at rest is 7 × 10px + 6 × 3px = 88px tall, which stops fitting
-   the GitHub box once the four bento rows get short. Two steps down (68px,
-   then 48px) keep all seven weekday rows visible rather than cropping the
-   bottom of the year behind .gh__scroll's hidden scrollbar. Same viewport
-   condition as the lock, since without the lock the box sizes to its content
-   and the graph was never at risk.
-
-   The month strip and the stats row shrink with it, then go entirely at the
-   tightest step. They are the parts worth losing: the seven weekday rows are
-   the graph, and cropping those is the failure this whole ladder exists to
-   avoid. The figures survive as the grid's aria-label either way. */
+/* Short screens shrink the cells on their own; only the gap between them has
+   to be told, or a 6px cell sits in 3px of air. */
 @media (min-width: 769px) and (max-height: 860px) {
-  :root { --gh-cell: 8px; --gh-gap: 2px; --gh-months-h: 12px; }
+  :root { --gh-gap: 2px; }
 }
 
 @media (min-width: 769px) and (max-height: 700px) {
-  :root { --gh-cell: 6px; --gh-gap: 1px; --gh-months-h: 0px; }
-
-  .gh__months,
-  .gh__meta,
-  .gh__days {
-    display: none;
-  }
+  :root { --gh-gap: 1px; }
 }
 
-/* ===========================================================
-   Responsive
-   5 cols (sketch = 7 tracks) -> 2 cols -> 1 col
-   =========================================================== */
+/* ==== Responsive ==== */
 @media (max-width: 768px) {
-  /* The header sticks. Stacked into one or two columns the home page is
-     roughly three screens tall, and navigation that lives at one end of a
-     long page is navigation you have to go looking for — the exact problem
-     the old footer nav had, just at the other end. The negative margins pull
-     the bar out to the viewport edges (body carries --gap of padding) so the
-     background covers the full width once it is stuck. */
   .site-header {
     position: sticky;
     top: 0;
@@ -3196,15 +2393,6 @@ code {
     padding: calc(var(--space) * 0.5) var(--gap) 0;
   }
 
-  /* The bar used to wrap: wordmark and toggle on line one, nav spread across
-     a second full-width line. With the wordmark gone that first line would
-     hold nothing but the theme toggle, so the wrap is gone too — four links
-     plus the toggle fit on one row inside 320px even at full tap-target
-     height (the 480px rule below tightens the link padding for the last
-     stretch of that).
-
-     Desktop trades height for quiet; a finger cannot. Down here the links go
-     back to a 44px target and the toggle to 40px. */
   .site-nav a { min-height: 44px; }
 
   .icon-btn {
@@ -3219,37 +2407,20 @@ code {
     height: 18px;
   }
 
-  /* Same value as the desktop rule, restated: .icon-btn's tap-target margin
-     above is the same specificity and further down the file, so it wins by
-     order and the door drifts away from the toggle without this. */
   .site-header__signout {
     margin-right: calc(var(--space) * -2);
   }
 
-  /* Keeps its own horizontal scroll (it is wider than a phone), but must
-     claim a real height now that the row no longer dictates one. */
+  /* A definite height, not a floor: the grid stretches to the chart, so an
+     auto-height chart collapses to its own gaps. Width stays on flex: 1. */
   .gh__chart {
-    flex: none;
-    min-height: 92px;
+    height: 92px;
   }
 
-  /* Stacked, the box sizes to its content and there is no height to defend,
-     so .gh can go back to being content-sized too. */
   .gh {
     flex: none;
   }
 
-  /* Every box is the full width down here, so the map was already one column
-     wearing two — and the order it spelled out is the order the markup is
-     in. Dropping it is what stops the count variants above from needing four
-     phone-sized copies of themselves: there is nothing left to vary.
-
-     [data-projects] is carried, not decoration: the five maps above are
-     attribute-qualified and outrank a bare .bento even from inside a media
-     query. Without it this rule loses and the phone gets the seven-column
-     desktop grid. The grid-area reset is explicit for the same reason — and
-     because leaning on an unmatched area name falling back to auto placement
-     is a rule nobody should have to know. */
   .bento[data-projects] {
     grid-template-columns: 1fr;
     grid-template-rows: none;                  /* let stacked boxes size to content */
@@ -3259,24 +2430,13 @@ code {
 
   .bento > * { grid-area: auto; }
 
-  /* Let the link boxes keep a tappable height instead of being crushed
-     into the short auto-row; the stack grows to fit them. */
   .link-box {
     min-height: 56px;
   }
 
-  .project-grid {
-    grid-template-columns: 1fr;
-  }
 
   .pager__next { text-align: left; }
 
-  /* ---- Subpage reading flow on a phone ----
-     Nothing in this query used to touch a project page's content at all: the
-     bands relied on their own auto-fit and overflow rules and were simply
-     desktop spacing at phone width. The measures take care of themselves (a
-     phone is narrower than 66ch), but the rhythm does not — 40px between
-     bands is a third of the screen. */
   :root {
     --stack-lg: calc(var(--space) * 4);
   }
@@ -3289,17 +2449,10 @@ code {
   /* 70vh of screenshot leaves nothing of the page around it. */
   .figure img { max-height: 50vh; }
 
-  /* Side by side on a phone the clip gets about 150px and the paragraph gets
-     five words a line, which is neither a picture nor a sentence. Stacked,
-     each gets the whole width. */
   .mediarow {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  /* A disclosure is a control, and down here a control is 44px tall — the
-     same floor the nav links take. The row is already the full width, so
-     this is the only axis that was short. align-content centres the line
-     inside that height; the items still sit on a shared baseline. */
   .reveal__summary {
     min-height: 44px;
     align-content: center;
@@ -3318,21 +2471,8 @@ code {
 }
 
 @media (max-width: 480px) {
-  /* The bento rule that used to be here restated the 768px one column for
-     one column. The query above already stacks; there is nothing left to say.
-
-     At this width the four nav items plus their padding no longer fit on one
-     row; shrink the horizontal padding rather than the type or the 44px
-     height, both of which are doing real work. */
   .site-nav a { padding: 0 calc(var(--space) * 0.5); }
 
-  /* Signed in there is a second control in the bar, and at this width the
-     four links plus two 40px targets do not fit one row — measured, not
-     guessed: they overflow a 375px screen by about 40px. The bar takes the
-     second row back rather than paying for the fit by squashing the links
-     into each other or pulling the toggle off the layout's right edge.
-     Scoped to .has-signout (set by script.js) so a signed-out visitor —
-     which is nearly everyone — keeps the single-row bar unchanged. */
   .site-header.has-signout {
     flex-wrap: wrap;
     justify-content: flex-end;

@@ -17,6 +17,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='.5' y='.5' width='31' height='31' fill='%230e0e0e' stroke='%232a2a2a'/%3E%3Crect x='9' y='9' width='14' height='14' fill='%23ff1e2f'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
 
+  <!-- Saved theme, applied before first paint so a light visitor sees no flash. -->
   <script>
     try {
       if (localStorage.getItem("theme") === "light") {
@@ -27,88 +28,6 @@
 </head>
 <body>
 
-<!--
-=========================================================================
-  PROJECT PAGE TEMPLATE
-  Copy this file to project-<slug>.html and fill in the marked slots.
-  This file is not linked from anywhere and is marked noindex.
-=========================================================================
-
-  ADDING OR SWAPPING A PROJECT — the complete list. Five places, no more,
-  and only one of them is CSS.
-
-  1. THIS FILE -> project-<slug>.html
-       Replace: <title>, the <h1>, the .is-SLUG class on .page-head,
-       the chips, the lede, body sections, datarow, links.
-
-  2. style.css — ONE line in the palette block (search "Per-project
-     palettes"), plus one line in the light-theme block below it:
-       .is-<slug>          { --edge-1: #shade; --edge-2: #BRAND; --edge-3: #tint; }
-       :root.light .is-<slug> { ...darker versions, brand must clear 3:1 on white... }
-     --edge-2 is the project's actual colour; the other two are a darker
-     and a lighter version of it. Nothing else in the CSS is per-project.
-
-  3. projects.html — the card in .project-grid. Copy an existing <li>,
-     change the .is-<slug> class, the href, the label, chips and text.
-     Add .is-wide if it should take a full row.
-
-  4. index.html — only if the project appears on the home bento. Same
-     card markup, plus the grid area: the .area-* class and the matching
-     name inside .bento's grid-template-areas in style.css.
-
-  5. The NEIGHBOURS' pagers — the previous and next project pages each
-     link to this one at the bottom. Search for "pager" in the two
-     adjacent project-*.html files. This is the only cross-file edit;
-     order is: comfyui -> ignite -> kobui -> stalkr.
-
-  REMOVING a project: delete its page, its card in projects.html (and
-  index.html), its palette line, and re-link the pagers on either side.
-
--------------------------------------------------------------------------
-  THE PAGE'S SHAPE — three rules, and they are the whole design.
-
-  ORDER. Title and chips in the .page-head (they are identity, so they sit
-  with the name); then lede; then the sections that explain the thing; then
-  the screenshot; then the facts strip and the links, which are reference
-  material you look up after reading rather than wade through first.
-
-  BANDS. Every top-level block inside <article class="project reading"> —
-  .project__section, .figure, .datarow — opens with a hairline across the
-  article and is separated from the next by --stack-lg. One seam repeated
-  down the page. The .linklist is a sibling of the <article>, not a child,
-  and carries the same seam. The lede is the only block above the first one.
-
-  MEASURE. Text is capped at --measure, screenshots and tables at
-  --measure-wide. Two right edges on the page, never more. Do not add a
-  max-width to a block: it inherits the right one already.
-
-  The `reading` class on the <article> is what gives its prose the body
-  line-height and styles inline links. Keep it.
-
--------------------------------------------------------------------------
-  CONTENT BLOCKS AVAILABLE (all in style.css, all project-agnostic).
-  Pick what the project actually needs and delete the rest — a page with
-  three blocks is fine, an empty labelled block is not.
-
-    .project__lede    one-sentence pitch, set a step above body copy
-    .chips            tech tags with icons — goes in the .page-head
-    .datarow          hard facts as a strip; closes the article
-    .project__section titled block, wraps any of the below
-    .steps            numbered procedure (pipeline stages, setup)
-    .feature-list     flat "what it does" list
-    .spec-table       real tabular data, wrap in .table-wrap
-    .note             short aside; add .note--accent for a WIP notice.
-                      Always inside a section, never a bare sibling.
-    .figure           screenshot + caption, top level, no wrapping section
-                      and no heading — the figcaption is the heading
-    .linklist         where the page sends you; sibling of the <article>
-    <code>            filenames, ports, commands
-=========================================================================
--->
-
-  <!-- The site's one navigation. Byte-identical on every page except for
-       which link carries aria-current, so "where can I go" never depends on
-       "where am I". Sticky on mobile — see .site-header in style.css. -->
   <header class="site-header">
     <nav class="site-nav" aria-label="Main">
       <a href="index.html">Home</a>
@@ -123,15 +42,10 @@
     </button>
   </header>
 
-  <!-- SLOT: .is-SLUG keys the title rule to this project's colour. The header
-       above is identical on every page — never edit it per project. -->
   <div class="page-head page-head--project is-SLUG">
     <!-- SLOT: name. Optional <span class="status">WIP</span> after it. -->
     <h1 class="page-head__title" id="page-title">PROJECT NAME</h1>
 
-    <!-- SLOT: tech chips. Copy the <svg> for a language from any other
-         project page; a chip with no icon renders fine too. These belong
-         here with the title, not in the article. -->
     <ul class="chips">
       <li class="chip">Language</li>
       <li class="chip">Framework</li>
@@ -162,8 +76,6 @@
         </ul>
       </section>
 
-      <!-- BLOCK: tabular data. The aside belongs inside the section it
-           qualifies — a .note is never a bare sibling of the article. -->
       <section class="project__section" aria-labelledby="lbl-table">
         <h2 class="section-label" id="lbl-table">What it expects</h2>
         <div class="table-wrap">
@@ -177,19 +89,6 @@
         <!-- BLOCK: aside. .note--accent for a WIP / caveat notice. -->
         <div class="note">A caveat, a disclosure, or a <strong>detail</strong> worth pulling out.</div>
       </section>
-
-      <!-- BLOCK: screenshot. Put the file in assets/ first, then delete the
-           surrounding comment markers. No wrapping section and no heading —
-           the figcaption is the heading. If the file is missing the figure
-           removes itself (initFigures in script.js), but do not ship the
-           markup for a screenshot that does not exist: it costs a failing
-           request on every visit to render nothing. -->
-      <!--
-      <figure class="figure">
-        <img src="assets/SLUG-shot.png" alt="Describe what is shown" loading="lazy" decoding="async">
-        <figcaption>Short caption</figcaption>
-      </figure>
-      -->
 
       <!-- SLOT: 3-4 hard facts. More than four and the strip gets thin. -->
       <dl class="datarow">
@@ -209,8 +108,6 @@
 
     </article>
 
-    <!-- SLOT: links. The repo itself, not the profile. One <li> per
-         destination; the optional .linklist__note is a short gloss. -->
     <nav class="linklist" aria-labelledby="lbl-links">
       <h2 class="section-label" id="lbl-links">Links</h2>
       <ul>

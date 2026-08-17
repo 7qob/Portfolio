@@ -16,8 +16,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='.5' y='.5' width='31' height='31' fill='%230e0e0e' stroke='%232a2a2a'/%3E%3Crect x='9' y='9' width='14' height='14' fill='%23ff1e2f'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="../style.css">
 
-  <!-- Apply the saved theme before first paint, so a light-mode visitor
-       never sees a dark flash when moving between pages. -->
+  <!-- Saved theme, applied before first paint so a light visitor sees no flash. -->
   <script>
     try {
       if (localStorage.getItem("theme") === "light") {
@@ -28,29 +27,6 @@
 </head>
 <body>
 
-  <!-- ===================================================================
-       PREVIEW / SPEC FILE — not part of the site.
-
-       This is the exact markup server/src/projects/render.ts must emit for
-       a project authored in the panel. Two differences from a real
-       published page, both deliberate:
-
-         * paths are ../ prefixed (this file lives in docs/), a published
-           page sits in the site root and uses bare style.css / script.js;
-         * media points at ../assets/*, a published page points at
-           assets/up/<sha256[0:16]>.<ext>.
-
-       Everything else — every class, every attribute, the order of the
-       bands, the pager — is what the renderer produces. If the renderer
-       and this file disagree, one of them is wrong.
-
-       Note what is NOT here: no <script> that fetches anything, no API
-       call, no inline style. The page is static and opens from disk.
-       =================================================================== -->
-
-  <!-- The site's one navigation. Byte-identical on every page except for
-       which link carries aria-current, so "where can I go" never depends on
-       "where am I". Sticky on mobile — see .site-header in style.css. -->
   <header class="site-header">
     <nav class="site-nav" aria-label="Main">
       <a href="../index.html">Home</a>
@@ -77,8 +53,6 @@
   <main class="page-body page-body--project" aria-labelledby="page-title">
     <article class="project reading">
 
-      <!-- The Description field, reused verbatim as the card text on the
-           home bento and on projects.html. -->
       <p class="project__lede">This page was assembled from four bands in the panel — a text band, an image band, a folded clip band and a video band — plus a slug, a title, a description and a repo link. Nothing else was typed.</p>
 
       <!-- ================= BAND: text, open ================= -->
@@ -101,11 +75,6 @@
         </div>
       </section>
 
-      <!-- ================= BAND: media, FOLDED, text beside =================
-           Closed on purpose: inside a closed <details> a lazy image has no
-           layout box, so nothing below is fetched until the reader asks.
-           The hint is computed from the real byte sizes on the server —
-           never typed by the author. -->
       <details class="reveal">
         <summary class="reveal__summary">
           <h2 class="section-label">My setup</h2>
@@ -142,12 +111,6 @@
         </div>
       </details>
 
-      <!-- ================= BAND: media, FOLDED, text below =================
-           An MP4 row: a frame wrapping the video, the two clip buttons and
-           the progress track. initClipToggles() in script.js drives these
-           off the data-clip-* attributes. layout "below" is .mediarow--wide,
-           which collapses the two columns into one so the words sit under
-           the picture — the right shape for a wide 16:9 clip. -->
       <details class="reveal">
         <summary class="reveal__summary">
           <h2 class="section-label">Walkthrough</h2>
@@ -187,9 +150,6 @@
         </div>
       </details>
 
-      <!-- ================= BAND: text, FOLDED =================
-           The same text band as the first one with Foldable ticked. A folded
-           text band carries no hint — there is nothing to weigh. -->
       <details class="reveal">
         <summary class="reveal__summary">
           <h2 class="section-label">The long version</h2>
@@ -206,8 +166,6 @@
 
     </article>
 
-    <!-- The repo link. One head field in the editor, rendered as the last
-         thing before the pager. Omitted entirely when the field is empty. -->
     <nav class="linklist" aria-labelledby="lbl-repo">
       <h2 class="section-label" id="lbl-repo">Source</h2>
       <ul>
