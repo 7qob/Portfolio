@@ -122,7 +122,7 @@ copy the existing records for `kira1q.dev` and `www`.** That is your only way
 back. Reverting means re-entering those records by hand.
 
 The Devportal repo itself is untouched — it stays at
-`kiraa1q.github.io/Devportal` and you can always re-point DNS to it.
+`7qob.github.io/Devportal` and you can always re-point DNS to it.
 
 ### 2.6 Run it as a service
 

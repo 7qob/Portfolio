@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ComfyUI × Krea 2 · kiraa1q</title>
+  <title>ComfyUI × Krea 2 · 7qob</title>
   <meta name="description" content="">
 
   <!-- Open Graph (empty — fill before sharing) -->
@@ -29,20 +29,20 @@
 
   <header class="site-header">
     <nav class="site-nav" aria-label="Main">
-      <a href="index.html">Home</a>
-      <a href="projects.html" aria-current="page">Projects</a>
-      <a href="about.html">About</a>
+      <a href="index.html" data-de="Start">Home</a>
+      <a href="projects.html" aria-current="page" data-de="Projekte">Projects</a>
+      <a href="about.html" data-de="Über mich">About</a>
       <a href="vault/index.html">Vault</a>
     </nav>
-    <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" aria-pressed="false">
+    <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" data-de-label="Hell/Dunkel umschalten" aria-pressed="false">
       <span data-theme-icon>
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </span>
     </button>
   </header>
 
-  <div class="page-head page-head--project is-comfy">
-    <h1 class="page-head__title" id="page-title">ComfyUI &times; Krea 2 <span class="status">Featured</span></h1>
+  <div class="page-head page-head--project">
+    <h1 class="page-head__title" id="page-title">ComfyUI &times; Krea 2 <span class="status" data-de="Empfohlen">Featured</span></h1>
     <ul class="chips">
       <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/></svg>ComfyUI</li>
       <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Krea 2</li>
@@ -53,48 +53,48 @@
   <main class="page-body page-body--project" aria-labelledby="page-title">
     <article class="project reading">
 
-      <p class="project__lede">A ComfyUI workflow built around Krea 2 Turbo: a two-stage portrait pipeline that renders at 1152 × 1728, then refines the same seed through a 2× latent upscale.</p>
+      <p class="project__lede" data-de="Ein ComfyUI-Workflow rund um Krea 2 Turbo: eine zweistufige Porträt-Pipeline, die mit 1152 × 1728 rendert und danach denselben Seed über ein 2×-Latent-Upscale verfeinert.">A ComfyUI workflow built around Krea 2 Turbo: a two-stage portrait pipeline that renders at 1152 × 1728, then refines the same seed through a 2× latent upscale.</p>
 
       <section class="project__section" aria-labelledby="lbl-pipeline">
-        <h2 class="section-label" id="lbl-pipeline">How the pipeline works</h2>
+        <h2 class="section-label" id="lbl-pipeline" data-de="Wie die Pipeline arbeitet">How the pipeline works</h2>
         <ol class="steps">
-          <li><span><b>Base pass — </b>1152 × 1728, 8 steps, denoise 1.0. CFG stays at <code>1.0</code> because Krea 2 Turbo expects it, which also makes the negative prompt inert.</span></li>
-          <li><span><b>Latent upscale — </b>2.0× using bislerp, with no decode between the stages.</span></li>
-          <li><span><b>Refine pass — </b>3 steps at denoise 0.4 on the <em>same seed</em>, so the refine sharpens the base composition instead of redrawing it.</span></li>
-          <li><span><b>Compare — </b>an rgthree Image Comparer node holds base and refined output side by side, which is how the step and denoise numbers above were settled on.</span></li>
+          <li><span data-de='<b>Base-Pass — </b>1152 × 1728, 8 Steps, Denoise 1.0. CFG bleibt bei <code>1.0</code>, weil Krea 2 Turbo das so erwartet — womit auch der Negative Prompt wirkungslos ist.'><b>Base pass — </b>1152 × 1728, 8 steps, denoise 1.0. CFG stays at <code>1.0</code> because Krea 2 Turbo expects it, which also makes the negative prompt inert.</span></li>
+          <li><span data-de='<b>Latent-Upscale — </b>2.0× mit bislerp, ohne Decode zwischen den Stufen.'><b>Latent upscale — </b>2.0× using bislerp, with no decode between the stages.</span></li>
+          <li><span data-de='<b>Refine-Pass — </b>3 Steps bei Denoise 0.4 auf <em>demselben Seed</em>, damit der Refine die Basis-Komposition schärft, statt sie neu zu zeichnen.'><b>Refine pass — </b>3 steps at denoise 0.4 on the <em>same seed</em>, so the refine sharpens the base composition instead of redrawing it.</span></li>
+          <li><span data-de='<b>Vergleich — </b>ein rgthree Image Comparer hält Basis und verfeinerte Ausgabe nebeneinander — so wurden die Step- und Denoise-Werte oben überhaupt festgelegt.'><b>Compare — </b>an rgthree Image Comparer node holds base and refined output side by side, which is how the step and denoise numbers above were settled on.</span></li>
         </ol>
       </section>
 
       <section class="project__section" aria-labelledby="lbl-expects">
-        <h2 class="section-label" id="lbl-expects">What it expects</h2>
+        <h2 class="section-label" id="lbl-expects" data-de="Was es erwartet">What it expects</h2>
         <div class="table-wrap">
           <table class="spec-table">
-            <thead><tr><th>Slot</th><th>File</th></tr></thead>
+            <thead><tr><th>Slot</th><th data-de="Datei">File</th></tr></thead>
             <tbody>
             <tr><td>UNET</td><td><code>krea2TurboFP8_krea2TURBO.safetensors</code></td></tr>
-            <tr><td>CLIP</td><td><code>qwen3vl_4b_fp8_scaled.safetensors</code> (type <code>krea2</code>)</td></tr>
+            <tr><td>CLIP</td><td data-de='<code>qwen3vl_4b_fp8_scaled.safetensors</code> (Typ <code>krea2</code>)'><code>qwen3vl_4b_fp8_scaled.safetensors</code> (type <code>krea2</code>)</td></tr>
             <tr><td>VAE</td><td><code>qwen_image_vae.safetensors</code></td></tr>
-            <tr><td>Custom nodes</td><td><code>rgthree-comfy</code>, for the Image Comparer</td></tr>
+            <tr><td data-de="Custom Nodes">Custom nodes</td><td data-de='<code>rgthree-comfy</code>, für den Image Comparer'><code>rgthree-comfy</code>, for the Image Comparer</td></tr>
             </tbody>
           </table>
         </div>
       </section>
 
       <section class="project__section" aria-labelledby="lbl-publishing">
-        <h2 class="section-label" id="lbl-publishing">Publishing</h2>
-        <p>The graph carries five LoRA slots under one shared strength control, so a look can be dialled in without rewiring anything.</p>
-        <div class="note"><code>tools/sanitize.py</code> generates the public copy from the private working file, stripping <strong>LoRA names and strengths, prompts, absolute paths and seeds</strong> — the published workflow is the structure, not anyone's settings.</div>
+        <h2 class="section-label" id="lbl-publishing" data-de="Veröffentlichen">Publishing</h2>
+        <p data-de="Der Graph trägt fünf LoRA-Slots unter einer gemeinsamen Stärke-Steuerung, damit sich ein Look einstellen lässt, ohne etwas neu zu verkabeln.">The graph carries five LoRA slots under one shared strength control, so a look can be dialled in without rewiring anything.</p>
+        <div class="note" data-de='<code>tools/sanitize.py</code> erzeugt die öffentliche Kopie aus der privaten Arbeitsdatei und entfernt dabei <strong>LoRA-Namen und -Stärken, Prompts, absolute Pfade und Seeds</strong> — veröffentlicht wird die Struktur, nicht jemandes Einstellungen.'><code>tools/sanitize.py</code> generates the public copy from the private working file, stripping <strong>LoRA names and strengths, prompts, absolute paths and seeds</strong> — the published workflow is the structure, not anyone's settings.</div>
       </section>
 
       <figure class="figure">
-        <img src="assets/graph.png" alt="The ComfyUI node graph: a Models column of five LoRA slots under one Master Strength control, feeding Stage 1 (Base, 1152×1728) and Stage 2 (Refine, latent upscale) with an rgthree Compare node between the two outputs." loading="lazy" decoding="async">
-        <figcaption>The full workflow — Models and LoRA stack on the left, Base and Refine stages on the right, joined by the Compare node.</figcaption>
+        <img src="assets/graph.png" alt="The ComfyUI node graph: a Models column of five LoRA slots under one Master Strength control, feeding Stage 1 (Base, 1152×1728) and Stage 2 (Refine, latent upscale) with an rgthree Compare node between the two outputs." data-de-alt="Der ComfyUI-Node-Graph: eine Models-Spalte mit fünf LoRA-Slots unter einer Master-Strength-Steuerung, die Stufe 1 (Base, 1152×1728) und Stufe 2 (Refine, Latent-Upscale) speist, dazwischen ein rgthree-Compare-Node für die beiden Ausgaben." loading="lazy" decoding="async">
+        <figcaption data-de="Der ganze Workflow — Models und LoRA-Stack links, Base- und Refine-Stufe rechts, verbunden durch den Compare-Node.">The full workflow — Models and LoRA stack on the left, Base and Refine stages on the right, joined by the Compare node.</figcaption>
       </figure>
 
       <details class="reveal">
         <summary class="reveal__summary">
-          <h2 class="section-label">Walkthrough</h2>
-          <span class="reveal__hint">1 clip &middot; 16 MB</span>
+          <h2 class="section-label" data-de="Rundgang">Walkthrough</h2>
+          <span class="reveal__hint" data-de="1 Clip &middot; 16 MB">1 clip &middot; 16 MB</span>
           <span class="reveal__mark" aria-hidden="true">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </span>
@@ -103,7 +103,7 @@
         <div class="reveal__body">
           <div class="mediarow mediarow--wide">
             <div class="mediarow__frame">
-              <video class="mediarow__media" src="assets/comfyui.mp4" width="1920" height="1080" autoplay loop muted playsinline preload="none" aria-label="A screen recording panning across the workflow in ComfyUI and zooming in on the note cards, the model column and the two sampler nodes."></video>
+              <video class="mediarow__media" src="assets/comfyui.mp4" width="1920" height="1080" autoplay loop muted playsinline preload="none" aria-label="A screen recording panning across the workflow in ComfyUI and zooming in on the note cards, the model column and the two sampler nodes." data-de-label="Eine Bildschirmaufnahme, die über den Workflow in ComfyUI schwenkt und auf die Notizkarten, die Modellspalte und die beiden Sampler-Nodes zoomt."></video>
               <button class="clip-btn clip-btn--play" type="button" data-clip-toggle aria-label="Pause clip">
                 <span data-clip-icon="pause">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="9" y1="4" x2="9" y2="20"/><line x1="15" y1="4" x2="15" y2="20"/></svg>
@@ -123,9 +123,9 @@
               <div class="clip-track" data-clip-track aria-hidden="true"><span class="clip-track__fill" data-clip-fill></span></div>
             </div>
             <div class="mediarow__text reading">
-              <h3 class="mediarow__title">The graph, moving</h3>
-              <p>Twenty seconds across the same graph as the still above, at a zoom where the nodes can be read &mdash; the models column, both samplers, and the Quick Switches group that bypasses the LoRA stack.</p>
-              <p>The prompts and LoRA slots are empty because this is the published copy, not the working file.</p>
+              <h3 class="mediarow__title" data-de="Der Graph, in Bewegung">The graph, moving</h3>
+              <p data-de="Zwanzig Sekunden über denselben Graphen wie im Bild darüber, in einem Zoom, in dem die Nodes lesbar sind &mdash; die Modellspalte, beide Sampler und die Quick-Switches-Gruppe, die den LoRA-Stack umgeht.">Twenty seconds across the same graph as the still above, at a zoom where the nodes can be read &mdash; the models column, both samplers, and the Quick Switches group that bypasses the LoRA stack.</p>
+              <p data-de="Die Prompts und LoRA-Slots sind leer, weil das die veröffentlichte Kopie ist und nicht die Arbeitsdatei.">The prompts and LoRA slots are empty because this is the published copy, not the working file.</p>
             </div>
           </div>
         </div>
@@ -133,19 +133,19 @@
 
       <dl class="datarow">
         <div class="datarow__cell">
-          <dt>Type</dt>
-          <dd>Node-graph workflow</dd>
+          <dt data-de="Typ">Type</dt>
+          <dd data-de="Node-Graph-Workflow">Node-graph workflow</dd>
         </div>
         <div class="datarow__cell">
           <dt>Nodes</dt>
           <dd>21</dd>
         </div>
         <div class="datarow__cell">
-          <dt>Output</dt>
+          <dt data-de="Ausgabe">Output</dt>
           <dd>1152 × 1728</dd>
         </div>
         <div class="datarow__cell">
-          <dt>Licence</dt>
+          <dt data-de="Lizenz">Licence</dt>
           <dd>MIT</dd>
         </div>
       </dl>
@@ -156,17 +156,17 @@
       <h2 class="section-label" id="lbl-links">Links</h2>
       <ul>
         <li>
-          <a href="https://github.com/kiraa1q/Workflows" target="_blank" rel="noopener">
-            <span class="linklist__label">kiraa1q/Workflows</span>
+          <a href="https://github.com/7qob/Workflows" target="_blank" rel="noopener">
+            <span class="linklist__label">7qob/Workflows</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
           </a>
         </li>
       </ul>
     </nav>
 
-    <nav class="pager" aria-label="More projects">
+    <nav class="pager" aria-label="More projects" data-de-label="Weitere Projekte">
       <a class="pager__next" href="project-ignite.html">
-        <span class="pager__dir">Next &rarr;</span>
+        <span class="pager__dir" data-de="Weiter &rarr;">Next &rarr;</span>
         <span>Ignite</span>
       </a>
     </nav>
@@ -174,9 +174,9 @@
 
   <!-- Legal + credit only. Navigation is in the header. -->
   <footer class="site-footer">
-    <span class="site-footer__meta">&copy; <span id="year"></span> kiraa1q &middot; v1.0.0</span>
+    <span class="site-footer__meta">&copy; <span id="year"></span> 7qob &middot; v1.0.0</span>
     <a href="impressum.html">Impressum</a>
-    <a href="https://github.com/kiraa1q" target="_blank" rel="noopener">GitHub<svg class="footer-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></a>
+    <a href="https://github.com/7qob" target="_blank" rel="noopener">GitHub<svg class="footer-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></a>
   </footer>
 
   <script src="script.js"></script>

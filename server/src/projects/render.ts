@@ -5,6 +5,11 @@
  * works over file://, makes zero API calls. Every class emitted here already
  * exists in style.css; this file adds no CSS and expects none.
  *
+ * Two languages: the chrome this file emits carries its German in data-de,
+ * the same attribute the hand-written pages use and the same one script.js
+ * swaps. What comes out of the database — headings, paragraphs, ledes, blurbs,
+ * chips — is emitted in the language it was authored in and is not translated.
+ *
  * Security stance: every author-supplied value passes through esc() first. The
  * only markup an author can produce is [text](url) and `code`, applied AFTER
  * escaping and with the href checked against SAFE_HREF. The one style attribute
@@ -29,6 +34,8 @@ export interface PageProject {
   slug: string;
   title: string;
   status: string | null;
+  /** The picture on the index row, already resolved. Null renders no rail. */
+  cover: MediaRef | null;
   accent: string | null;
   homeSlot: string | null;
   repoUrl: string | null;
@@ -161,11 +168,11 @@ const FAVICON =
 
 function head(title: string, ogType: string, p: string): string {
   return `<!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${esc(title)} · kiraa1q</title>
+  <title>${esc(title)} · 7qob</title>
   <meta name="description" content="">
 
   <!-- Open Graph (empty — fill before sharing) -->
@@ -194,12 +201,12 @@ function head(title: string, ogType: string, p: string): string {
 function header(p: string): string {
   return `  <header class="site-header">
     <nav class="site-nav" aria-label="Main">
-      <a href="${p}index.html">Home</a>
-      <a href="${p}projects.html" aria-current="page">Projects</a>
-      <a href="${p}about.html">About</a>
+      <a href="${p}index.html" data-de="Start">Home</a>
+      <a href="${p}projects.html" aria-current="page" data-de="Projekte">Projects</a>
+      <a href="${p}about.html" data-de="Über mich">About</a>
       <a href="${p}vault/index.html">Vault</a>
     </nav>
-    <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" aria-pressed="false">
+    <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" data-de-label="Hell/Dunkel umschalten" aria-pressed="false">
       <span data-theme-icon>
         ${ICON_MOON}
       </span>
@@ -210,9 +217,9 @@ function header(p: string): string {
 
 function footer(p: string): string {
   return `  <footer class="site-footer">
-    <span class="site-footer__meta">&copy; <span id="year"></span> kiraa1q &middot; v1.0.0</span>
+    <span class="site-footer__meta">&copy; <span id="year"></span> 7qob &middot; v1.0.0</span>
     <a href="${p}impressum.html">Impressum</a>
-    <a href="https://github.com/kiraa1q" target="_blank" rel="noopener">GitHub<svg class="footer-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></a>
+    <a href="https://github.com/7qob" target="_blank" rel="noopener">GitHub<svg class="footer-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></a>
   </footer>
 
   <script src="${p}script.js"></script>
@@ -244,6 +251,7 @@ function band(opts: {
   inner: string;
   collapsible: boolean;
   hint?: string;
+  hintDe?: string;
   bodyClass?: string;
 }): string {
   if (!opts.collapsible) {
@@ -254,7 +262,10 @@ ${indent(opts.inner, '        ')}
 `;
   }
 
-  const hint = opts.hint ? `\n          <span class="reveal__hint">${opts.hint}</span>` : '';
+  const de = opts.hintDe ? ` data-de="${opts.hintDe}"` : '';
+  const hint = opts.hint
+    ? `\n          <span class="reveal__hint"${de}>${opts.hint}</span>`
+    : '';
 
   return `      <details class="reveal">
         <summary class="reveal__summary">
@@ -326,6 +337,7 @@ ${text}
     inner: rows,
     collapsible: b.collapsible,
     hint: `${n} clip${n === 1 ? '' : 's'} &middot; ${formatBytes(totalBytes)}`,
+    hintDe: `${n} Clip${n === 1 ? '' : 's'} &middot; ${formatBytes(totalBytes)}`,
   });
 }
 
@@ -337,13 +349,13 @@ function renderBlock(b: Block, index: number, media: MediaLookup, p: string): st
 function repoLink(url: string): string {
   const label = url.replace(/^https:\/\//i, '').replace(/\/+$/, '');
   return `    <nav class="linklist" aria-labelledby="lbl-repo">
-      <h2 class="section-label" id="lbl-repo">Source</h2>
+      <h2 class="section-label" id="lbl-repo" data-de="Quellcode">Source</h2>
       <ul>
         <li>
           <a href="${esc(url)}" target="_blank" rel="noopener">
             <span class="linklist__label">${esc(label)}</span>
             ${ICON_EXTERNAL}
-            <span class="linklist__note">The repository this page describes.</span>
+            <span class="linklist__note" data-de="Das Repository, das diese Seite beschreibt.">The repository this page describes.</span>
           </a>
         </li>
       </ul>
@@ -391,18 +403,18 @@ ${chipList(project.chips, '    ')}  </div>
   if (prev || next) {
     const prevLink = prev
       ? `      <a class="pager__prev" href="${p}project-${esc(prev.slug)}.html">
-        <span class="pager__dir">&larr; Previous</span>
+        <span class="pager__dir" data-de="&larr; Zurück">&larr; Previous</span>
         <span>${esc(prev.title)}</span>
       </a>\n`
       : '';
     const nextLink = next
       ? `      <a class="pager__next" href="${p}project-${esc(next.slug)}.html">
-        <span class="pager__dir">Next &rarr;</span>
+        <span class="pager__dir" data-de="Weiter &rarr;">Next &rarr;</span>
         <span>${esc(next.title)}</span>
       </a>\n`
       : '';
     html += `
-    <nav class="pager" aria-label="More projects">
+    <nav class="pager" aria-label="More projects" data-de-label="Weitere Projekte">
 ${prevLink}${nextLink}    </nav>
 `;
   }
@@ -418,14 +430,17 @@ ${prevLink}${nextLink}    </nav>
 function projectCard(proj: PageProject, opts: { area: string; large: boolean; p: string }): string {
   const id = `p-${esc(proj.slug)}`;
   const accent = accentAttrs(proj.accent);
-  const label = proj.status === 'Featured' ? `${ICON_STAR}Featured` : `${ICON_FOLDER}Project`;
+  const label =
+    proj.status === 'Featured'
+      ? `${ICON_STAR}<span data-de="Empfohlen">Featured</span>`
+      : `${ICON_FOLDER}<span data-de="Projekt">Project</span>`;
   const wip = proj.status === 'WIP' ? `\n          <span class="status">WIP</span>` : '';
   const blurb = proj.cardBlurb ?? proj.lede ?? '';
   const nameClass = `project-box__name${opts.large ? ' project-box__name--lg' : ''}`;
   const body = `${chipList(proj.chips, '          ')}          <p class="box__text">${inline(blurb)}</p>`;
 
   return `      <section class="box box--link box--edge${accent.cls} area-${opts.area}"${accent.style} aria-labelledby="${id}">
-        <a class="stretched-link" href="${opts.p}project-${esc(proj.slug)}.html" aria-label="${esc(proj.title)} — project page"></a>
+        <a class="stretched-link" href="${opts.p}project-${esc(proj.slug)}.html" aria-label="${esc(proj.title)} — project page" data-de-label="${esc(proj.title)} — Projektseite"></a>
         <span class="box-arrow" aria-hidden="true">
           ${ICON_BOX_ARROW}
         </span>
@@ -441,20 +456,40 @@ ${body}
 
 /**
  * A row on the projects index: the same band every other subpage is built from
- * — hairline, heading, content — with the project's colour in the seam.
+ * — hairline, then content — with the project's colour at the end of the seam
+ * and its screenshot on the same 20rem rail a .mediarow uses. The eyebrow, the
+ * name and the chips are the bento card's, in the card's order, so the two
+ * indexes read as one thing.
+ *
+ * The cover is decorative: the row is already named by the stretched link, so
+ * an alt repeating the title would only be read out twice.
  */
 function projectRow(proj: PageProject, p: string): string {
   const accent = accentAttrs(proj.accent);
-  const status = proj.status ? ` <span class="status">${esc(proj.status)}</span>` : '';
+  const label =
+    proj.status === 'Featured'
+      ? `${ICON_STAR}<span data-de="Empfohlen">Featured</span>`
+      : `${ICON_FOLDER}<span data-de="Projekt">Project</span>`;
+  const wip = proj.status === 'WIP' ? `<span class="status">WIP</span>` : '';
   const blurb = proj.cardBlurb ?? proj.lede ?? '';
+  const img = proj.cover
+    ? `<img class="project-row__shot" src="${mediaSrc(proj.cover, p)}"${dims(proj.cover)}` +
+      ` loading="lazy" decoding="async" alt="">`
+    : '';
+  const shot = img ? `\n        ${img}` : '';
 
   return `      <li class="project-row${accent.cls}"${accent.style}>
-        <a class="stretched-link" href="${p}project-${esc(proj.slug)}.html" aria-label="${esc(proj.title)} — project page"></a>
-        <span class="box-arrow" aria-hidden="true">
-          ${ICON_BOX_ARROW}
-        </span>
-        <h2 class="section-label" id="p-${esc(proj.slug)}">${esc(proj.title)}${status}</h2>
-${chipList(proj.chips, '        ')}        <p>${inline(blurb)}</p>
+        <a class="stretched-link" href="${p}project-${esc(proj.slug)}.html" aria-label="${esc(proj.title)} — project page" data-de-label="${esc(proj.title)} — Projektseite"></a>${shot}
+        <div class="project-row__text">
+          <span class="box-arrow" aria-hidden="true">
+            ${ICON_BOX_ARROW}
+          </span>
+          <p class="box__label">${label}</p>
+          <div class="project-row__head">
+            <h2 class="project-row__name" id="p-${esc(proj.slug)}">${esc(proj.title)}</h2>${wip}
+          </div>
+          <p>${inline(blurb)}</p>
+${chipList(proj.chips, '          ')}        </div>
       </li>`;
 }
 
@@ -467,8 +502,8 @@ export function renderProjectsIndex(projects: PageProject[], opts: RenderOptions
   html += header(p);
   html += `
   <div class="page-head">
-    <h1 class="page-head__title" id="page-title">Projects</h1>
-    <p class="page-head__lede">Tools, servers and experiments — mostly things I wanted for myself first.</p>
+    <h1 class="page-head__title" id="page-title" data-de="Projekte">Projects</h1>
+    <p class="page-head__lede" data-de="Tools, Server und Experimente — meistens Dinge, die ich zuerst selbst haben wollte.">Tools, servers and experiments — mostly things I wanted for myself first.</p>
   </div>
 
   <main class="page-body" aria-labelledby="page-title">

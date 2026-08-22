@@ -37,6 +37,7 @@ export interface ProjectRow {
   status: string | null;
   home_slot: string | null;
   accent: string | null;
+  cover_media_id: number | null;
   repo_url: string | null;
   lede: string | null;
   card_blurb: string | null;
@@ -134,6 +135,7 @@ export class ProjectsService {
       status: row.status,
       homeSlot: row.home_slot,
       accent: row.accent,
+      coverMediaId: row.cover_media_id,
       repoUrl: row.repo_url,
       lede: row.lede,
       cardBlurb: row.card_blurb,
@@ -201,6 +203,7 @@ export class ProjectsService {
       status?: string | null;
       homeSlot?: string | null;
       accent?: string | null;
+      coverMediaId?: number | null;
       repoUrl?: string | null;
       lede?: string | null;
       cardBlurb?: string | null;
@@ -232,6 +235,9 @@ export class ProjectsService {
     const homeSlot = input.homeSlot === undefined ? row.home_slot : input.homeSlot || null;
     const accent = input.accent === undefined ? row.accent : input.accent || null;
     const repoUrl = input.repoUrl === undefined ? row.repo_url : input.repoUrl || null;
+    // 0 is what an empty <select> reads as, and it is no more an id than null.
+    const cover =
+      input.coverMediaId === undefined ? row.cover_media_id : input.coverMediaId || null;
 
     // One statement, one transaction: the slot swap below has to be part of
     // the same write, or a failure halfway leaves a cell holding nobody.
@@ -241,8 +247,8 @@ export class ProjectsService {
       this.database.db
         .prepare(
           `UPDATE projects SET
-             slug = ?, title = ?, status = ?, home_slot = ?, accent = ?, repo_url = ?,
-             lede = ?, card_blurb = ?,
+             slug = ?, title = ?, status = ?, home_slot = ?, accent = ?,
+             cover_media_id = ?, repo_url = ?, lede = ?, card_blurb = ?,
              chips = ?, blocks = ?, sort_order = ?, visible = ?,
              updated_at = datetime('now')
            WHERE id = ?`,
@@ -253,6 +259,7 @@ export class ProjectsService {
           input.status === undefined ? row.status : input.status,
           homeSlot,
           accent === null ? null : accent.toLowerCase(),
+          cover,
           repoUrl,
           input.lede === undefined ? row.lede : input.lede,
           input.cardBlurb === undefined ? row.card_blurb : input.cardBlurb,
@@ -316,6 +323,11 @@ export class ProjectsService {
     // Refuse before touching disk if the page depends on missing uploads.
     const blocks = JSON.parse(row.blocks) as Block[];
     this.mediaLookupFor(blocks);
+    if (row.cover_media_id !== null && !this.mediaRef(row.cover_media_id)) {
+      throw new BadRequestException(
+        `The cover picture no longer exists (media id ${row.cover_media_id}).`,
+      );
+    }
 
     this.database.db
       .prepare(`UPDATE projects SET published_at = datetime('now') WHERE id = ?`)
@@ -430,6 +442,9 @@ export class ProjectsService {
       slug: row.slug,
       title: row.title,
       status: row.status,
+      // A cover deleted between publishes drops the rail rather than the page:
+      // publish() already refused the case an author can still fix.
+      cover: row.cover_media_id === null ? null : this.mediaRef(row.cover_media_id),
       accent: row.accent,
       homeSlot: row.home_slot,
       repoUrl: row.repo_url,
@@ -461,6 +476,22 @@ export class ProjectsService {
     return { prev: toNeighbour(chain[i - 1]), next: toNeighbour(chain[i + 1]) };
   }
 
+  /** One upload by id, or null if it is gone. */
+  private mediaRef(id: number): MediaRef | null {
+    const m = this.database.db.prepare('SELECT * FROM media WHERE id = ?').get(id) as
+      | MediaRow
+      | undefined;
+    if (!m) return null;
+    return {
+      filename: m.filename,
+      originalName: m.original_name,
+      mime: m.mime,
+      sizeBytes: m.size_bytes,
+      width: m.width,
+      height: m.height,
+    };
+  }
+
   /**
    * Loads every media row the blocks reference, and throws a 400 naming the
    * missing ids if any upload has since been deleted.
@@ -470,19 +501,8 @@ export class ProjectsService {
     const map = new Map<number, MediaRef>();
 
     for (const id of ids) {
-      const m = this.database.db.prepare('SELECT * FROM media WHERE id = ?').get(id) as
-        | MediaRow
-        | undefined;
-      if (m) {
-        map.set(id, {
-          filename: m.filename,
-          originalName: m.original_name,
-          mime: m.mime,
-          sizeBytes: m.size_bytes,
-          width: m.width,
-          height: m.height,
-        });
-      }
+      const ref = this.mediaRef(id);
+      if (ref) map.set(id, ref);
     }
 
     const missing = ids.filter((id) => !map.has(id));

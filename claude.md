@@ -21,7 +21,6 @@ impressum.html      legal + Datenschutz (school requirement)
 login.html          sign-in for the vault
 admin.html          admin panel (admins only)
 vault/index.html    private document list — an empty shell, filled by the API
-vault-locked.html   retired, redirects to login.html
 style.css           all styling, one file
 script.js           shared behaviour, loaded by every page
 admin.js            admin panel only
@@ -46,6 +45,45 @@ over `file://` or on GitHub Pages with no backend at all. Only the vault,
 login and admin pages need the API, and each degrades to a plain message
 rather than a broken screen when it is absent. **Keep it that way** — do not
 introduce an API call into a page that does not need one.
+
+## Two languages
+
+The site is English by default with a German version of every text, switched by
+the **DE / EN button in the header**, next to the theme toggle. The choice is
+kept in `localStorage.lang` and `<html lang>` follows it.
+
+There is **no dictionary file and no build step**. The rules:
+
+- **The markup is the English.** The German lives beside it in a `data-de`
+  attribute on the same element, so a sentence and its translation are edited in
+  one place and cannot drift apart. `applyLang()` in `script.js` swaps them.
+- **Three attribute twins**: `data-de-label` for `aria-label`, `data-de-alt` for
+  `alt`, `data-de-title` for `title`. That is the whole list.
+- **The swap is `innerHTML`**, so a `data-de` may carry the same inline markup
+  its element does — use a single-quoted attribute when it contains `"`.
+  It is author-written, from this repo, as trusted as the tag it sits on. Never
+  point it at anything a user typed; the admin panel's `textContent` rule is
+  untouched by this.
+- **Do not nest `data-de` inside `data-de`** — the outer swap replaces the inner
+  element.
+- **Strings that exist only in JS use `t(en, de)`** rather than a key. Text that
+  JS wrote is re-written on a switch: `setText()` for a plain message,
+  `onLangChange()` for anything that has to be redrawn (the contributions graph,
+  the vault rows, the filter bar's count).
+- **The button is built by `script.js`**, not written into every page — the same
+  reason the projects filter is: without JS it could switch nothing.
+- **Product names are not translated.** React, Rust, KoboldCpp, Vault, GitHub,
+  Impressum and the project names read the same in both languages, and the
+  filter chips are built from them.
+- The Impressum was the one page written in German. It is flipped, not
+  rewritten: the German is verbatim in `data-de`, the English is the markup.
+
+`render.ts` emits the same `data-de` attributes on the chrome it generates —
+nav, pager, `Source`, the reveal hint, the `Featured` / `Project` eyebrow. What
+comes **out of the database is not translated**: a project's heading, lede,
+blurb and paragraphs are published in the language they were authored in. A
+bilingual CMS would mean a second column per field, and the panel does not have
+one.
 
 ## Design rules (unchanged, still binding)
 
@@ -76,11 +114,21 @@ measure column it was before.
   `.project__section`, `.project-row`, `.reveal`, `.figure`, `.datarow` and
   `.linklist`. The lede is the only block above the first seam.
 - **The projects index is bands too, not cards.** One `.project-row` per
-  project — seam, name, chips, blurb, corner arrow — on the same
-  `--measure-wide` rail as a project page, so the list and the page it opens
-  read as one document. The row's seam carries the project's own accent the
-  way `.page-head--project` does. The old two-column `.project-grid` and its
-  `is-wide` split are gone; cards live on the bento home page only.
+  project — seam, screenshot, eyebrow, name, blurb, chips, corner arrow — on
+  the same `--measure-wide` rail as a project page, so the list and the page it
+  opens read as one document. The picture sits on `.mediarow`'s 20rem rail and
+  is cropped to 16:9, so four differently shaped screenshots do not give the
+  list four rhythms; a project with no cover drops the rail and takes the full
+  width. The seam is **painted, not bordered**: neutral to 68%, then the
+  project's shade / brand / tint on the same stops as `.box--edge`, so the
+  colour arrives at the end of the rule exactly as it does on a bento card.
+  `--seam` is the neutral run and hover is the only thing that moves it. The
+  old two-column `.project-grid` and its `is-wide` split are gone; cards live
+  on the bento home page only.
+- **The index's filter bar is built by `script.js` from the chips already in
+  the rows.** The technologies are never written down twice, and a page with
+  no JS shows the whole list rather than buttons that do nothing. It is the
+  one piece of the index that is not in the markup.
 - **Five type sizes, all from `--fs-*` tokens**: `--fs-name`, `--fs-subtitle`,
   `--fs-heading`, `--fs-lede`, `--fs-body`, plus `--fs-caption` for labels. A
   literal `rem` value in a rule is a bug.
@@ -143,6 +191,11 @@ grid's area map, so the bento stays full at four projects and at one.
 Everything else in `index.html` is hand-written and never parsed. Its base is
 `PAGES_DIR/index.html` if one exists, else `HOME_TEMPLATE`.
 
+A project's index picture is **one upload id in `cover_media_id`**, chosen in
+the panel and shown on the index row and nowhere else — not on the bento card,
+not on the project page. Publish refuses if it has been deleted, and
+`MediaService.remove` refuses to delete an upload a project still covers with.
+
 A project's colour is **one `#rrggbb` in the `accent` column**, emitted as
 `class="… is-custom" style="--edge-brand:…"`. The four `.is-comfy` /
 `.is-ignite` / `.is-kobui` / `.is-stalkr` palettes are gone; `.is-custom`
@@ -187,8 +240,8 @@ The four original `project-*.html` files are still on disk and still answer
 their URLs, but nothing links to them any more: the home page's cards, the
 projects index and the pagers all come from the database. They are kept so old
 links do not break, and they are the one place the pre-rebuild markup can
-still be read. They carry no accent — the palette classes they name no longer
-exist — so they wear the site accent.
+still be read. They carry no accent — the palette classes were
+stripped with the rest of them — so they wear the site accent.
 
 `index.html` and `projects.html` are rsynced as before, but nginx serves the
 generated copies first for those two URLs (`location = /` in
@@ -228,12 +281,15 @@ adjusting this line get it wrong without you.
 - **Native modules.** `better-sqlite3` and `argon2` need a compiler. They are
   built in CI inside the Docker image and never on the Pi — and they will not
   install on a Node version without prebuilds unless Python is present.
-- **Commits carry no AI attribution.** Author is `kiraa1q`, no
+- **Commits carry no AI attribution.** Author is `7qob`, no
   `Co-Authored-By` trailer, no mention of Claude anywhere.
+- **A generated page carries only the German the renderer knows.** The chrome
+  switches; the project's own words do not, because they are database text.
 - **A markup change in the renderer needs a Publish to take effect.** The
   generated `projects.html` on the Pi was written by the renderer that shipped
-  before it. After deploying the band-list index, publish once so the live page
-  stops asking for `.project-grid`, which no longer exists in `style.css`.
+  before it. After deploying the picture-rail index, publish once — the live
+  page is still asking for `.project-row > .section-label`, which no longer
+  exists in `style.css`, and no row will carry a cover until it is republished.
 
 ## Deployment
 

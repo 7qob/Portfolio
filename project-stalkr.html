@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stalkr · kiraa1q</title>
+  <title>Stalkr · 7qob</title>
   <meta name="description" content="">
 
   <!-- Open Graph (empty — fill before sharing) -->
@@ -29,19 +29,19 @@
 
   <header class="site-header">
     <nav class="site-nav" aria-label="Main">
-      <a href="index.html">Home</a>
-      <a href="projects.html" aria-current="page">Projects</a>
-      <a href="about.html">About</a>
+      <a href="index.html" data-de="Start">Home</a>
+      <a href="projects.html" aria-current="page" data-de="Projekte">Projects</a>
+      <a href="about.html" data-de="Über mich">About</a>
       <a href="vault/index.html">Vault</a>
     </nav>
-    <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" aria-pressed="false">
+    <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" data-de-label="Hell/Dunkel umschalten" aria-pressed="false">
       <span data-theme-icon>
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </span>
     </button>
   </header>
 
-  <div class="page-head page-head--project is-stalkr">
+  <div class="page-head page-head--project">
     <h1 class="page-head__title" id="page-title">Stalkr</h1>
     <ul class="chips">
         <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="10" ry="4.2"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(120 12 12)"/></svg>React</li>
@@ -54,41 +54,41 @@
   <main class="page-body page-body--project" aria-labelledby="page-title">
     <article class="project reading">
 
-      <p class="project__lede">A full-stack dashboard for a Minecraft server: live status and player list for everyone, plus an authenticated admin side for server control, live logs and configuration.</p>
+      <p class="project__lede" data-de="Ein Full-Stack-Dashboard für einen Minecraft-Server: Live-Status und Spielerliste für alle, dazu ein Admin-Bereich mit Anmeldung für Serversteuerung, Live-Logs und Konfiguration.">A full-stack dashboard for a Minecraft server: live status and player list for everyone, plus an authenticated admin side for server control, live logs and configuration.</p>
 
       <section class="project__section" aria-labelledby="lbl-does">
-        <h2 class="section-label" id="lbl-does">What it does</h2>
+        <h2 class="section-label" id="lbl-does" data-de="Was es kann">What it does</h2>
         <ul class="feature-list">
-          <li>Live server status and player list</li>
-          <li>Admin login by password, issuing a JWT</li>
-          <li>Server control from the admin section</li>
-          <li>Live log view</li>
-          <li>Configuration from the browser</li>
-          <li>RCON connection and NBT parsing</li>
-          <li>Embedded BlueMap view (optional)</li>
+          <li data-de="Live-Serverstatus und Spielerliste">Live server status and player list</li>
+          <li data-de="Admin-Login per Passwort, das ein JWT ausstellt">Admin login by password, issuing a JWT</li>
+          <li data-de="Serversteuerung aus dem Admin-Bereich">Server control from the admin section</li>
+          <li data-de="Live-Ansicht der Logs">Live log view</li>
+          <li data-de="Konfiguration aus dem Browser">Configuration from the browser</li>
+          <li data-de="RCON-Verbindung und NBT-Parsing">RCON connection and NBT parsing</li>
+          <li data-de="Eingebettete BlueMap-Ansicht (optional)">Embedded BlueMap view (optional)</li>
         </ul>
       </section>
 
       <section class="project__section" aria-labelledby="lbl-wiring">
-        <h2 class="section-label" id="lbl-wiring">How it is wired</h2>
+        <h2 class="section-label" id="lbl-wiring" data-de="Wie es verdrahtet ist">How it is wired</h2>
         <div class="table-wrap">
           <table class="spec-table">
-            <thead><tr><th>Piece</th><th>Where</th><th>Notes</th></tr></thead>
+            <thead><tr><th data-de="Teil">Piece</th><th data-de="Wo">Where</th><th data-de="Hinweise">Notes</th></tr></thead>
             <tbody>
-            <tr><td>Client</td><td><code>:5173</code></td><td>React 19 + TypeScript on Vite</td></tr>
+            <tr><td>Client</td><td><code>:5173</code></td><td data-de="React 19 + TypeScript auf Vite">React 19 + TypeScript on Vite</td></tr>
             <tr><td>API</td><td><code>:4000</code></td><td>Express 5 + TypeScript</td></tr>
-            <tr><td>Minecraft</td><td>RCON</td><td>must be enabled on the server</td></tr>
-            <tr><td>BlueMap</td><td><code>:8100</code></td><td>optional, embedded in the dashboard</td></tr>
+            <tr><td>Minecraft</td><td>RCON</td><td data-de="muss auf dem Server aktiviert sein">must be enabled on the server</td></tr>
+            <tr><td>BlueMap</td><td><code>:8100</code></td><td data-de="optional, im Dashboard eingebettet">optional, embedded in the dashboard</td></tr>
             </tbody>
           </table>
         </div>
-        <div class="note"><code>server/.env</code> holds the host, RCON port and password, world path, cache path, JWT secret and admin password. Needs Node.js 20+ and npm 10+. Runs on a Raspberry Pi 5.</div>
+        <div class="note" data-de='<code>server/.env</code> hält Host, RCON-Port und -Passwort, Weltpfad, Cache-Pfad, JWT-Secret und Admin-Passwort. Braucht Node.js 20+ und npm 10+. Läuft auf einem Raspberry Pi 5.'><code>server/.env</code> holds the host, RCON port and password, world path, cache path, JWT secret and admin password. Needs Node.js 20+ and npm 10+. Runs on a Raspberry Pi 5.</div>
       </section>
 
       <details class="reveal">
         <summary class="reveal__summary">
-          <h2 class="section-label">Walkthrough</h2>
-          <span class="reveal__hint">1 clip</span>
+          <h2 class="section-label" data-de="Rundgang">Walkthrough</h2>
+          <span class="reveal__hint" data-de="1 Clip">1 clip</span>
           <span class="reveal__mark" aria-hidden="true">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </span>
@@ -96,11 +96,11 @@
 
         <div class="reveal__body">
           <div class="mediarow">
-            <img class="mediarow__media" src="assets/stalkr.gif" width="480" height="270" loading="lazy" decoding="async" alt="A screen recording of the Stalkr dashboard: live server status and the player list, then the admin side with the log view.">
+            <img class="mediarow__media" src="assets/stalkr.gif" width="480" height="270" loading="lazy" decoding="async" alt="A screen recording of the Stalkr dashboard: live server status and the player list, then the admin side with the log view." data-de-alt="Eine Bildschirmaufnahme des Stalkr-Dashboards: Live-Serverstatus und Spielerliste, danach der Admin-Bereich mit der Log-Ansicht.">
             <div class="mediarow__text reading">
-              <h3 class="mediarow__title">The dashboard, live</h3>
-              <p>The public side first &mdash; live status and the player list &mdash; then the admin login and what it unlocks: the log view, and server control going out over RCON.</p>
-              <p>Reading a real server on the Pi 5 it runs on, not a fixture.</p>
+              <h3 class="mediarow__title" data-de="Das Dashboard, live">The dashboard, live</h3>
+              <p data-de="Zuerst die öffentliche Seite &mdash; Live-Status und Spielerliste &mdash;, dann der Admin-Login und was er freischaltet: die Log-Ansicht und die Serversteuerung, die über RCON rausgeht.">The public side first &mdash; live status and the player list &mdash; then the admin login and what it unlocks: the log view, and server control going out over RCON.</p>
+              <p data-de="Liest einen echten Server auf dem Pi 5, auf dem es läuft, keine Testdaten.">Reading a real server on the Pi 5 it runs on, not a fixture.</p>
             </div>
           </div>
         </div>
@@ -108,8 +108,8 @@
 
       <dl class="datarow">
         <div class="datarow__cell">
-          <dt>Type</dt>
-          <dd>Full-stack dashboard</dd>
+          <dt data-de="Typ">Type</dt>
+          <dd data-de="Full-Stack-Dashboard">Full-stack dashboard</dd>
         </div>
         <div class="datarow__cell">
           <dt>Frontend</dt>
@@ -131,17 +131,17 @@
       <h2 class="section-label" id="lbl-links">Links</h2>
       <ul>
         <li>
-          <a href="https://github.com/kiraa1q/stalkr" target="_blank" rel="noopener">
-            <span class="linklist__label">kiraa1q/stalkr</span>
+          <a href="https://github.com/7qob/stalkr" target="_blank" rel="noopener">
+            <span class="linklist__label">7qob/stalkr</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
           </a>
         </li>
       </ul>
     </nav>
 
-    <nav class="pager" aria-label="More projects">
+    <nav class="pager" aria-label="More projects" data-de-label="Weitere Projekte">
       <a class="pager__prev" href="project-kobui.html">
-        <span class="pager__dir">&larr; Previous</span>
+        <span class="pager__dir" data-de="&larr; Zurück">&larr; Previous</span>
         <span>Kobui</span>
       </a>
     </nav>
@@ -149,9 +149,9 @@
 
   <!-- Legal + credit only. Navigation is in the header. -->
   <footer class="site-footer">
-    <span class="site-footer__meta">&copy; <span id="year"></span> kiraa1q &middot; v1.0.0</span>
+    <span class="site-footer__meta">&copy; <span id="year"></span> 7qob &middot; v1.0.0</span>
     <a href="impressum.html">Impressum</a>
-    <a href="https://github.com/kiraa1q" target="_blank" rel="noopener">GitHub<svg class="footer-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></a>
+    <a href="https://github.com/7qob" target="_blank" rel="noopener">GitHub<svg class="footer-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></a>
   </footer>
 
   <script src="script.js"></script>

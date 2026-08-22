@@ -1385,6 +1385,18 @@ function buildProjectEditor(host, record, mediaRows, allProjects) {
   blurbWrap.appendChild(blurbField);
   grid.appendChild(blurbWrap);
 
+  // Index-facing, like the card text above it: the picture is what tells the
+  // rows apart now that a project's colour is one hairline at the seam's end.
+  var coverWrap = el("div", "pe-field pe-field--wide");
+  coverWrap.appendChild(el("span", "pe-field__label", "Cover picture"));
+  var cover = mediaPicker(mediaRows, record.coverMediaId,
+    "image/png,image/jpeg,image/webp,image/gif");
+  coverWrap.appendChild(cover.root);
+  coverWrap.appendChild(el("span", "pe-field__hint",
+    "The picture beside this project on the projects index, cropped to 16:9. " +
+    "Leave it empty and the row is words only."));
+  grid.appendChild(coverWrap);
+
   var statusSelect = peSelect([["", "—"], ["WIP", "WIP"], ["Featured", "Featured"]], record.status);
   grid.appendChild(peField("Status", statusSelect, null, false));
 
@@ -1522,6 +1534,7 @@ function buildProjectEditor(host, record, mediaRows, allProjects) {
       title: titleInput.value.trim(),
       status: statusSelect.value || null,
       accent: accent.read(),
+      coverMediaId: cover.read() || null,
       repoUrl: repoInput.value.trim() || null,
       lede: ledeArea.value.trim() || null,
       cardBlurb: blurbToggle.input.checked ? (blurbArea.value.trim() || null) : null,

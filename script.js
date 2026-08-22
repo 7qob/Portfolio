@@ -1,7 +1,113 @@
 /* Shared behaviour, loaded by every page. Every init below is a no-op when the
    page has none of its elements, so one file serves all of them. ES5 on
    purpose: no build step, and it has to run straight off disk over file://. */
+/* ---- Language ----------------------------------------------------------
+   Two languages, no dictionary file. The English is the markup; the German sits
+   next to it in a data-de attribute, so a sentence and its translation are
+   edited in the same place and cannot drift apart. Strings that exist only in
+   JS use t(en, de) for the same reason.
+
+   The swap is innerHTML because a data-de carries the same inline markup its
+   element does. It is author-written, from this repo, exactly as trusted as the
+   tag it sits on — never point it at anything a user typed. Do not nest data-de
+   inside data-de: the outer swap replaces the inner element. */
+var LANG_KEY = "lang";
+var lang = readLang();
+var langHooks = [];   // redraws for text JS wrote; markup re-swaps itself
+
+/* The German attribute, and the attribute it stands in for. */
+var LANG_ATTRS = [
+  ["data-de-label", "aria-label"],
+  ["data-de-alt", "alt"],
+  ["data-de-title", "title"]
+];
+
+function readLang() {
+  try {
+    if (localStorage.getItem(LANG_KEY) === "de") return "de";
+  } catch (e) {}
+  return "en";
+}
+
+function t(en, de) {
+  return lang === "de" ? de : en;
+}
+
+function onLangChange(fn) {
+  langHooks.push(fn);
+}
+
+/* Text written by JS rather than by the markup: set now, and again on a switch. */
+function setText(el, en, de) {
+  if (!el) return;
+  var write = function () { el.textContent = t(en, de); };
+  write();
+  onLangChange(write);
+}
+
+function applyLang() {
+  document.documentElement.setAttribute("lang", lang);
+
+  var nodes = document.querySelectorAll("[data-de]");
+  for (var i = 0; i < nodes.length; i++) {
+    var el = nodes[i];
+    if (el.langEn === undefined) el.langEn = el.innerHTML;
+    el.innerHTML = lang === "de" ? el.getAttribute("data-de") : el.langEn;
+  }
+
+  for (var a = 0; a < LANG_ATTRS.length; a++) {
+    var from = LANG_ATTRS[a][0];
+    var to = LANG_ATTRS[a][1];
+    var cache = "langEn_" + to;
+    var tagged = document.querySelectorAll("[" + from + "]");
+
+    for (var j = 0; j < tagged.length; j++) {
+      var node = tagged[j];
+      if (node[cache] === undefined) node[cache] = node.getAttribute(to) || "";
+      node.setAttribute(to, lang === "de" ? node.getAttribute(from) : node[cache]);
+    }
+  }
+}
+
+/* Built here rather than written into every page, for the same reason the
+   projects filter is: without JS it could not switch anything, and a button
+   that does nothing is worse than no button. */
+function initLangToggle() {
+  var header = document.querySelector(".site-header");
+  if (!header) return;
+
+  var btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "icon-btn lang-btn";
+
+  function sync() {
+    // The button names the language it switches to, not the one in use.
+    btn.textContent = lang === "de" ? "EN" : "DE";
+    btn.setAttribute("aria-label", t("Switch to German", "Zu Englisch wechseln"));
+  }
+  sync();
+
+  btn.addEventListener("click", function () {
+    lang = lang === "de" ? "en" : "de";
+    try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
+
+    applyLang();
+    sync();
+    for (var i = 0; i < langHooks.length; i++) langHooks[i]();
+  });
+
+  var toggle = document.getElementById("theme-toggle");
+  if (toggle && toggle.parentNode === header) header.insertBefore(btn, toggle);
+  else header.appendChild(btn);
+}
+
+/* Run at parse time, not on DOMContentLoaded: this file is the last thing in
+   the body, so the markup is already there, and a German visitor never sees the
+   English flash past. The theme does the same trick in each page's <head>. */
+applyLang();
+
 document.addEventListener("DOMContentLoaded", function () {
+
   var year = document.getElementById("year");
   if (year) {
     year.textContent = new Date().getFullYear();
@@ -9,9 +115,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   renderContributions();
   initThemeToggle();
+  initLangToggle();
   initFigures();
   initClipToggles();
   initBoxScroll();
+  initProjectFilter();
 
   initAuth();
   initVault();
@@ -54,13 +162,19 @@ function initBoxScroll() {
 }
 
 function initFigures() {
-  var imgs = document.querySelectorAll(".figure img, .mediarow img, .mediarow video");
+  var imgs = document.querySelectorAll(
+    ".figure img, .mediarow img, .mediarow video, .project-row__shot"
+  );
   for (var i = 0; i < imgs.length; i++) {
     var img = imgs[i];
     var hide = (function (image) {
       return function () {
         var fig = image.closest(".figure, .mediarow");
-        if (fig) fig.hidden = true;
+        /* A cover that 404s leaves its row, not the other way round: the
+           project still belongs in the index, it has just lost its picture.
+           Removed rather than hidden so the row drops back to one column. */
+        if (!fig) return image.remove();
+        fig.hidden = true;
 
         var band = image.closest(".reveal");
         if (band && !band.querySelector(".mediarow:not([hidden])")) {
@@ -71,6 +185,86 @@ function initFigures() {
     if (img.complete && img.naturalWidth === 0) hide();
     else img.addEventListener("error", hide);
   }
+}
+
+/* Projects index filter. The technologies come out of the chips already in the
+   rows, so the list is never maintained twice, and the bar is only built when
+   there is something to choose between — no JS, no bar, whole list. */
+function initProjectFilter() {
+  var list = document.querySelector(".project-list");
+  if (!list) return;
+
+  var rows = list.querySelectorAll(".project-row");
+  if (rows.length < 2) return;
+
+  var techs = [];      // every distinct chip label, in reading order
+  var owned = [];      // parallel to rows: the labels each row carries
+
+  for (var i = 0; i < rows.length; i++) {
+    var chips = rows[i].querySelectorAll(".chips .chip");
+    var mine = [];
+    for (var j = 0; j < chips.length; j++) {
+      var text = chips[j].textContent.trim();
+      if (!text || mine.indexOf(text) !== -1) continue;
+      mine.push(text);
+      if (techs.indexOf(text) === -1) techs.push(text);
+    }
+    owned.push(mine);
+  }
+  if (techs.length < 2) return;
+
+  var bar = document.createElement("div");
+  bar.className = "project-filter";
+
+  var caption = document.createElement("span");
+  caption.className = "project-filter__label";
+  caption.id = "project-filter-label";
+  caption.textContent = "Filter";   // the same word in both languages
+  bar.appendChild(caption);
+
+  var chipList = document.createElement("ul");
+  chipList.className = "chips";
+  chipList.setAttribute("aria-labelledby", "project-filter-label");
+  bar.appendChild(chipList);
+
+  var buttons = [];
+
+  function apply(tech) {
+    for (var i = 0; i < rows.length; i++) {
+      rows[i].hidden = tech !== "" && owned[i].indexOf(tech) === -1;
+    }
+    for (var k = 0; k < buttons.length; k++) {
+      var on = buttons[k].getAttribute("data-tech") === tech;
+      buttons[k].setAttribute("aria-pressed", on ? "true" : "false");
+    }
+  }
+
+  function addChip(tech, text) {
+    var item = document.createElement("li");
+    var chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip chip--filter";
+    chip.textContent = text;
+    chip.setAttribute("data-tech", tech);
+    chip.setAttribute("aria-pressed", "false");
+    chip.addEventListener("click", function () { apply(tech); });
+    buttons.push(chip);
+    item.appendChild(chip);
+    chipList.appendChild(item);
+    return chip;
+  }
+
+  var all = addChip("", t("All", "Alle") + " · " + rows.length);
+  onLangChange(function () {
+    all.textContent = t("All", "Alle") + " · " + rows.length;
+  });
+
+  /* The technologies are product names — React, Rust — so they read the same
+     in either language and are never translated. */
+  for (var n = 0; n < techs.length; n++) addChip(techs[n], techs[n]);
+
+  list.parentNode.insertBefore(bar, list);
+  apply("");
 }
 
 function initClipToggles() {
@@ -93,8 +287,11 @@ function initClipToggles() {
         var syncPlay = function () {
           pause.hidden = video.paused;
           play.hidden = !video.paused;
-          toggle.setAttribute("aria-label", video.paused ? "Play clip" : "Pause clip");
+          toggle.setAttribute("aria-label", video.paused
+            ? t("Play clip", "Clip abspielen")
+            : t("Pause clip", "Clip pausieren"));
         };
+        onLangChange(syncPlay);
 
         toggle.addEventListener("click", function () {
           if (video.paused) video.play();
@@ -119,8 +316,11 @@ function initClipToggles() {
           var on = document.fullscreenElement === frame;
           enter.hidden = on;
           exit.hidden = !on;
-          full.setAttribute("aria-label", on ? "Exit fullscreen" : "Fullscreen");
+          full.setAttribute("aria-label", on
+            ? t("Exit fullscreen", "Vollbild verlassen")
+            : t("Fullscreen", "Vollbild"));
         };
+        onLangChange(syncFull);
 
         full.addEventListener("click", function () {
           if (document.fullscreenElement === frame) document.exitFullscreen();
@@ -201,8 +401,12 @@ function showSignedIn(user) {
     var out = document.createElement("button");
     out.type = "button";
     out.className = "icon-btn site-header__signout";
-    out.title = "Sign out";
-    out.setAttribute("aria-label", "Sign out");
+    var nameOut = function () {
+      out.title = t("Sign out", "Abmelden");
+      out.setAttribute("aria-label", out.title);
+    };
+    nameOut();
+    onLangChange(nameOut);
     out.setAttribute("data-signout", "");
     out.innerHTML = ICON_DOOR;
     out.addEventListener("click", function () {
@@ -223,7 +427,9 @@ function initVault() {
   if (!list) return;
 
   if (isOffline()) {
-    if (status) status.textContent = "The Vault needs the live site — it cannot be opened from a local file.";
+    setText(status,
+      "The Vault needs the live site — it cannot be opened from a local file.",
+      "Der Vault braucht die Live-Seite — aus einer lokalen Datei lässt er sich nicht öffnen.");
     return;
   }
 
@@ -240,20 +446,29 @@ function initVault() {
       var items = (data && data.items) || [];
 
       if (!items.length) {
-        if (status) status.textContent = "No documents are published right now.";
+        setText(status, "No documents are published right now.",
+                        "Zurzeit sind keine Dokumente veröffentlicht.");
         return;
       }
 
-      items.forEach(function (item) {
-        list.appendChild(vaultRow(item));
-      });
+      /* Redrawn rather than relabelled on a switch: a row carries a size and a
+         state, and rebuilding it is shorter than reaching into each part. */
+      function draw() {
+        list.textContent = "";
+        items.forEach(function (item) {
+          list.appendChild(vaultRow(item));
+        });
+      }
+      draw();
+      onLangChange(draw);
 
       list.hidden = false;
       if (status) status.remove();
     })
     .catch(function (err) {
       if (err && err.message === "redirecting") return;
-      if (status) status.textContent = "The document list could not be loaded. Please reload.";
+      setText(status, "The document list could not be loaded. Please reload.",
+                      "Die Dokumentliste konnte nicht geladen werden. Bitte neu laden.");
     });
 }
 
@@ -278,7 +493,7 @@ function vaultRow(item) {
   var meta = document.createElement("span");
   meta.className = "doc__meta";
   if (!item.available) {
-    meta.textContent = "Not uploaded";
+    meta.textContent = t("Not uploaded", "Nicht hochgeladen");
   } else {
     var size = formatBytes(item.sizeBytes);
     meta.textContent = size ? "PDF · " + size : "PDF";
@@ -309,7 +524,9 @@ function initLogin() {
   var next = safeNext(new URLSearchParams(location.search).get("next"));
 
   if (isOffline()) {
-    showLoginError(error, "Signing in needs the live site — it cannot be done from a local file.");
+    showLoginError(error, t(
+      "Signing in needs the live site — it cannot be done from a local file.",
+      "Die Anmeldung braucht die Live-Seite — aus einer lokalen Datei geht sie nicht."));
     if (submit) submit.disabled = true;
     return;
   }
@@ -325,14 +542,15 @@ function initLogin() {
     var password = form.password.value;
 
     if (!username || !password) {
-      showLoginError(error, "Enter both a username and a password.");
+      showLoginError(error, t("Enter both a username and a password.",
+                              "Bitte Benutzername und Passwort eingeben."));
       return;
     }
 
     if (error) error.hidden = true;
     if (submit) {
       submit.disabled = true;
-      submit.textContent = "Signing in…";
+      submit.textContent = t("Signing in…", "Anmeldung läuft…");
     }
 
     api("/auth/login", { method: "POST", body: { username: username, password: password } })
@@ -346,14 +564,16 @@ function initLogin() {
         });
       })
       .catch(function (err) {
-        showLoginError(error, err.message || "Something went wrong. Please try again.");
+        showLoginError(error, err.message ||
+          t("Something went wrong. Please try again.",
+            "Etwas ist schiefgelaufen. Bitte nochmals versuchen."));
         form.password.value = "";
         form.password.focus();
       })
       .finally(function () {
         if (submit) {
           submit.disabled = false;
-          submit.textContent = "Sign in";
+          submit.textContent = t("Sign in", "Anmelden");
         }
       });
   });
@@ -361,13 +581,21 @@ function initLogin() {
 
 function loginMessage(status, body) {
   if (status === 429) {
-    return (body && body.message) || "Too many attempts. Please wait and try again.";
+    /* The server's message carries the wait, so it wins over ours — and it is
+       the one string on this page the site cannot translate. */
+    return (body && body.message) ||
+      t("Too many attempts. Please wait and try again.",
+        "Zu viele Versuche. Bitte kurz warten und nochmals versuchen.");
   }
   if (status === 401) {
-    return "Invalid username or password.";
+    return t("Invalid username or password.", "Benutzername oder Passwort ist falsch.");
   }
-  if (status === 400) return "Please check the form and try again.";
-  return "Sign-in is unavailable right now. Please try again shortly.";
+  if (status === 400) {
+    return t("Please check the form and try again.",
+             "Bitte die Eingaben prüfen und nochmals versuchen.");
+  }
+  return t("Sign-in is unavailable right now. Please try again shortly.",
+           "Die Anmeldung ist gerade nicht verfügbar. Bitte in Kürze nochmals versuchen.");
 }
 
 function showLoginError(el, message) {
@@ -431,13 +659,18 @@ var GH_CACHE_KEY = "gh:contributions:v1";
 var GH_CACHE_TTL = 6 * 60 * 60 * 1000;   // 6h — the source updates daily at best
 var GH_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+var GH_MONTHS_DE = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun",
+                    "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
 var GH_ROWS = 7;                         // days in a column
 
 function renderContributions() {
   var root = document.getElementById("gh");
   if (!root) return;
 
-  var user = root.getAttribute("data-gh-user") || "kiraa1q";
+  // The handle lives in the markup only; no copy of it here to drift.
+  var user = root.getAttribute("data-gh-user");
+  if (!user) return;
+
   var cached = ghReadCache(user);
 
   if (cached) ghDraw(root, cached.days);
@@ -494,13 +727,17 @@ function ghDate(s) {
 
 function ghWhen(date) {
   var d = ghDate(date);
+  if (lang === "de") {
+    return d.getDate() + ". " + GH_MONTHS_DE[d.getMonth()] + " " + d.getFullYear();
+  }
   return d.getDate() + " " + GH_MONTHS[d.getMonth()] + " " + d.getFullYear();
 }
 
 function ghDayText(date, count) {
   var when = ghWhen(date);
-  if (!count) return "No contributions on " + when;
-  return count + (count === 1 ? " contribution on " : " contributions on ") + when;
+  if (!count) return t("No contributions on " + when, "Keine Beiträge am " + when);
+  return count + t(count === 1 ? " contribution on " : " contributions on ",
+                   count === 1 ? " Beitrag am " : " Beiträge am ") + when;
 }
 
 /* Days padded front and back to whole Sunday-first weeks, so a slice at any
@@ -541,8 +778,9 @@ function ghLabel(slots) {
     last = slots[i].date;
   }
 
-  return total.toLocaleString("en-US") + " contributions, " +
-         ghWhen(first) + " to " + ghWhen(last);
+  var sum = total.toLocaleString(t("en-US", "de-CH"));
+  return sum + t(" contributions, ", " Beiträge, ") +
+         ghWhen(first) + t(" to ", " bis ") + ghWhen(last);
 }
 
 /* The graph is the whole widget: no month ruler, no weekday column, no legend,
@@ -587,6 +825,16 @@ function ghDraw(root, days) {
    card resizes — once per element, and only when the count actually moves. */
 function ghWatch(root, days) {
   root.ghDays = days;
+
+  /* Every date and count in the graph is written by JS, so a switch redraws it
+     from the days already in hand rather than fetching them again. */
+  if (!root.ghLangHook) {
+    root.ghLangHook = true;
+    onLangChange(function () {
+      if (root.ghDays) ghDraw(root, root.ghDays);
+    });
+  }
+
   if (root.ghObserver || !window.ResizeObserver) return;
 
   var chart = root.querySelector("[data-gh-chart]");
@@ -642,17 +890,22 @@ function ghError(root) {
 
   var msg = document.createElement("p");
   msg.className = "gh__status";
-  msg.textContent = "Activity unavailable.";
+
+  /* The words are their own element: setText writes textContent, which would
+     take the retry button with it on a language switch. */
+  var words = document.createElement("span");
+  setText(words, "Activity unavailable.", "Aktivität nicht verfügbar.");
+  msg.appendChild(words);
 
   var retry = document.createElement("button");
   retry.type = "button";
   retry.className = "gh__retry";
-  retry.textContent = "Retry";
+  setText(retry, "Retry", "Erneut versuchen");
   retry.addEventListener("click", function () {
     chart.textContent = "";
     var wait = document.createElement("p");
     wait.className = "gh__status";
-    wait.textContent = "Loading activity…";
+    wait.textContent = t("Loading activity…", "Aktivität wird geladen…");
     chart.appendChild(wait);
     renderContributions();
   });

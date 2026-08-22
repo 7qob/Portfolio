@@ -221,6 +221,7 @@ body {
 
 .box__label,
 .link-box__caption,
+.project-filter__label,
 .field__label,
 .section-label,
 .datarow dt,
@@ -1032,6 +1033,16 @@ a:focus-visible,
   margin-right: calc(var(--space) * -2);   /* == .site-header's gap */
 }
 
+/* The language switch is an .icon-btn whose icon is two letters, so it takes
+   the nav's caption type rather than the body's. Its negative margin is the
+   header's gap again: the switches sit as one group, hard right. */
+.lang-btn {
+  font-size: var(--fs-caption);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-right: calc(var(--space) * -2);
+}
+
 .site-header__signout svg {
   width: 16px;
   height: 16px;
@@ -1632,8 +1643,8 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
 
 /* ---- Projects index: one band per project ----
    Same band rule as a project page, so the list and the page it opens read as
-   one document. The seam carries the project's own colour, exactly like the
-   masthead rule on .page-head--project. */
+   one document. The picture rail is .mediarow's 20rem rail, so a row and the
+   page it opens stand their screenshots on the same edge. */
 .project-list {
   list-style: none;
   display: flex;
@@ -1645,38 +1656,133 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
   padding-top: calc(var(--stack-lg) - var(--gap));
 }
 
-.project-row {
-  position: relative;
+/* Built by script.js from the chips already in the rows, so a page without JS
+   shows the whole list rather than a row of buttons that do nothing. */
+.project-filter {
   display: flex;
   flex-direction: column;
   gap: var(--stack-sm);
+  max-width: var(--measure-wide);
+  margin-top: calc(var(--stack-lg) - var(--gap));
   padding-top: var(--stack-md);
   border-top: var(--border-width) solid var(--border);
-  transition: border-color var(--motion);
 }
 
-.project-row.is-custom {
-  border-top-color: transparent;
-  background-image: linear-gradient(90deg, var(--edge-1), var(--edge-2) 45%, var(--edge-3));
-  background-size: 100% 2px;
+.chip--filter {
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color var(--motion), border-color var(--motion);
+}
+
+.chip--filter:hover {
+  color: var(--text);
+  border-color: var(--border-hover);
+}
+
+/* The blanket focus rule covers links, not buttons. */
+.chip--filter:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.chip--filter[aria-pressed="true"] {
+  color: var(--fg-strong);
+  border-color: var(--accent);
+}
+
+/* The seam is painted rather than bordered, so the colour can stop where the
+   bento card's does: neutral to 68%, then shade / brand / tint. --seam is the
+   neutral run, and it is the only thing hover moves. */
+.project-row {
+  --seam: var(--border);
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+  gap: var(--stack-md) var(--stack-lg);
+  align-items: start;
+  padding-top: var(--stack-md);
+  border-top: var(--border-width) solid transparent;
+  background-image: linear-gradient(
+    90deg,
+    var(--seam) 0%,
+    var(--seam) 68%,
+    var(--edge-1) 82%,
+    var(--edge-2) 92%,
+    var(--edge-3) 100%
+  );
+  background-size: 100% var(--border-width);
   background-position: top left;
   background-repeat: no-repeat;
   background-origin: border-box;
   background-clip: border-box;
 }
 
-.project-row:hover {
-  border-top-color: var(--border-hover);
+.project-row[hidden] { display: none; }
+
+/* No screenshot, no rail — the words take the width instead of sitting beside
+   an empty 20rem. */
+.project-row:not(:has(.project-row__shot)) {
+  grid-template-columns: minmax(0, 1fr);
 }
 
-.project-row:hover > .section-label,
-.project-row:has(.stretched-link:focus-visible) > .section-label {
+.project-row:hover,
+.project-row:has(.stretched-link:focus-visible) {
+  --seam: var(--border-hover);
+}
+
+.project-row:hover .project-row__name,
+.project-row:has(.stretched-link:focus-visible) .project-row__name {
   color: var(--accent);
 }
 
-.project-row > .box-arrow {
-  top: var(--stack-md);
+/* One ratio for every row: four differently shaped screenshots would otherwise
+   give the list four different rhythms. */
+.project-row__shot {
+  display: block;
+  width: 100%;
+  /* height:auto beats the width/height attributes, which are there to reserve
+     the box before the file lands; aspect-ratio is what actually shapes it. */
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border: var(--border-width) solid var(--border);
+  background: var(--panel-alt);
+}
+
+.project-row__text {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-sm);
+  min-width: 0;
+}
+
+/* The arrow belongs to the words, not the row: on a narrow screen the rail is
+   above them, and an arrow anchored to the row would land on the picture. */
+.project-row .box-arrow {
+  top: 0;
   right: 0;
+}
+
+.project-row__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space);
+  /* Room for the arrow, so a long name does not run under it. */
+  padding-right: calc(var(--space) * 3.5);
+}
+
+.project-row__name {
+  font-size: var(--fs-subtitle);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--fg-strong);
+  transition: color var(--motion);
+}
+
+.project-row .chips {
+  padding-top: var(--stack-sm);
 }
 
 .feature-list {
@@ -1775,7 +1881,6 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
 }
 
 .project__section > .section-label,
-.project-row > .section-label,
 .linklist > .section-label,
 .reveal__summary > .section-label {
   display: flex;
@@ -1788,7 +1893,6 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
 }
 
 .project__section > .section-label::before,
-.project-row > .section-label::before,
 .linklist > .section-label::before,
 .reveal__summary > .section-label::before {
   content: "";
@@ -2407,7 +2511,8 @@ code {
     height: 18px;
   }
 
-  .site-header__signout {
+  .site-header__signout,
+  .lang-btn {
     margin-right: calc(var(--space) * -2);
   }
 
@@ -2449,7 +2554,9 @@ code {
   /* 70vh of screenshot leaves nothing of the page around it. */
   .figure img { max-height: 50vh; }
 
-  .mediarow {
+  .mediarow,
+  .project-row,
+  .project-row:not(:has(.project-row__shot)) {
     grid-template-columns: minmax(0, 1fr);
   }
 
