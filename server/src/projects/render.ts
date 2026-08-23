@@ -145,6 +145,21 @@ const ICON_STAR = svg('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 2
 
 const ICON_FOLDER = svg('<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>', 14);
 
+const ICON_GITHUB = svg(
+  '<path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>',
+  20,
+);
+
+const ICON_USER = svg(
+  '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  20,
+);
+
+/* The box arrow's twin: same size, pointing out of the page rather than into
+   it. Both sit inside a span that is already aria-hidden. */
+const ICON_BOX_ARROW_EXT =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>';
+
 const CLIP_CONTROLS = `<button class="clip-btn clip-btn--play" type="button" data-clip-toggle aria-label="Pause clip">
   <span data-clip-icon="pause">
     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="9" y1="4" x2="9" y2="20"/><line x1="15" y1="4" x2="15" y2="20"/></svg>
@@ -166,19 +181,31 @@ const CLIP_CONTROLS = `<button class="clip-btn clip-btn--play" type="button" dat
 const FAVICON =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='.5' y='.5' width='31' height='31' fill='%230e0e0e' stroke='%232a2a2a'/%3E%3Crect x='9' y='9' width='14' height='14' fill='%23ff1e2f'/%3E%3C/svg%3E";
 
-function head(title: string, ogType: string, p: string): string {
+/**
+ * `titleDe` is the German title — the same data-de the hand-written pages put
+ * on their own <title>. `desc` fills the description and the two Open Graph
+ * lines from the page's own words rather than leaving them empty; it is not
+ * translated, because a crawler reads the file, not the switched DOM.
+ */
+function head(
+  title: string,
+  ogType: string,
+  p: string,
+  meta: { titleDe?: string; desc?: string } = {},
+): string {
+  const de = meta.titleDe ? ` data-de="${esc(meta.titleDe)} · 7qob"` : '';
+  const desc = meta.desc ? esc(meta.desc) : '';
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${esc(title)} · 7qob</title>
-  <meta name="description" content="">
+  <title${de}>${esc(title)} · 7qob</title>
+  <meta name="description" content="${desc}">
 
-  <!-- Open Graph (empty — fill before sharing) -->
   <meta property="og:type" content="${ogType}">
-  <meta property="og:title" content="">
-  <meta property="og:description" content="">
+  <meta property="og:title" content="${esc(title)} · 7qob">
+  <meta property="og:description" content="${desc}">
   <meta property="og:image" content="">
   <meta property="og:url" content="">
 
@@ -200,17 +227,21 @@ function head(title: string, ogType: string, p: string): string {
 
 function header(p: string): string {
   return `  <header class="site-header">
-    <nav class="site-nav" aria-label="Main">
-      <a href="${p}index.html" data-de="Start">Home</a>
+    <a class="site-brand" href="${p}index.html" aria-label="7qob, home" data-de-label="7qob, Startseite">
+      <span class="site-brand__name">7qob</span>
+    </a>
+    <nav class="site-nav" aria-label="Main" data-de-label="Hauptnavigation">
       <a href="${p}projects.html" aria-current="page" data-de="Projekte">Projects</a>
       <a href="${p}about.html" data-de="Über mich">About</a>
       <a href="${p}vault/index.html">Vault</a>
     </nav>
-    <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" data-de-label="Hell/Dunkel umschalten" aria-pressed="false">
-      <span data-theme-icon>
-        ${ICON_MOON}
-      </span>
-    </button>
+    <div class="site-controls">
+      <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" data-de-label="Hell/Dunkel umschalten" aria-pressed="false">
+        <span data-theme-icon>
+          ${ICON_MOON}
+        </span>
+      </button>
+    </div>
   </header>
 `;
 }
@@ -372,15 +403,27 @@ export function renderProjectPage(
 ): string {
   const p = opts.assetPrefix ?? '';
 
-  const status = project.status ? ` <span class="status">${esc(project.status)}</span>` : '';
+  /* Featured is the eyebrow's job now, so it is not also a badge on the name. */
+  const status =
+    project.status && project.status !== 'Featured'
+      ? ` <span class="status">${esc(project.status)}</span>`
+      : '';
+
+  const eyebrow =
+    project.status === 'Featured'
+      ? `${ICON_STAR}<span data-de="Empfohlen">Featured</span>`
+      : `${ICON_FOLDER}<span data-de="Projekt">Project</span>`;
 
   const accent = accentAttrs(project.accent);
 
-  let html = head(project.title, 'article', p);
+  let html = head(project.title, 'article', p, {
+    desc: project.lede ?? project.cardBlurb ?? undefined,
+  });
   html += '\n';
   html += header(p);
   html += `
   <div class="page-head page-head--project${accent.cls}"${accent.style}>
+    <p class="page-head__label">${eyebrow}</p>
     <h1 class="page-head__title" id="page-title">${esc(project.title)}${status}</h1>
 ${chipList(project.chips, '    ')}  </div>
 
@@ -440,7 +483,7 @@ function projectCard(proj: PageProject, opts: { area: string; large: boolean; p:
   const body = `${chipList(proj.chips, '          ')}          <p class="box__text">${inline(blurb)}</p>`;
 
   return `      <section class="box box--link box--edge${accent.cls} area-${opts.area}"${accent.style} aria-labelledby="${id}">
-        <a class="stretched-link" href="${opts.p}project-${esc(proj.slug)}.html" aria-label="${esc(proj.title)} — project page" data-de-label="${esc(proj.title)} — Projektseite"></a>
+        <a class="stretched-link" href="${opts.p}project-${esc(proj.slug)}.html" aria-label="${esc(proj.title)} project page" data-de-label="${esc(proj.title)} Projektseite"></a>
         <span class="box-arrow" aria-hidden="true">
           ${ICON_BOX_ARROW}
         </span>
@@ -455,16 +498,20 @@ ${body}
 }
 
 /**
- * A row on the projects index: the same band every other subpage is built from
- * — hairline, then content — with the project's colour at the end of the seam
- * and its screenshot on the same 20rem rail a .mediarow uses. The eyebrow, the
- * name and the chips are the bento card's, in the card's order, so the two
- * indexes read as one thing.
+ * A card on the projects index: the bento cell the home page renders, given a
+ * cover and room to breathe. Same box, same rim, same arrow, same eyebrow and
+ * chips in the same order, so the two indexes read as one system.
  *
- * The cover is decorative: the row is already named by the stretched link, so
- * an alt repeating the title would only be read out twice.
+ * The first project takes the feature card, which spans the row and stands its
+ * cover beside the words — the same "first project is the large one" rule the
+ * home page's cells follow.
+ *
+ * The cover is decorative: the card is already named by the stretched link, so
+ * an alt repeating the title would only be read out twice. Under every cover
+ * sits the plate, which shows through when a project has no picture yet or the
+ * file behind one has gone missing.
  */
-function projectRow(proj: PageProject, p: string): string {
+function projectIndexCard(proj: PageProject, p: string, feature: boolean): string {
   const accent = accentAttrs(proj.accent);
   const label =
     proj.status === 'Featured'
@@ -473,47 +520,97 @@ function projectRow(proj: PageProject, p: string): string {
   const wip = proj.status === 'WIP' ? `<span class="status">WIP</span>` : '';
   const blurb = proj.cardBlurb ?? proj.lede ?? '';
   const img = proj.cover
-    ? `<img class="project-row__shot" src="${mediaSrc(proj.cover, p)}"${dims(proj.cover)}` +
+    ? `\n          <img src="${mediaSrc(proj.cover, p)}"${dims(proj.cover)}` +
       ` loading="lazy" decoding="async" alt="">`
     : '';
-  const shot = img ? `\n        ${img}` : '';
+  const cls = `box box--link box--edge project-card${feature ? ' project-card--feature' : ''}${accent.cls}`;
 
-  return `      <li class="project-row${accent.cls}"${accent.style}>
-        <a class="stretched-link" href="${p}project-${esc(proj.slug)}.html" aria-label="${esc(proj.title)} — project page" data-de-label="${esc(proj.title)} — Projektseite"></a>${shot}
-        <div class="project-row__text">
+  return `      <li class="${cls}"${accent.style}>
+        <a class="stretched-link" href="${p}project-${esc(proj.slug)}.html" aria-label="${esc(proj.title)} project page" data-de-label="${esc(proj.title)} Projektseite"></a>
+        <span class="project-card__shot">
+          <span class="shot-plate">
+            <span class="shot-plate__mark">${esc(proj.title)}</span>
+            <span class="shot-plate__note" data-de="Screenshot folgt">Screenshot pending</span>
+          </span>${img}
+        </span>
+        <div class="project-card__body">
           <span class="box-arrow" aria-hidden="true">
             ${ICON_BOX_ARROW}
           </span>
           <p class="box__label">${label}</p>
-          <div class="project-row__head">
-            <h2 class="project-row__name" id="p-${esc(proj.slug)}">${esc(proj.title)}</h2>${wip}
+          <div class="project-card__head">
+            <h2 class="project-card__name" id="p-${esc(proj.slug)}">${esc(proj.title)}</h2>${wip}
           </div>
           <p>${inline(blurb)}</p>
 ${chipList(proj.chips, '          ')}        </div>
       </li>`;
 }
 
+/** The two link boxes that close the index — the same pair about.html ends on. */
+function indexEndcap(p: string): string {
+  return `    <section class="endcap" aria-labelledby="lbl-elsewhere">
+      <h2 class="section-label" id="lbl-elsewhere" data-de="Anderswo">Elsewhere</h2>
+      <div class="linkrow">
+
+        <a class="link-box" href="https://github.com/7qob" target="_blank" rel="noopener">
+          <span class="link-box__caption" data-de="Profil">Profile</span>
+          <span class="link-box__label">
+            <span class="link-box__icon" aria-hidden="true">
+              ${ICON_GITHUB}
+            </span>
+            GitHub
+          </span>
+          <span class="link-box__note" data-de="der Quellcode zu allem hier, plus die kleineren Sachen.">the source behind these, plus the smaller things.</span>
+          <span class="box-arrow box-arrow--external" aria-hidden="true">
+            ${ICON_BOX_ARROW_EXT}
+          </span>
+        </a>
+
+        <a class="link-box" href="${p}about.html">
+          <span class="link-box__caption" data-de="Kontext">Context</span>
+          <span class="link-box__label">
+            <span class="link-box__icon" aria-hidden="true">
+              ${ICON_USER}
+            </span>
+            <span data-de="Über mich">About me</span>
+          </span>
+          <span class="link-box__note" data-de="wer das hier baut, und warum diese Dinge.">who builds these, and why these things.</span>
+          <span class="box-arrow" aria-hidden="true">
+            ${ICON_BOX_ARROW}
+          </span>
+        </a>
+
+      </div>
+    </section>
+`;
+}
+
 export function renderProjectsIndex(projects: PageProject[], opts: RenderOptions = {}): string {
   const p = opts.assetPrefix ?? '';
-  const rows = projects.map((proj) => projectRow(proj, p)).join('\n\n');
+  const cards = projects.map((proj, i) => projectIndexCard(proj, p, i === 0)).join('\n\n');
 
-  let html = head('Projects', 'website', p);
+  let html = head('Projects', 'website', p, {
+    titleDe: 'Projekte',
+    desc: 'Tools, servers and experiments, mostly things I wanted for myself first.',
+  });
   html += '\n';
   html += header(p);
   html += `
   <div class="page-head">
+    <p class="page-head__label" data-de="Übersicht">Index</p>
     <h1 class="page-head__title" id="page-title" data-de="Projekte">Projects</h1>
-    <p class="page-head__lede" data-de="Tools, Server und Experimente — meistens Dinge, die ich zuerst selbst haben wollte.">Tools, servers and experiments — mostly things I wanted for myself first.</p>
+    <p class="page-head__lede" data-de="Tools, Server und Experimente, meistens Dinge, die ich zuerst selbst haben wollte.">Tools, servers and experiments, mostly things I wanted for myself first.</p>
   </div>
 
   <main class="page-body" aria-labelledby="page-title">
 
-    <ul class="project-list">
+    <ul class="project-grid">
 
-${rows}
+${cards}
 
     </ul>
-  </main>
+
+${indexEndcap(p)}  </main>
 
 `;
   html += footer(p);

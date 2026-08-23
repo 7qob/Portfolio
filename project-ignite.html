@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ignite · 7qob</title>
-  <meta name="description" content="">
+  <meta name="description" content="A standalone reverse proxy that safely exposes any local LLM server (KoboldCpp, llama.cpp, Ollama) to the internet.">
 
-  <!-- Open Graph (empty — fill before sharing) -->
+  <!-- Open Graph (empty; fill before sharing) -->
   <meta property="og:type" content="article">
-  <meta property="og:title" content="">
-  <meta property="og:description" content="">
+  <meta property="og:title" content="Ignite · 7qob">
+  <meta property="og:description" content="A standalone reverse proxy that safely exposes any local LLM server (KoboldCpp, llama.cpp, Ollama) to the internet.">
   <meta property="og:image" content="">
   <meta property="og:url" content="">
 
@@ -28,20 +28,25 @@
 <body>
 
   <header class="site-header">
-    <nav class="site-nav" aria-label="Main">
-      <a href="index.html" data-de="Start">Home</a>
+    <a class="site-brand" href="index.html" aria-label="7qob, home" data-de-label="7qob, Startseite">
+      <span class="site-brand__name">7qob</span>
+    </a>
+    <nav class="site-nav" aria-label="Main" data-de-label="Hauptnavigation">
       <a href="projects.html" aria-current="page" data-de="Projekte">Projects</a>
       <a href="about.html" data-de="Über mich">About</a>
       <a href="vault/index.html">Vault</a>
     </nav>
-    <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" data-de-label="Hell/Dunkel umschalten" aria-pressed="false">
-      <span data-theme-icon>
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      </span>
-    </button>
+    <div class="site-controls">
+      <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" data-de-label="Hell/Dunkel umschalten" aria-pressed="false">
+        <span data-theme-icon>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </span>
+      </button>
+    </div>
   </header>
 
   <div class="page-head page-head--project">
+    <p class="page-head__label"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span data-de="Projekt">Project</span></p>
     <h1 class="page-head__title" id="page-title">Ignite <span class="status">WIP</span></h1>
     <ul class="chips">
         <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="6.3"/><circle cx="12" cy="12" r="2.4"/><g stroke-width="2.6" stroke-linecap="butt"><path d="M12 5.7V2.5M12 18.3v3.2M5.7 12H2.5M18.3 12h3.2M7.55 7.55L5.28 5.28M16.45 16.45l2.27 2.27M16.45 7.55l2.27-2.27M7.55 16.45l-2.27 2.27"/></g></svg>Rust</li>
@@ -54,7 +59,7 @@
   <main class="page-body page-body--project" aria-labelledby="page-title">
     <article class="project reading">
 
-      <p class="project__lede" data-de="Ein eigenständiger Reverse Proxy, der jeden lokalen LLM-Server — KoboldCpp, llama.cpp, Ollama — sicher ins Internet stellt.">A standalone reverse proxy that safely exposes any local LLM server — KoboldCpp, llama.cpp, Ollama — to the internet.</p>
+      <p class="project__lede" data-de="Ein eigenständiger Reverse Proxy, der jeden lokalen LLM-Server (KoboldCpp, llama.cpp, Ollama) sicher ins Internet stellt.">A standalone reverse proxy that safely exposes any local LLM server (KoboldCpp, llama.cpp, Ollama) to the internet.</p>
 
       <section class="project__section" aria-labelledby="lbl-does">
         <h2 class="section-label" id="lbl-does" data-de="Was es kann">What it does</h2>
@@ -66,7 +71,7 @@
           <li data-de="SSE-Streaming durchgereicht">SSE streaming passthrough</li>
           <li data-de="Cloudflare-Tunnel-Setup mit einem Befehl">One-command Cloudflare Tunnel setup</li>
         </ul>
-        <div class="note note--accent" data-de="Ignite wird noch gebaut und das Repository ist noch nicht öffentlich, deshalb ist diese Seite bewusst kurz — sie soll mit dem Projekt wachsen, statt etwas zu beschreiben, das es noch nicht gibt. Die anderen drei verlinken direkt auf ihren Quellcode.">Ignite is still being built and the repository is not public yet, so this page is deliberately short — it will grow with the project rather than describe something that does not exist. The other three link straight to their source.</div>
+        <div class="note note--accent" data-de="Ignite wird noch gebaut und das Repository ist noch nicht öffentlich, deshalb ist diese Seite bewusst kurz. Sie soll mit dem Projekt wachsen, statt etwas zu beschreiben, das es noch nicht gibt. Die anderen drei verlinken direkt auf ihren Quellcode.">Ignite is still being built and the repository is not public yet, so this page is deliberately short. It will grow with the project rather than describe something that does not exist. The other three link straight to their source.</div>
       </section>
 
       <details class="reveal">

@@ -21,22 +21,27 @@
 <body>
 
   <header class="site-header">
-    <nav class="site-nav" aria-label="Main">
-      <a href="../index.html" data-de="Start">Home</a>
+    <a class="site-brand" href="../index.html" aria-label="7qob, home" data-de-label="7qob, Startseite">
+      <span class="site-brand__name">7qob</span>
+    </a>
+    <nav class="site-nav" aria-label="Main" data-de-label="Hauptnavigation">
       <a href="../projects.html" data-de="Projekte">Projects</a>
       <a href="../about.html" data-de="Über mich">About</a>
       <a href="index.html" aria-current="page">Vault</a>
     </nav>
-    <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" data-de-label="Hell/Dunkel umschalten" aria-pressed="false">
-      <span data-theme-icon>
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      </span>
-    </button>
+    <div class="site-controls">
+      <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" data-de-label="Hell/Dunkel umschalten" aria-pressed="false">
+        <span data-theme-icon>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </span>
+      </button>
+    </div>
   </header>
 
   <div class="page-head">
+    <p class="page-head__label" data-de="Privat">Private</p>
     <h1 class="page-head__title" id="page-title">Vault</h1>
-    <p class="page-head__lede" data-de="Bewerbungsunterlagen. Passwortgeschützt und nicht indexiert — bitte für dich behalten.">Application documents. Password-protected and not indexed — please keep them to yourself.</p>
+    <p class="page-head__lede" data-de="Bewerbungsunterlagen. Passwortgeschützt und nicht indexiert. Bitte für dich behalten.">Application documents. Password-protected and not indexed. Please keep them to yourself.</p>
   </div>
 
   <main class="page-body" aria-labelledby="page-title">

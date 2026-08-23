@@ -96,9 +96,10 @@ function initLangToggle() {
     for (var i = 0; i < langHooks.length; i++) langHooks[i]();
   });
 
-  var toggle = document.getElementById("theme-toggle");
-  if (toggle && toggle.parentNode === header) header.insertBefore(btn, toggle);
-  else header.appendChild(btn);
+  /* The header's right-hand column. Every switch lives in it, so the header
+     grid keeps its three tracks however many switches there are. */
+  var controls = header.querySelector(".site-controls") || header;
+  controls.insertBefore(btn, controls.firstChild);
 }
 
 /* Run at parse time, not on DOMContentLoaded: this file is the last thing in
@@ -163,16 +164,17 @@ function initBoxScroll() {
 
 function initFigures() {
   var imgs = document.querySelectorAll(
-    ".figure img, .mediarow img, .mediarow video, .project-row__shot"
+    ".figure img, .mediarow img, .mediarow video, .project-card__shot img"
   );
   for (var i = 0; i < imgs.length; i++) {
     var img = imgs[i];
     var hide = (function (image) {
       return function () {
         var fig = image.closest(".figure, .mediarow");
-        /* A cover that 404s leaves its row, not the other way round: the
+        /* A card cover that 404s leaves the card, not the other way round: the
            project still belongs in the index, it has just lost its picture.
-           Removed rather than hidden so the row drops back to one column. */
+           Removing it uncovers the .shot-plate underneath, so the grid keeps
+           its rhythm instead of dropping a cell. */
         if (!fig) return image.remove();
         fig.hidden = true;
 
@@ -188,13 +190,30 @@ function initFigures() {
 }
 
 /* Projects index filter. The technologies come out of the chips already in the
-   rows, so the list is never maintained twice, and the bar is only built when
-   there is something to choose between — no JS, no bar, whole list. */
+   cards, so the list is never maintained twice, and the bar is only built when
+   there is something to choose between — no JS, no bar, whole grid. */
+/* Two columns and a wide first card leave a hole whenever an even number of
+   cards is on screen: the last one would sit alone in its row. It takes the
+   width instead. Measured from what is actually showing, so a filter that
+   hides two cards closes the grid again rather than punching a gap in it. */
+function layoutCards(rows) {
+  var shown = [];
+  for (var i = 0; i < rows.length; i++) {
+    rows[i].classList.remove("project-card--wide");
+    if (!rows[i].hidden) shown.push(rows[i]);
+  }
+  if (!shown.length) return;
+
+  shown[0].classList.add("project-card--wide");
+  if (shown.length % 2 === 0) shown[shown.length - 1].classList.add("project-card--wide");
+}
+
 function initProjectFilter() {
-  var list = document.querySelector(".project-list");
+  var list = document.querySelector(".project-grid");
   if (!list) return;
 
-  var rows = list.querySelectorAll(".project-row");
+  var rows = list.querySelectorAll(".project-card");
+  layoutCards(rows);
   if (rows.length < 2) return;
 
   var techs = [];      // every distinct chip label, in reading order
@@ -237,6 +256,7 @@ function initProjectFilter() {
       var on = buttons[k].getAttribute("data-tech") === tech;
       buttons[k].setAttribute("aria-pressed", on ? "true" : "false");
     }
+    layoutCards(rows);
   }
 
   function addChip(tech, text) {
@@ -414,10 +434,8 @@ function showSignedIn(user) {
         .then(function () { location.href = "/index.html"; })
         .catch(function () { location.href = "/index.html"; });
     });
-    var toggle = document.getElementById("theme-toggle");
-    if (toggle && toggle.parentNode === header) header.insertBefore(out, toggle);
-    else header.appendChild(out);
-    header.classList.add("has-signout");
+    var controls = header.querySelector(".site-controls") || header;
+    controls.appendChild(out);
   }
 }
 
@@ -428,8 +446,8 @@ function initVault() {
 
   if (isOffline()) {
     setText(status,
-      "The Vault needs the live site — it cannot be opened from a local file.",
-      "Der Vault braucht die Live-Seite — aus einer lokalen Datei lässt er sich nicht öffnen.");
+      "The Vault needs the live site. It cannot be opened from a local file.",
+      "Der Vault braucht die Live-Seite. Aus einer lokalen Datei lässt er sich nicht öffnen.");
     return;
   }
 
@@ -525,8 +543,8 @@ function initLogin() {
 
   if (isOffline()) {
     showLoginError(error, t(
-      "Signing in needs the live site — it cannot be done from a local file.",
-      "Die Anmeldung braucht die Live-Seite — aus einer lokalen Datei geht sie nicht."));
+      "Signing in needs the live site. It cannot be done from a local file.",
+      "Die Anmeldung braucht die Live-Seite. Aus einer lokalen Datei geht sie nicht."));
     if (submit) submit.disabled = true;
     return;
   }

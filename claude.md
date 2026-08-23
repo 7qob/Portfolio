@@ -90,15 +90,63 @@ one.
 - Retro, KISS, classic. Not soft, not rounded, no glassmorphism.
 - Dark theme by default, light theme via the header toggle. Colours are
   CSS variables; only the primitives are overridden for light.
+- **Everything sits on one centred rail, `--shell`, and the public site has
+  exactly one value for it.** The header, the masthead, the body and the footer
+  all take it, which is the only reason the site reads as centred rather than as
+  a column pinned to the left edge of a wide screen. `.is-admin` is the only
+  page left that overrides the token — a tool full of tables, and not a page
+  anyone walks to from the home page. **The home page used to widen the rail and
+  must not again**: the header and the footer are the same chrome on every page,
+  so a page-scoped rail moves the brand and the nav sideways the moment a visitor
+  clicks Projects. For the same reason `html` carries `scrollbar-gutter: stable`
+  — the home page is locked to one screen and the subpages scroll, and without a
+  reserved gutter the rail slides half a scrollbar between them. A block that
+  wants to be narrower than the rail centres itself inside it with
+  `width: 100%` + `max-width` + `margin-inline: auto` — the `width` is
+  load-bearing, because an auto-width box with auto margins is sized to its
+  content instead of to its cap.
+- **A page-scoped type scale goes on the page's content, never on `<body>`.**
+  The home page reads one step down the `--fs-*` scale; those tokens sit on
+  `.bento`, because a `--fs-caption` on the body would resize the brand, the nav
+  and the footer along with the cards.
+- **The masthead is the only place the words themselves are centred.** Body
+  copy keeps its left edge: a centred column of prose costs the eye the start
+  of every line.
 - **1px borders on every box. `border-radius: 0`. No box-shadows.** Depth
-  comes from the border and the panel/background contrast, nothing else.
+  comes from the border and the panel/background contrast, nothing else. The
+  contributions heatmap is the one sanctioned exception, through `--gh-radius`:
+  its cells are a few pixels across, where a hard corner reads as a stray pixel
+  rather than as a square. It steps down with `--gh-gap` on short screens. Do
+  not spend the exception anywhere else.
 - Spacing off a single `--space` unit and `--gap`. Reading flow uses
   `--stack-lg` / `--stack-md` / `--stack-sm`; `--gap` is for grids.
-- Serif type (`--font`). The type scale is sized for it.
+- **Two faces, both already on the machine.** `--font` is the serif
+  everything is read in (Iowan Old Style / Charter / Georgia / Noto Serif — the
+  stack lands on a real book face on every platform and never on Times).
+  `--font-mono` is the caption role: eyebrows, chips, nav, brand, footer,
+  status, hints. If a string labels something it is mono; if it is read it is
+  serif. There is no webfont and no third face.
 - Visible `:focus-visible` states everywhere, not just `:hover`.
 - Home page bento grid uses `grid-template-areas` and is height-locked to one
   screen on desktop; boxes scroll internally rather than the page. Overflow is
   **measured at runtime**, never assumed at author time.
+
+### The header
+
+Three tracks: brand left, nav centred, switches right (`1fr auto 1fr`, so the
+nav is centred on the page rather than on what the switches left over). **The
+brand is the home link — that is why there is no Home item in the nav.** It is
+the word `7qob` and nothing else: the accent square that used to sit beside it
+is gone, and the hover it carried moved onto the word. Every switch lives in
+`.site-controls`; `script.js` puts the language button and the sign-out button
+there too, so the grid keeps its three tracks however many switches exist.
+
+On a phone the header becomes two rows — brand and switches, then the nav
+across the full width as **equal columns**. Each item gets the same share, so a
+fifth one (Admin, once signed in) costs no layout, nothing shrinks, nothing
+scrolls and there is no hamburger to open. It is sticky, and `width: auto` is
+load-bearing there: the shell's `width: 100%` fights the negative margins and
+the bar stops short of the right edge without it.
 
 ### Subpage rules (project pages, about, impressum, projects index)
 
@@ -111,24 +159,40 @@ measure column it was before.
   than two right edges, something added its own.
 - **Every top-level block in an article is a band**: hairline along the top,
   `--stack-md` of air under it, `--stack-lg` to the next band. That is
-  `.project__section`, `.project-row`, `.reveal`, `.figure`, `.datarow` and
-  `.linklist`. The lede is the only block above the first seam.
-- **The projects index is bands too, not cards.** One `.project-row` per
-  project — seam, screenshot, eyebrow, name, blurb, chips, corner arrow — on
-  the same `--measure-wide` rail as a project page, so the list and the page it
-  opens read as one document. The picture sits on `.mediarow`'s 20rem rail and
-  is cropped to 16:9, so four differently shaped screenshots do not give the
-  list four rhythms; a project with no cover drops the rail and takes the full
-  width. The seam is **painted, not bordered**: neutral to 68%, then the
-  project's shade / brand / tint on the same stops as `.box--edge`, so the
-  colour arrives at the end of the rule exactly as it does on a bento card.
-  `--seam` is the neutral run and hover is the only thing that moves it. The
-  old two-column `.project-grid` and its `is-wide` split are gone; cards live
-  on the bento home page only.
+  `.project__section`, `.reveal`, `.figure`, `.datarow` and `.linklist`. The
+  lede is the only block above the first seam.
+- **The projects index is a bento of cards.** One `.project-card` per project
+  in a two-column `.project-grid`, and the card is the home page's card: same
+  `.box`, same `.box--edge` rim, same `.box-arrow`, same eyebrow and chips in
+  the same order, so the two indexes read as one system. The cover bleeds to
+  the rim — the card carries no padding, `.project-card__body` does — and is
+  cropped to 16:9, so differently shaped screenshots do not give the grid
+  several rhythms.
+- **Under every cover sits `.shot-plate`.** It shows through when a project has
+  no picture yet, and `initFigures()` uncovers it by removing an `<img>` whose
+  file 404s. A missing screenshot costs a card its picture, never its cell.
+- **A wide card closes the grid.** `.project-card--feature` (the first project,
+  from the markup) always spans the row with its cover beside the words. When
+  an **even** number of cards is showing, the last one would sit alone in a
+  two-column row, so it goes wide as well — mirrored, cover on the right, so
+  the two do not read as a repeat. `layoutCards()` in `script.js` decides that
+  from what is actually visible, which is what keeps the grid closed while a
+  filter is on; the `:last-child:nth-child(even)` rule in the stylesheet is the
+  same answer for a page without JS. Only the feature reads at hero size.
 - **The index's filter bar is built by `script.js` from the chips already in
-  the rows.** The technologies are never written down twice, and a page with
+  the cards.** The technologies are never written down twice, and a page with
   no JS shows the whole list rather than buttons that do nothing. It is the
-  one piece of the index that is not in the markup.
+  one piece of the index that is not in the markup. On a phone it is a single
+  swipeable rail rather than five wrapped rows — which is why `.page-body` sets
+  `grid-template-columns: minmax(0, 1fr)`: an auto track would be sized by the
+  rail's full content and stretch the page instead of scrolling inside it.
+- **A page ends on an `.endcap`**: a hairline, a `.section-label` and a
+  `.linkrow` of `.link-box`es — the same pair about.html closes on, and the
+  same component the home page's links column is built from.
+- **Every subpage masthead is: eyebrow, title, lede** — `.page-head__label` in
+  the caption role with an accent rule either side, then the h1, then one
+  sentence. A project page's eyebrow is its `Featured` / `Project` card label,
+  which is why `Featured` is no longer also a badge on the name.
 - **Five type sizes, all from `--fs-*` tokens**: `--fs-name`, `--fs-subtitle`,
   `--fs-heading`, `--fs-lede`, `--fs-body`, plus `--fs-caption` for labels. A
   literal `rem` value in a rule is a bug.
@@ -151,6 +215,21 @@ measure column it was before.
 - No widgets needing a third-party backend (message board, map, Last.fm,
   Discord). The contributions graph is the one third-party call, it needs no
   token, and it degrades to cached or absent without breaking the page.
+- **No em-dashes in anything a visitor reads.** Not in page copy, not in a
+  `data-de`, not in an `aria-label`, not in a string `script.js`, `admin.js` or
+  `render.ts` puts on a screen. Use a comma, a colon, a semicolon, brackets or a
+  full stop, whichever the sentence actually wants. Where a dash was standing in
+  for an empty value (an admin table cell, a placeholder `<option>`) the site's
+  middle dot or a parenthesised word takes over. Source comments are not copy and
+  still use them.
+- **One sentence case for one component.** Every `.link-box__note` is a
+  capitalised sentence ending in a full stop, in both languages; they used to be
+  a mix of lowercase fragments and sentences, sitting side by side in the same
+  column. The same goes for the `data-de` twin of anything you fix: a casing
+  change that lands on only one language is half a change.
+- The `.section-label`, `.box__label`, `.page-head__label`, nav and footer roles
+  are uppercased **by the stylesheet**. Write them sentence case in the markup
+  and let the CSS do it, so the source stays readable and one rule decides.
 
 ## The backend, in one paragraph
 
@@ -179,9 +258,9 @@ description, some words and some pictures.
 render.ts`): `project-<slug>.html` per published project, a regenerated
 `projects.html`, and `index.html` — the home page. Pagers are derived from
 `sort_order`, so neighbouring pages re-render on every publish and the chain
-never goes stale. `projectRow()` renders the index, `projectCard()` renders the
-bento cells, and they are separate on purpose — the index is bands, the home
-page is cards.
+never goes stale. `projectIndexCard()` renders the index, `projectCard()`
+renders the bento cells, and they are separate on purpose — the index card has
+a cover and room to breathe, the bento cell has neither.
 
 The home page is a **splice, not a render**. `renderHome()` reads the template,
 replaces the region between `<!-- projects:start -->` and
@@ -288,8 +367,11 @@ adjusting this line get it wrong without you.
 - **A markup change in the renderer needs a Publish to take effect.** The
   generated `projects.html` on the Pi was written by the renderer that shipped
   before it. After deploying the picture-rail index, publish once — the live
-  page is still asking for `.project-row > .section-label`, which no longer
-  exists in `style.css`, and no row will carry a cover until it is republished.
+  page is still asking for `.project-row`, which no longer exists in
+  `style.css`, and no card will carry a cover until it is republished. The same
+  Publish is what drops the brand square from the generated pages — the static
+  files lost it with the edit, the generated ones carry the old header until
+  the renderer runs again.
 
 ## Deployment
 

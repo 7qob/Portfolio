@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Impressum · 7qob</title>
-  <meta name="description" content="">
+  <meta name="description" content="Legal information and privacy statement for kira1q.dev.">
 
-  <!-- Open Graph (empty — fill before sharing) -->
+  <!-- Open Graph (empty; fill before sharing) -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="">
   <meta property="og:description" content="">
@@ -28,20 +28,25 @@
 <body>
 
   <header class="site-header">
-    <nav class="site-nav" aria-label="Main">
-      <a href="index.html" data-de="Start">Home</a>
+    <a class="site-brand" href="index.html" aria-label="7qob, home" data-de-label="7qob, Startseite">
+      <span class="site-brand__name">7qob</span>
+    </a>
+    <nav class="site-nav" aria-label="Main" data-de-label="Hauptnavigation">
       <a href="projects.html" data-de="Projekte">Projects</a>
       <a href="about.html" data-de="Über mich">About</a>
       <a href="vault/index.html">Vault</a>
     </nav>
-    <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" data-de-label="Hell/Dunkel umschalten" aria-pressed="false">
-      <span data-theme-icon>
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      </span>
-    </button>
+    <div class="site-controls">
+      <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" data-de-label="Hell/Dunkel umschalten" aria-pressed="false">
+        <span data-theme-icon>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </span>
+      </button>
+    </div>
   </header>
 
   <div class="page-head">
+    <p class="page-head__label" data-de="Rechtliches">Legal</p>
     <h1 class="page-head__title" id="page-title">Impressum</h1>
     <p class="page-head__lede" data-de="Rechtliche Angaben zu dieser Website.">Legal information about this website.</p>
   </div>
@@ -78,7 +83,7 @@
 
       <p class="box__text" data-de="Die öffentlichen Seiten dieser Website setzen keine Cookies, binden keine Analyse- oder Tracking-Dienste ein und speichern nichts über Besucherinnen und Besucher.">The public pages of this site set no cookies, embed no analytics or tracking services, and store nothing about visitors.</p>
 
-      <p class="box__text" data-de='Der geschützte Bereich <span lang="en">(Vault)</span> ist nur mit einem persönlichen Zugang nutzbar. Wer sich anmeldet, für den werden gespeichert: Benutzername, Zeitpunkt der Anmeldung, IP-Adresse, Browserkennung <span lang="en">(User-Agent)</span> sowie welche Dokumente wann heruntergeladen wurden. Auch fehlgeschlagene Anmeldeversuche werden protokolliert — das ist nötig, um Missbrauch zu erkennen und automatisierte Angriffe zu bremsen.'>The protected area (Vault) can only be used with a personal account. For anyone who signs in, the following is stored: username, time of sign-in, IP address, browser identification (User-Agent), and which documents were downloaded when. Failed sign-in attempts are logged as well — that is necessary to detect misuse and to slow down automated attacks.</p>
+      <p class="box__text" data-de='Der geschützte Bereich <span lang="en">(Vault)</span> ist nur mit einem persönlichen Zugang nutzbar. Wer sich anmeldet, für den werden gespeichert: Benutzername, Zeitpunkt der Anmeldung, IP-Adresse, Browserkennung <span lang="en">(User-Agent)</span> sowie welche Dokumente wann heruntergeladen wurden. Auch fehlgeschlagene Anmeldeversuche werden protokolliert. Das ist nötig, um Missbrauch zu erkennen und automatisierte Angriffe zu bremsen.'>The protected area (Vault) can only be used with a personal account. For anyone who signs in, the following is stored: username, time of sign-in, IP address, browser identification (User-Agent), and which documents were downloaded when. Failed sign-in attempts are logged as well. That is necessary to detect misuse and to slow down automated attacks.</p>
 
       <p class="box__text" data-de='Diese Einträge werden nach 90 Tagen automatisch gelöscht. Passwörter werden ausschliesslich als <span lang="en">argon2id</span>-Hash gespeichert und sind auch für mich nicht lesbar. Die Daten liegen auf einem privat betriebenen Server in der Schweiz und werden nicht an Dritte weitergegeben.'>These entries are deleted automatically after 90 days. Passwords are stored exclusively as an argon2id hash and are unreadable even to me. The data sits on a privately operated server in Switzerland and is not passed on to third parties.</p>
 

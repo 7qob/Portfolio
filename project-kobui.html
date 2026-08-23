@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kobui · 7qob</title>
-  <meta name="description" content="">
+  <meta name="description" content="A local-only AI chat frontend made with React for the inference engine KoboldCpp.">
 
-  <!-- Open Graph (empty — fill before sharing) -->
+  <!-- Open Graph (empty; fill before sharing) -->
   <meta property="og:type" content="article">
-  <meta property="og:title" content="">
-  <meta property="og:description" content="">
+  <meta property="og:title" content="Kobui · 7qob">
+  <meta property="og:description" content="A local-only AI chat frontend made with React for the inference engine KoboldCpp.">
   <meta property="og:image" content="">
   <meta property="og:url" content="">
 
@@ -28,20 +28,25 @@
 <body>
 
   <header class="site-header">
-    <nav class="site-nav" aria-label="Main">
-      <a href="index.html" data-de="Start">Home</a>
+    <a class="site-brand" href="index.html" aria-label="7qob, home" data-de-label="7qob, Startseite">
+      <span class="site-brand__name">7qob</span>
+    </a>
+    <nav class="site-nav" aria-label="Main" data-de-label="Hauptnavigation">
       <a href="projects.html" aria-current="page" data-de="Projekte">Projects</a>
       <a href="about.html" data-de="Über mich">About</a>
       <a href="vault/index.html">Vault</a>
     </nav>
-    <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" data-de-label="Hell/Dunkel umschalten" aria-pressed="false">
-      <span data-theme-icon>
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      </span>
-    </button>
+    <div class="site-controls">
+      <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" data-de-label="Hell/Dunkel umschalten" aria-pressed="false">
+        <span data-theme-icon>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </span>
+      </button>
+    </div>
   </header>
 
   <div class="page-head page-head--project">
+    <p class="page-head__label"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span data-de="Projekt">Project</span></p>
     <h1 class="page-head__title" id="page-title">Kobui</h1>
     <ul class="chips">
         <li class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="10" ry="4.2"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(120 12 12)"/></svg>React</li>
@@ -54,7 +59,7 @@
   <main class="page-body page-body--project" aria-labelledby="page-title">
     <article class="project reading">
 
-      <p class="project__lede" data-de="Eine lokale, datenschutzfreundliche Alternative zu KI-Charakterdiensten in der Cloud — ein React-Chat-Frontend, das mit einem KoboldCpp-Server auf dem eigenen Rechner spricht.">A local, privacy-friendly alternative to cloud-based AI character services — a React chat frontend that talks to a KoboldCpp server running on your own machine.</p>
+      <p class="project__lede" data-de="Eine lokale, datenschutzfreundliche Alternative zu KI-Charakterdiensten in der Cloud: ein React-Chat-Frontend, das mit einem KoboldCpp-Server auf dem eigenen Rechner spricht.">A local, privacy-friendly alternative to cloud-based AI character services: a React chat frontend that talks to a KoboldCpp server running on your own machine.</p>
 
       <section class="project__section" aria-labelledby="lbl-run">
         <h2 class="section-label" id="lbl-run" data-de="So läuft es">Running it</h2>
@@ -78,7 +83,7 @@
             </tbody>
           </table>
         </div>
-        <div class="note" data-de='Die Dokumentation liegt der App bei — in den Einstellungen oder direkt unter <code>/docs</code>. Nichts verlässt den Rechner: das Frontend spricht ausschliesslich mit der eigenen KoboldCpp-Instanz.'>Documentation ships with the app — in settings, or directly at <code>/docs</code>. Nothing leaves the machine: the frontend only ever talks to your own KoboldCpp instance.</div>
+        <div class="note" data-de='Die Dokumentation liegt der App bei, in den Einstellungen oder direkt unter <code>/docs</code>. Nichts verlässt den Rechner: das Frontend spricht ausschliesslich mit der eigenen KoboldCpp-Instanz.'>Documentation ships with the app, in settings or directly at <code>/docs</code>. Nothing leaves the machine: the frontend only ever talks to your own KoboldCpp instance.</div>
         <div class="note" data-de="Claude hat bei Komponenten-Architektur, CSS Modules, TypeScript und der KoboldCpp-Integration mitgeholfen. Aller generierte Code wurde geprüft und angepasst; die Design- und Feature-Entscheidungen sind meine.">Claude assisted with component architecture, CSS Modules, TypeScript and the KoboldCpp integration. All generated code was reviewed and adapted; the design and feature decisions are mine.</div>
       </section>
 

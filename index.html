@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>7qob · Portfolio</title>
-  <meta name="description" content="">
+  <meta name="description" content="Matti Näf (7qob), a computer science student in Bern, Switzerland. Projects in machine learning, security tooling and design, and a CV behind a password.">
 
-  <!-- Open Graph (empty — fill before sharing) -->
+  <!-- Open Graph (empty; fill before sharing) -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="">
-  <meta property="og:description" content="">
+  <meta property="og:title" content="7qob · Portfolio">
+  <meta property="og:description" content="Computer science student in Bern, Switzerland. Tools, servers and experiments, mostly things I wanted for myself first.">
   <meta property="og:image" content="">
   <meta property="og:url" content="">
 
@@ -29,17 +29,21 @@
 <body class="is-home">
 
   <header class="site-header">
-    <nav class="site-nav" aria-label="Main">
-      <a href="index.html" aria-current="page" data-de="Start">Home</a>
+    <a class="site-brand" href="index.html" aria-current="page" aria-label="7qob, home" data-de-label="7qob, Startseite">
+      <span class="site-brand__name">7qob</span>
+    </a>
+    <nav class="site-nav" aria-label="Main" data-de-label="Hauptnavigation">
       <a href="projects.html" data-de="Projekte">Projects</a>
       <a href="about.html" data-de="Über mich">About</a>
       <a href="vault/index.html">Vault</a>
     </nav>
-    <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" data-de-label="Hell/Dunkel umschalten" aria-pressed="false">
-      <span data-theme-icon>
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      </span>
-    </button>
+    <div class="site-controls">
+      <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" data-de-label="Hell/Dunkel umschalten" aria-pressed="false">
+        <span data-theme-icon>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </span>
+      </button>
+    </div>
   </header>
 
   <!-- data-projects = how many cards sit between the markers below. It picks
@@ -48,9 +52,9 @@
   <main class="bento" data-projects="0">
 
     <section class="box area-name" aria-labelledby="lbl-name">
-      <h1 class="hero__title" id="lbl-name" data-de='Hallo, ich bin <span class="accent">7qob</span>'>Hello I'm <span class="accent">7qob</span></h1>
+      <h1 class="hero__title" id="lbl-name" data-de='Hallo, ich bin <span class="accent">7qob</span>'>Hello, I'm <span class="accent">7qob</span></h1>
       <div class="box__body">
-        <p class="box__text" data-de='Ich bin Matti — 17 Jahre alt, Informatikschüler im dritten Jahr an der IMS, und gerade an <span class="accent">meinem Portfolio</span>.'>I'm Matti — a 17 year old computer science student in my third year at the IMS, currently working on <span class="accent">my portfolio</span>.</p>
+        <p class="box__text" data-de='Ich bin Matti, 17 Jahre alt, Informatikschüler im dritten Jahr an der IMS, und arbeite gerade an <span class="accent">meinem Portfolio</span>.'>I'm Matti, a 17-year-old computer science student in my third year at the IMS, currently working on <span class="accent">my portfolio</span>.</p>
         <p class="hero__loc">
           <span class="hero__loc-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
           <span data-de="Bern, Schweiz">Bern, Switzerland</span>
@@ -64,7 +68,7 @@
     <a class="box box--link area-about" href="about.html" aria-labelledby="lbl-about">
       <h2 class="box__label" id="lbl-about"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span data-de="Über mich">About me</span></h2>
       <div class="box__body">
-        <p class="box__text" data-de="Das meiste, was ich baue, fängt als etwas an, das ich selbst haben wollte — ein Tool, ein Server, ein kleines Spiel. Abseits der Tastatur sind es Sport, Games, Anime und Musik, dazu ab und zu ein Wochenende Skifahren oder Wandern.">Most of what I build starts as something I wanted for myself — a tool, a server, a small game. Away from the keyboard it's sport, games, anime and music, plus the occasional weekend of skiing or hiking.</p>
+        <p class="box__text" data-de="Das meiste, was ich baue, fängt als etwas an, das ich selbst haben wollte: ein Tool, ein Server, ein kleines Spiel. Abseits der Tastatur sind es Sport, Games, Anime und Musik, dazu ab und zu ein Wochenende Skifahren oder Wandern.">Most of what I build starts as something I wanted for myself: a tool, a server, a small game. Away from the keyboard it's sport, games, anime and music, plus the occasional weekend of skiing or hiking.</p>
 
         <p class="box__text" data-de="Ich bin in Bern, Schweiz, zu Hause und suche zurzeit ein Praktikum in Machine Learning, Security-Tooling und Design. Ich spreche Deutsch (Muttersprache) und Englisch und lerne Mandarin.">I'm based in Bern, Switzerland and currently looking for a Praktikum in machine learning, security tooling and design. I speak German (native) and English, and I'm learning Mandarin.</p>
       </div>
@@ -84,7 +88,7 @@
     </section>
 
     <!-- Links column: 3 standalone boxes, each its own clickable element. -->
-    <section class="box-stack area-buttons" aria-label="Links">
+    <section class="box-stack area-buttons" aria-label="Links" data-de-label="Verweise">
 
       <a class="link-box" href="https://github.com/7qob" target="_blank" rel="noopener">
         <span class="link-box__caption" data-de="Profil">Profile</span>
@@ -94,7 +98,7 @@
           </span>
           GitHub
         </span>
-        <span class="link-box__note" data-de="hier liegt mein Zeug.">this is where my stuff lies.</span>
+        <span class="link-box__note" data-de="Hier liegt mein Zeug.">This is where my stuff lives.</span>
         <span class="box-arrow box-arrow--external" aria-hidden="true">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
         </span>
@@ -108,7 +112,7 @@
           </span>
           <span data-de="E-Mail">Email</span>
         </span>
-        <span class="link-box__note" data-de="der schnellste Weg, mich direkt zu erreichen.">the fastest way to reach me directly.</span>
+        <span class="link-box__note" data-de="Der schnellste Weg, mich direkt zu erreichen.">The fastest way to reach me directly.</span>
         <span class="box-arrow box-arrow--external" aria-hidden="true">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
         </span>

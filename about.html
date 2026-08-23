@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title data-de="Über mich · 7qob">About · 7qob</title>
-  <meta name="description" content="">
+  <meta name="description" content="What I'm into away from the keyboard, and the desk I do it at. Matti Näf, 17, a computer science student in Bern, Switzerland.">
 
-  <!-- Open Graph (empty — fill before sharing) -->
+  <!-- Open Graph (empty; fill before sharing) -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="">
-  <meta property="og:description" content="">
+  <meta property="og:title" content="About · 7qob">
+  <meta property="og:description" content="What I'm into, and the desk I do it at.">
   <meta property="og:image" content="">
   <meta property="og:url" content="">
 
@@ -28,32 +28,34 @@
 <body>
 
   <header class="site-header">
-    <nav class="site-nav" aria-label="Main">
-      <a href="index.html" data-de="Start">Home</a>
+    <a class="site-brand" href="index.html" aria-label="7qob, home" data-de-label="7qob, Startseite">
+      <span class="site-brand__name">7qob</span>
+    </a>
+    <nav class="site-nav" aria-label="Main" data-de-label="Hauptnavigation">
       <a href="projects.html" data-de="Projekte">Projects</a>
       <a href="about.html" aria-current="page" data-de="Über mich">About</a>
       <a href="vault/index.html">Vault</a>
     </nav>
-    <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" data-de-label="Hell/Dunkel umschalten" aria-pressed="false">
-      <span data-theme-icon>
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      </span>
-    </button>
+    <div class="site-controls">
+      <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle dark/bright" data-de-label="Hell/Dunkel umschalten" aria-pressed="false">
+        <span data-theme-icon>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </span>
+      </button>
+    </div>
   </header>
 
   <div class="page-head">
+    <p class="page-head__label" data-de="Profil">Profile</p>
     <h1 class="page-head__title" id="page-title" data-de="Über mich">About</h1>
-    <p class="page-head__lede" data-de="Wer ich bin, was mich interessiert und was ich suche.">Who I am, what I'm into, and what I'm looking for.</p>
+    <p class="page-head__lede" data-de="Was mich interessiert, und der Schreibtisch, an dem ich es mache.">What I'm into, and the desk I do it at.</p>
   </div>
 
   <main class="page-body" aria-labelledby="page-title">
     <div class="about">
 
       <div class="about__lead reading">
-        <p data-de="Ich heisse Matti Näf, bin 17, Informatikschüler in Bern, Schweiz, und im dritten Jahr an der IMS — der Informatikmittelschule.">My name is Matti Näf. I'm 17, a computer science student in Bern, Switzerland, and in my third year at the IMS — the Informatikmittelschule.</p>
-        <p data-de='Das meiste, was ich bisher gebaut habe, wollte ich zuerst selbst haben: was mich gerade interessiert hat, oder was meinen eigenen Tag ein bisschen einfacher gemacht hat. Daher kommt alles unter <a href="projects.html">Projekte</a> — ein Reverse Proxy, damit mein eigener LLM-Server von aussen erreichbar ist, ohne offen zu stehen (Ignite), ein Chat-Frontend, das meinen Rechner nie verlässt (Kobui), ein Dashboard für den Minecraft-Server auf meinem Raspberry Pi (Stalkr) und ein ComfyUI-Workflow, an dem ich so lange geschraubt habe, bis er es wert war, ihn wiederzuverwenden.'>Most of what I have built so far is something I wanted for myself first: whatever I was curious about at the time, or whatever made my own day a little easier. That is where everything under <a href="projects.html">projects</a> came from — a reverse proxy so my own LLM server can be reached from outside without being left open (Ignite), a chat frontend that never leaves my machine (Kobui), a dashboard for the Minecraft server on my Raspberry Pi (Stalkr), and a ComfyUI workflow I kept tuning until it was worth reusing.</p>
-        <p data-de="Meine liebsten Fächer sind Informatik, Englisch, Deutsch, Sport und Chemie. Ausserhalb der Schule bin ich entweder mit meinen Freunden unterwegs — treffen, oder einen Abend lang im Voice-Chat — oder ich arbeite an meinen eigenen Sachen und stelle sie online.">The subjects I like most are computer science, English, German, sports and chemistry. Outside school I'm either with my friends — meeting up, or sitting in a voice chat for an evening — or working on my own things and putting them online.</p>
-        <p data-de='Was ich beruflich wirklich machen möchte, ist <strong>Machine Learning, Security-Tooling und Design</strong>. Genau dafür suche ich gerade ein <strong>Praktikum</strong>.'>What I would really like to do professionally is <strong>machine learning, security tooling and design</strong>. Right now I'm looking for a <strong>Praktikum</strong> in that direction.</p>
+        <p data-de="Ich habe viele Interessen. Ich bin dankbar, dass ich diese Dinge machen kann.">I have many interests. I am grateful to be able to do such things.</p>
       </div>
 
       <!-- Closed on purpose: inside a closed <details> a loading=lazy image has
@@ -81,7 +83,7 @@
             <img class="mediarow__media" src="assets/keyboard.gif" width="480" height="270" loading="lazy" decoding="async" alt="A close pass along a black mechanical keyboard with dark keycaps, on a wooden desk." data-de-alt="Eine nahe Fahrt entlang einer schwarzen mechanischen Tastatur mit dunklen Keycaps auf einem Holztisch.">
             <div class="mediarow__text reading">
               <h3 class="mediarow__title" data-de="Die Tastatur">The keyboard</h3>
-              <p data-de="Komplett schwarz — schwarzes Gehäuse, schwarze Keycaps, nichts darauf gedruckt, was das Licht einfängt. Sie steht genau vor dem Monitor, das Kabel läuft hinten über die Tischkante.">All black — black case, black keycaps, nothing printed on them that catches the light. It sits square in front of the monitor with the cable running back over the edge of the desk.</p>
+              <p data-de="Komplett schwarz: schwarzes Gehäuse, schwarze Keycaps, nichts darauf gedruckt, was das Licht einfängt. Sie steht genau vor dem Monitor, das Kabel läuft hinten über die Tischkante.">All black: black case, black keycaps, nothing printed on them that catches the light. It sits square in front of the monitor with the cable running back over the edge of the desk.</p>
             </div>
           </div>
 
@@ -106,38 +108,33 @@
 
       <section class="project__section" aria-labelledby="lbl-building">
         <h2 class="section-label" id="lbl-building" data-de="Dinge bauen">Building things</h2>
-        <p data-de="Als ich klein war, habe ich die meiste Zeit mit Lego verbracht. Aus einem Haufen identischer Steine ein ganzes Ding zu machen, hat irgendeinen Teil meines Gehirns angesprochen, und der hat nie wieder abgeschaltet — bis heute baue ich gern Dinge aus Teilen, die nie füreinander gedacht waren, was ziemlich genau die Beschreibung eines Homelabs ist.">When I was young I spent most of my time on Lego. Making a whole thing out of a pile of identical blocks stimulated some part of my brain, and it never really switched off — to this day I like building things out of parts that were never meant for each other, which is more or less the description of a homelab.</p>
-      </section>
-
-      <section class="project__section" aria-labelledby="lbl-flow">
-        <h2 class="section-label" id="lbl-flow" data-de="Flow">Flow</h2>
-        <p data-de="Wenn mich etwas interessiert, kann ich ihm den ganzen Tag geben. Sobald es mich hat, bleibt nur noch diese eine Sache im Raum, und Musik bringt mich am schnellsten dorthin: sobald meine eigenen Songs laufen, ist es wie ein abgeschlossener Raum mit einer einzigen Aufgabe darin. Zusammen damit, stundenlang am Stück arbeiten zu können, fühlt sich das ein bisschen nach Schummeln an.">When something has my interest, I can give it the entire day. Once I'm captured by it there is only the one thing left in the room, and music is what gets me there fastest: as soon as my own songs are playing it's like a closed-off space with a single task inside it. Together with being able to work for hours straight, that combination feels a bit like cheating.</p>
+        <p data-de="Als ich klein war, habe ich viel mit Lego gespielt. Das hat einen Teil meines Gehirns angesprochen, der gern Sachen aus Bausteinen macht. Ich mache das immer noch gern.">When I was young, I played with Lego a lot. It stimulated a part of my brain that likes to create stuff out of blocks. I still like doing it.</p>
       </section>
 
       <section class="project__section" aria-labelledby="lbl-sports">
         <h2 class="section-label" id="lbl-sports" data-de="Sport">Sports</h2>
-        <p data-de="Ich habe immer Sport gemacht und mache ihn immer noch. Er gibt mir ein Gefühl von Freiheit und Leichtigkeit — so schnell zu rennen, wie ich kann, ist ein Gefühl, das ich wohl nie verliere. Meine kompetitive Seite ist in diesem Umfeld gross geworden, bevor sie irgendwo sonst aufgetaucht ist.">I've always done sport and I still do. It makes me feel free and light — running as fast as I can is a feeling I don't think I'll ever lose. The competitive side of me grew up in that environment before it turned up anywhere else.</p>
+        <p data-de="Ich habe schon immer gern Sport gemacht. Er gibt mir wirklich ein Gefühl von Freiheit und Leichtigkeit, vor allem so schnell zu rennen, wie ich kann. Ich glaube, dass der Sport meine kompetitive Seite geprägt hat.">I have always liked to do sports. It really makes me feel free and light, especially running as fast as I can. I believe that doing sports has developed my competitive side.</p>
       </section>
 
-      <section class="project__section" aria-labelledby="lbl-outdoors">
-        <h2 class="section-label" id="lbl-outdoors" data-de="Skifahren und Wandern">Skiing and hiking</h2>
-        <p data-de="Beides ist eher gelegentlich als wöchentlich — ich komme dazu, wenn Saison und Wochenende zusammenpassen —, aber es sind die beiden Dinge, die ich am liebsten mache.">Both are occasional rather than weekly — I get to them when the season and the weekend agree — but they are the two I like doing most.</p>
-      </section>
-
-      <section class="project__section" aria-labelledby="lbl-games">
-        <h2 class="section-label" id="lbl-games" data-de="Games">Games</h2>
-        <p data-de="Games sind für mich eine Art, mich online auszudrücken. Viel von meiner Zeit darin geht ins Bauen von Charakteren und Profilen statt ins Spiel selbst. Die Genres sind völlig quer durch — manche kompetitiv, manche technisch, und manche einfach unfassbar schlecht — und bisher hatte ich mit Freunden so viel Spass wie allein.">Playing games is a way of expressing myself online. A lot of my time in them goes into creating characters and profiles rather than into the game itself. The genres are all over the place — some competitive, some technical, and some just stupidly bad — and so far I've had as much fun with friends as alone.</p>
-        <p data-de="Wo es ein Ziel zum Draufhalten gibt, entscheidet das Aim, und meines ist wahrscheinlich der Grund, warum ich kompetitive Spiele so mag. Gegen andere Leute auf reine Technik zu gewinnen, macht mich unaufhaltsam. Das ist pures Dopamin.">Where there is a target to shoot at, aim decides it, and mine is probably why I like competitive games as much as I do. Winning against other people on raw technique makes me feel unstoppable. It's pure dopamine.</p>
+      <section class="project__section" aria-labelledby="lbl-flow">
+        <h2 class="section-label" id="lbl-flow" data-de="Flow">Flow</h2>
+        <p data-de="Manchmal, wenn mir etwas richtig gefällt, kann ich mich voll auf die Sache konzentrieren. Musik zu hören macht mich glücklich.">Sometimes, when I really like to do something, I am able to fully concentrate on the task. Listening to music makes me happy.</p>
       </section>
 
       <section class="project__section" aria-labelledby="lbl-anime">
         <h2 class="section-label" id="lbl-anime" data-de="Anime">Anime</h2>
-        <p data-de="Ich schaue Anime, weil er dem echten Leben nicht ähneln muss. Er liest sich eher wie ein Paralleluniversum, und in manchen davon kann ich mich selbst leben sehen.">I watch anime because it doesn't have to resemble real life. It reads more like an alternate universe, and in some of them I can picture myself living.</p>
+        <p data-de="Ich schaue gern Anime, weil sie das echte Leben nicht abbilden. Sie sind wie Paralleluniversen. In manchen davon könnte ich mich selbst leben sehen.">I like to watch anime, because they don't mirror real life. They are like alternate universes. I could see myself living in some of them.</p>
+      </section>
+
+      <section class="project__section" aria-labelledby="lbl-games">
+        <h2 class="section-label" id="lbl-games" data-de="Games">Games</h2>
+        <p data-de="Games sind für mich eine Art, mich online auszudrücken, indem ich Zeit damit verbringe, Charaktere oder Profile zu erstellen. Ich spiele aber ganz verschiedene Genres. Manche davon sind kompetitiv, manche technisch und manche einfach nur Spass. Ich spiele entweder mit Freunden oder allein.">Playing games is a way of expressing myself online, spending time creating characters or profiles. I do play a lot of different genres though. Some of them are competitive, some are technical and some are just pure fun. I play games either with friends, or by myself.</p>
+        <p data-de="In Games, in denen man auf ein Ziel schiessen muss, braucht man gutes Aim. Mein gutes Aim ist wahrscheinlich der Grund, warum ich solche kompetitiven Spiele so mag. Gegen andere allein mit purer Technik zu gewinnen, macht mich unaufhaltsam. Das ist pures Dopamin!">In games, where you have to shoot at a target, you need good aim. My good aim is probably why I like such competitive games that much. Being able to win against others with just raw technique makes me feel unstoppable. It is pure dopamine!</p>
       </section>
 
       <section class="project__section" aria-labelledby="lbl-langs">
         <h2 class="section-label" id="lbl-langs" data-de="Sprachen">Languages</h2>
-        <p data-de="Sprachen lernen war bei mir bisher eine passive Sache. In letzter Zeit ist es Mandarin — weit genug, um mich auszudrücken, und vielleicht eines Tages, um mit Muttersprachlern zu reden. Ohne Bücher und ohne festen Plan bin ich damit nicht so weit gekommen, wie ich gern gewesen wäre, aber Chinesisch ist die Sprache, die mich wirklich interessiert.">Learning languages has been a passive thing for me so far. Lately it has been Mandarin — far enough to express myself, and maybe one day to talk to native speakers. Without books or a structured plan I haven't got as far with it as I would have liked, but Chinese is the one that really interests me.</p>
+        <p data-de="Sprachen lernen habe ich in den letzten Jahren eher passiv gemacht. Trotzdem lerne ich sie sehr gern. Im Moment lerne ich Mandarin-Chinesisch. Es ist eine Sprache, die mich wirklich fasziniert.">Learning languages is something I have been doing more passively in the past years. Even so, I enjoy learning them very much. At the moment I am learning Mandarin Chinese. It is a language that really fascinates me.</p>
         <dl class="datarow">
           <div class="datarow__cell">
             <dt data-de="Deutsch">German</dt>
@@ -156,7 +153,7 @@
 
       <section class="project__section" aria-labelledby="lbl-contact">
         <h2 class="section-label" id="lbl-contact" data-de="Kontakt">Get in touch</h2>
-        <div class="about-contact">
+        <div class="linkrow">
 
           <a class="link-box" href="mailto:matti.naef@bwdbern.ch">
             <span class="link-box__caption" data-de="Kontakt">Reach me</span>
@@ -166,7 +163,7 @@
               </span>
               <span data-de="E-Mail">Email</span>
             </span>
-            <span class="link-box__note" data-de="der schnellste Weg, mich direkt zu erreichen.">the fastest way to reach me directly.</span>
+            <span class="link-box__note" data-de="Der schnellste Weg, mich direkt zu erreichen.">The fastest way to reach me directly.</span>
             <span class="box-arrow box-arrow--external" aria-hidden="true">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
             </span>
@@ -180,7 +177,7 @@
               </span>
               GitHub
             </span>
-            <span class="link-box__note" data-de="hier liegt mein Zeug.">this is where my stuff lies.</span>
+            <span class="link-box__note" data-de="Hier liegt mein Zeug.">This is where my stuff lives.</span>
             <span class="box-arrow box-arrow--external" aria-hidden="true">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
             </span>
