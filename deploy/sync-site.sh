@@ -73,7 +73,7 @@ sudo rsync -a --delete \
   --exclude '.claude/' --exclude '.git/' --exclude '.github/' \
   --exclude '*.zip' \
   --exclude 'vault/files/' \
-  "$UPLOAD"/ "$WEBROOT"/
+  "$SRC"/ "$WEBROOT"/
 
 sudo chown -R www-data:www-data "$WEBROOT"
 sudo find "$WEBROOT" -type d -exec chmod 755 {} \;
