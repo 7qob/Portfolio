@@ -126,7 +126,29 @@ one.
   `--font-mono` is the caption role: eyebrows, chips, nav, brand, footer,
   status, hints. If a string labels something it is mono; if it is read it is
   serif. There is no webfont and no third face.
-- Visible `:focus-visible` states everywhere, not just `:hover`.
+- **Two hover signals, and nothing else.** A box lifts: `--border-hover` on
+  the rim, `--fg-strong` on the type, plus the inner corner wash. It never
+  takes the accent, because a page holds a dozen boxes and a dozen red rims is
+  a warning light rather than a design. Anything that is really a word takes
+  `--accent`: prose links, nav, the brand, footer links, `.linklist`, document
+  rows, filter chips, icon buttons, a `.reveal` summary, the clip buttons, the
+  admin tabs. Hover and `:focus-visible` always move together, and a new hover
+  that is neither of these two means one of them was what you wanted.
+- **Each signal is declared exactly once**, as a selector list next to that
+  comment: one `color: var(--accent)` rule, one `border-color:
+  var(--border-hover)` rule, one focus ring on
+  `a, button, summary, input, select, textarea, [tabindex]`. **A component adds
+  its selector to a list; it does not write the declaration again.** That is
+  not tidiness. The site ended up with three different hovers and seventeen
+  copies of the same focus ring precisely because every new component wrote
+  its own, and fifteen copies of one colour drift the moment somebody updates
+  fourteen. What stays local to a component is only what is unique to it: an
+  underline, a rotation, an arrow that nudges, an offset. Three rules override
+  the shared offset (`.site-nav a`, `.admin-tab`, `.reveal__summary`) and
+  nothing else should.
+- Visible `:focus-visible` states everywhere, not just `:hover`. Never
+  `outline: none` without putting a ring back: the footer links carried one
+  for months and a keyboard visitor could not see where they were.
 - Home page bento grid uses `grid-template-areas` and is height-locked to one
   screen on desktop; boxes scroll internally rather than the page. Overflow is
   **measured at runtime**, never assumed at author time.
@@ -182,8 +204,18 @@ measure column it was before.
 - **The index's filter bar is built by `script.js` from the chips already in
   the cards.** The technologies are never written down twice, and a page with
   no JS shows the whole list rather than buttons that do nothing. It is the
-  one piece of the index that is not in the markup. On a phone it is a single
-  swipeable rail rather than five wrapped rows — which is why `.page-body` sets
+  one piece of the index that is not in the markup. **It is shut by default**:
+  the index exists to show the projects, and eleven chips standing between the
+  masthead and the first card are a tool nobody has asked for yet. What is open
+  is remembered in `localStorage.projectFilterOpen`; **the chosen filter is
+  not**, because returning to a page that has silently hidden most of itself is
+  a bug report waiting to happen. The shut toggle keeps naming the active
+  filter and its count (`Comfyui · 1`) and wears the accent rim, so a closed
+  panel is never the unexplained reason two thirds of the grid is missing.
+  Each chip carries the number of cards it would leave, clicking the chip that
+  is already on clears it, and Escape backs out one step at a time: the filter
+  first, then the panel. On a phone it is a single swipeable rail rather than
+  five wrapped rows — which is why `.page-body` sets
   `grid-template-columns: minmax(0, 1fr)`: an auto track would be sized by the
   rail's full content and stretch the page instead of scrolling inside it.
 - **A page ends on an `.endcap`**: a hairline, a `.section-label` and a
@@ -241,7 +273,15 @@ secret anywhere in the service** — nothing is signed, so the image can be
 public and the compose file has no credentials in it. Accounts are issued by
 an admin and the password is generated server-side and shown exactly once.
 Vault documents live in `/var/lib/kira1q/vault-files/` on the Pi, outside the
-web root, and are streamed only after a session check.
+web root, and are streamed only after a session check. `GET /vault/archive`
+sends all of them as one ZIP, built by `server/src/vault/zip.ts` — a store-only
+writer in one file with **no dependency**, because a PDF is already compressed
+and deflating it again would buy a percent and cost a lockfile entry. It holds
+the archive in memory and refuses over 64 MB rather than emit something only
+half the unzippers can read, and it **logs one download per document, not one
+for the archive**: the log answers "who read my references", and an entry
+saying "downloaded everything" makes that unanswerable a year later, when what
+everything meant has changed.
 
 ## Project pages from the admin panel
 
@@ -315,17 +355,44 @@ Rules the implementation enforces — keep them enforced:
   the `width`/`height` attributes; the `reveal` band's "N clips · X MB" hint
   is computed from real sizes, never typed.
 
-The four original `project-*.html` files are still on disk and still answer
-their URLs, but nothing links to them any more: the home page's cards, the
-projects index and the pagers all come from the database. They are kept so old
-links do not break, and they are the one place the pre-rebuild markup can
-still be read. They carry no accent — the palette classes were
-stripped with the rest of them — so they wear the site accent.
+The four original `project-*.html` files are **gone**. Nothing linked to them
+after the rebuild, and while they sat in the repo they were worse than dead
+weight: `location ~* \.html$` in the nginx config tries `$uri` before
+`/pages/$uri`, so a stale hand-written file was being served in place of the
+generated page for its own URL. Deleting them is what lets the generated one
+answer. The pre-rebuild markup is in `git log`, which is where that kind of
+thing belongs. `project-template.html` stays — it is the CSS catalogue, and
+nginx refuses to serve it.
+
+The URLs still work, through the `/pages/` fallback, **as long as the project
+is published under the same slug**. If one is not, the request now lands on
+`404.html` rather than on nginx's white default page (`error_page 404`, and
+the location is `internal` so `/404.html` is never itself a 200 for a crawler
+to index as a soft 404).
 
 `index.html` and `projects.html` are rsynced as before, but nginx serves the
 generated copies first for those two URLs (`location = /` in
 `deploy/nginx-kira1q.dev.conf`); the rsynced ones are the template and the
 never-published fallback.
+
+## Shared helpers
+
+`script.js` and `admin.js` both build DOM by hand, and both use the same three
+helpers rather than repeating the same three lines at every call site. Keep
+using them; a new `document.createElement` in either file is almost always one
+of these written out longhand.
+
+- `el(tag, className, text)` — the node, its class and its text in one call.
+  Same signature in both files on purpose.
+- `iconSpan(className, svg)` — a decorative glyph, `aria-hidden`, sized by its
+  class. It is the **one** sanctioned `innerHTML` in `script.js`, and the
+  reason is not that it is an icon: it is that every string passed to it is an
+  `ICON_*` literal in the same file. The admin panel's `textContent` rule is
+  untouched by it.
+- `recall(area, key)` / `remember(area, key, value)` — storage that cannot
+  throw. `localStorage` and `sessionStorage` raise rather than return null in
+  private mode and under a blocked-storage policy, and a site whose theme
+  toggle throws is worse than one that forgets the theme.
 
 ## Comments
 
@@ -352,6 +419,22 @@ adjusting this line get it wrong without you.
   after authentication. It was hardcoded once, which told anyone who viewed
   source what documents existed. Do not put it back. There is a check for this
   in `deploy/README.md` §3.6.
+- **And it does not paint the names it is given, either.** Three separate
+  things are sensitive there and they are not the same thing: whether a
+  document exists (never leaves the server unauthenticated), what it is called
+  (a title tells a bystander, a screen share or a beamer what the file is
+  without anyone getting past the password), and who read it (answered by
+  saying so in the guard bar, because the `download_log` does record it). So
+  the rows arrive covered: a mono redaction bar, quantised to steps of four
+  characters so a long name and a longer one look the same, and one click to
+  uncover. The cover is **display, not access** — a covered row still
+  downloads, and a covered title is still in the accessibility tree behind
+  `.visually-hidden`, because a screen reader is read to one person through an
+  earpiece rather than shown to the room. A reveal lasts the tab
+  (`sessionStorage`, never `localStorage`) and covers itself again once the tab
+  has been away more than `VAULT_RECOVER_MS`. Count, size and file type stay
+  legible throughout: they are not sensitive, and a visitor has to know there
+  is something worth fetching before deciding to uncover anything.
 - **In the admin panel, use `textContent`, never `innerHTML`.** It displays
   user-agent strings and usernames from failed logins — attacker-chosen text
   the server stored verbatim, as it should.
@@ -371,10 +454,74 @@ adjusting this line get it wrong without you.
   `style.css`, and no card will carry a cover until it is republished. The same
   Publish is what drops the brand square from the generated pages — the static
   files lost it with the edit, the generated ones carry the old header until
-  the renderer runs again.
+  the renderer runs again. The favicon is the same story: it is a black circle
+  in the static pages and in `FAVICON` in `render.ts`, and a generated page
+  keeps the old bordered square until the next Publish.
+
+## Tests
+
+`server/` has tests and CI runs them. **They use Node's own test runner** —
+`node --test` against `tsc` output — so there is no jest, no ts-jest and no
+new dependency, which is the same rule the rest of the repo lives by.
+
+```
+npm test          # in server/
+```
+
+Three files, and they are not there for coverage:
+
+- `src/vault/zip.test.ts` — the archive writer is hand-rolled, so the test
+  reads the bytes back **by hand, at the offsets the spec names**, rather than
+  round-tripping through the same code that wrote them: code that is wrong
+  agrees with itself. The CRC is pinned to the published `123456789` check
+  vector, which is the assertion that catches a wrong polynomial or a
+  little-endian slip in one number instead of in a corrupt file months later.
+- `src/projects/render.test.ts` — `esc` and `inline` are the entire boundary
+  between the admin form and a published page. If one regresses the panel
+  becomes a stored-XSS injector into a static file, and nothing else in the
+  stack is looking.
+- `src/vault/vault.service.test.ts` — `resolvePath`, the last line of defence
+  on path traversal and the only one of the three still standing if a filename
+  ever reaches the database from somewhere other than the panel.
+
+`tsconfig.build.json` is what keeps `*.test.ts` out of the image, and the
+Dockerfile copies it. `tsconfig.test.json` builds to `dist-test/`, which is
+gitignored.
 
 ## Deployment
 
-GitHub Actions builds the arm64 image on pushes touching `server/` and
-publishes to GHCR. The Pi pulls it. The static site is rsynced separately.
+GitHub Actions typechecks, **runs the tests**, and builds the arm64 image on
+pushes touching `server/`, then publishes to GHCR.
+
+Updating the Pi is **one command**, run there or over ssh:
+
+```
+~/Portfolio/deploy/update.sh          # both halves; --static / --api for one
+```
+
+It pulls the repository (public, so no key and no secret on the Pi), copies
+the site in, reloads nginx only if the server block actually changed, pulls
+the API image, waits for the container to report healthy, and then checks nine
+URLs including that `/api/vault/items` still answers 401. It also says out
+loud when the pull touched `render.ts`, because a renderer change does not
+reach a visitor until Publish runs and that is the way a deploy most often
+looks finished and is not.
+
+Three scripts, and the split matters:
+
+- `sync-site.sh` — **the only copy of the rsync exclude list in the repo.** It
+  used to live inside `setup-pi.sh`; a second copy in an update script would
+  be a second copy of `--delete` with slightly different exclusions, and the
+  first time the two drifted it would take the vault files or every published
+  page with it. One list, two callers.
+- `setup-pi.sh` — first run only. Installs nginx, creates the directories the
+  container writes into, calls `sync-site.sh`, installs the server block.
+- `update.sh` — every run after.
+
+`~/Portfolio` on the Pi should be a **git clone, not a WinSCP upload**. A
+checkout can say what is actually deployed; a copied directory cannot. It also
+gets LF line endings, where a binary-mode copy of a Windows working tree hands
+the Pi shell scripts full of carriage returns — which is also why
+`.gitattributes` pins `*.sh` and `*.conf` to `eol=lf`.
+
 Full runbook in `deploy/README.md`.
