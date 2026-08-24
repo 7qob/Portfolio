@@ -11,6 +11,44 @@
    element does. It is author-written, from this repo, exactly as trusted as the
    tag it sits on — never point it at anything a user typed. Do not nest data-de
    inside data-de: the outer swap replaces the inner element. */
+/* ---- Shared builders ----------------------------------------------------
+   el() already existed in admin.js with this exact signature, and this file
+   hand-wrote the same three lines at forty call sites instead of borrowing
+   it. Same name and same arguments in both, so moving between the two files
+   does not mean changing habits. */
+function el(tag, className, text) {
+  var node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined && text !== null) node.textContent = String(text);
+  return node;
+}
+
+/* A decorative glyph: sized by its class, hidden from assistive tech because
+   the words next to it already say what it means. The innerHTML is safe for
+   the one reason innerHTML is ever safe here, and the reason is not "it is an
+   icon": every string passed to this is a literal in this file. Never point
+   it at anything that came from a server or a form. */
+function iconSpan(className, svg) {
+  var node = el("span", className);
+  node.setAttribute("aria-hidden", "true");
+  node.innerHTML = svg;
+  return node;
+}
+
+/* ---- Storage ------------------------------------------------------------
+   Storage throws outright rather than returning null when a browser has it
+   disabled, in private mode, or blocked by a third-party-cookie policy, so
+   every read and write goes through these two instead of repeating the same
+   try/catch at nine call sites. A site whose theme toggle throws is worse
+   than a site that forgets the theme. */
+function recall(area, key) {
+  try { return area.getItem(key); } catch (e) { return null; }
+}
+
+function remember(area, key, value) {
+  try { area.setItem(key, value); } catch (e) {}
+}
+
 var LANG_KEY = "lang";
 var lang = readLang();
 var langHooks = [];   // redraws for text JS wrote; markup re-swaps itself
@@ -23,10 +61,7 @@ var LANG_ATTRS = [
 ];
 
 function readLang() {
-  try {
-    if (localStorage.getItem(LANG_KEY) === "de") return "de";
-  } catch (e) {}
-  return "en";
+  return recall(localStorage, LANG_KEY) === "de" ? "de" : "en";
 }
 
 function t(en, de) {
@@ -76,9 +111,8 @@ function initLangToggle() {
   var header = document.querySelector(".site-header");
   if (!header) return;
 
-  var btn = document.createElement("button");
+  var btn = el("button", "icon-btn lang-btn");
   btn.type = "button";
-  btn.className = "icon-btn lang-btn";
 
   function sync() {
     // The button names the language it switches to, not the one in use.
@@ -89,7 +123,7 @@ function initLangToggle() {
 
   btn.addEventListener("click", function () {
     lang = lang === "de" ? "en" : "de";
-    try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
+    remember(localStorage, LANG_KEY, lang);
 
     applyLang();
     sync();
@@ -232,58 +266,123 @@ function initProjectFilter() {
   }
   if (techs.length < 2) return;
 
-  var bar = document.createElement("div");
-  bar.className = "project-filter";
+  /* How many cards each technology would leave showing. Written on the chip,
+     so the cost of a filter is legible before it is paid rather than after. */
+  function countFor(tech) {
+    if (tech === "") return rows.length;
+    var n = 0;
+    for (var i = 0; i < owned.length; i++) if (owned[i].indexOf(tech) !== -1) n++;
+    return n;
+  }
 
-  var caption = document.createElement("span");
-  caption.className = "project-filter__label";
-  caption.id = "project-filter-label";
-  caption.textContent = "Filter";   // the same word in both languages
-  bar.appendChild(caption);
+  var bar = el("div", "project-filter");
 
-  var chipList = document.createElement("ul");
-  chipList.className = "chips";
+  var toggle = el("button", "project-filter__toggle");
+  toggle.type = "button";
+  toggle.id = "project-filter-label";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", "project-filter-chips");
+
+  // "Filter" is the same word in both languages, so it never needs redrawing.
+  var state = el("span", "project-filter__state");
+  toggle.appendChild(el("span", "project-filter__word", "Filter"));
+  toggle.appendChild(state);
+  toggle.appendChild(iconSpan("project-filter__mark", ICON_CHEVRON));
+  bar.appendChild(toggle);
+
+  var chipList = el("ul", "chips");
+  chipList.id = "project-filter-chips";
   chipList.setAttribute("aria-labelledby", "project-filter-label");
+  chipList.hidden = true;
   bar.appendChild(chipList);
 
   var buttons = [];
+  var active = "";
 
+  /* Only whether the panel is open is remembered. The filter itself is not:
+     coming back to a page that silently hides most of it is a bug report
+     waiting to happen, and the panel state costs nothing to be wrong about. */
+  var OPEN_KEY = "projectFilterOpen";
+
+  function setOpen(open) {
+    chipList.hidden = !open;
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    remember(localStorage, OPEN_KEY, open ? "1" : "0");
+  }
+
+  function isOpen() {
+    return toggle.getAttribute("aria-expanded") === "true";
+  }
+
+  /* The collapsed bar still says what is on. Without this the panel could be
+     shut over an active filter and the grid would look like the whole set. */
+  function syncState() {
+    state.textContent = (active === "" ? t("All", "Alle") : active) +
+                        " · " + countFor(active);
+    bar.classList.toggle("is-filtered", active !== "");
+    toggle.setAttribute("aria-label", active === ""
+      ? t("Filter projects, showing all", "Projekte filtern, alle werden gezeigt")
+      : t("Filter projects, showing ", "Projekte filtern, gezeigt wird ") + active);
+  }
+
+  /* Clicking the chip that is already on clears it, so the filter can always
+     be undone where it was set rather than only from the All chip. */
   function apply(tech) {
+    active = tech === active ? "" : tech;
     for (var i = 0; i < rows.length; i++) {
-      rows[i].hidden = tech !== "" && owned[i].indexOf(tech) === -1;
+      rows[i].hidden = active !== "" && owned[i].indexOf(active) === -1;
     }
     for (var k = 0; k < buttons.length; k++) {
-      var on = buttons[k].getAttribute("data-tech") === tech;
+      var on = buttons[k].getAttribute("data-tech") === active;
       buttons[k].setAttribute("aria-pressed", on ? "true" : "false");
     }
+    syncState();
     layoutCards(rows);
   }
 
-  function addChip(tech, text) {
-    var item = document.createElement("li");
-    var chip = document.createElement("button");
+  function addChip(tech, label) {
+    var chip = el("button", "chip chip--filter");
     chip.type = "button";
-    chip.className = "chip chip--filter";
-    chip.textContent = text;
     chip.setAttribute("data-tech", tech);
     chip.setAttribute("aria-pressed", "false");
+
+    var name = el("span", null, label);
+    chip.appendChild(name);
+    chip.appendChild(el("span", "chip__count", countFor(tech)));
     chip.addEventListener("click", function () { apply(tech); });
-    buttons.push(chip);
+
+    var item = el("li");
     item.appendChild(chip);
     chipList.appendChild(item);
-    return chip;
+    buttons.push(chip);
+    return name;
   }
 
-  var all = addChip("", t("All", "Alle") + " · " + rows.length);
-  onLangChange(function () {
-    all.textContent = t("All", "Alle") + " · " + rows.length;
-  });
+  var allLabel = addChip("", t("All", "Alle"));
 
   /* The technologies are product names — React, Rust — so they read the same
      in either language and are never translated. */
   for (var n = 0; n < techs.length; n++) addChip(techs[n], techs[n]);
 
+  toggle.addEventListener("click", function () { setOpen(!isOpen()); });
+
+  /* Escape backs out one step at a time: the filter first, then the panel. */
+  bar.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape" && e.keyCode !== 27) return;
+    if (active !== "") apply(active);
+    else setOpen(false);
+    toggle.focus();
+  });
+
+  onLangChange(function () {
+    allLabel.textContent = t("All", "Alle");
+    syncState();
+  });
+
+  var wasOpen = recall(localStorage, OPEN_KEY) === "1";
+
   list.parentNode.insertBefore(bar, list);
+  setOpen(wasOpen);
   apply("");
 }
 
@@ -389,6 +488,16 @@ function isOffline() {
          /(^|\.)github\.io$/.test(location.hostname);
 }
 
+/* Who is signed in, once /auth/me has answered. The vault names them in its
+   guard bar, and one call serves both rather than each page asking again. */
+var authUser = null;
+var authHooks = [];
+
+function onAuth(fn) {
+  if (authUser) fn(authUser);
+  else authHooks.push(fn);
+}
+
 function initAuth() {
   if (isOffline()) return;
 
@@ -397,7 +506,11 @@ function initAuth() {
       return res.ok ? res.json() : null;
     })
     .then(function (data) {
-      if (data && data.user) showSignedIn(data.user);
+      if (!data || !data.user) return;
+      authUser = data.user;
+      showSignedIn(authUser);
+      for (var i = 0; i < authHooks.length; i++) authHooks[i](authUser);
+      authHooks = [];
     })
     .catch(function () {
     });
@@ -408,9 +521,8 @@ function showSignedIn(user) {
   if (!nav) return;
 
   if (user.role === "admin" && !nav.querySelector("[data-admin-link]")) {
-    var admin = document.createElement("a");
+    var admin = el("a", null, "Admin");
     admin.href = "/admin.html";
-    admin.textContent = "Admin";
     admin.setAttribute("data-admin-link", "");
     if (location.pathname === "/admin.html") admin.setAttribute("aria-current", "page");
     nav.appendChild(admin);
@@ -418,9 +530,8 @@ function showSignedIn(user) {
 
   var header = nav.parentNode;
   if (header && !header.querySelector("[data-signout]")) {
-    var out = document.createElement("button");
+    var out = el("button", "icon-btn site-header__signout");
     out.type = "button";
-    out.className = "icon-btn site-header__signout";
     var nameOut = function () {
       out.title = t("Sign out", "Abmelden");
       out.setAttribute("aria-label", out.title);
@@ -439,15 +550,65 @@ function showSignedIn(user) {
   }
 }
 
+/* ---- The Vault ----------------------------------------------------------
+   Three things are sensitive on this page, and they are not the same thing.
+
+   1. Whether a document exists. That never leaves the server unauthenticated:
+      the markup ships empty and /api/vault/items answers a session or nothing.
+      Already true, and the reason vault/index.html has no rows in it.
+   2. What a document is called. "Zeugnis Sek II" tells a bystander, a screen
+      share or a beamer what the file is without anyone getting past the
+      password, and the list sits open on screen far longer than it is read.
+      So the names arrive and are not painted: each row wears a redaction bar
+      until the visitor asks, and asking is one click.
+   3. Who read what. That one is handled by saying so: the guard bar states
+      that every download is recorded, because it is.
+
+   The cover is display, not access. A revealed list lasts the tab and not the
+   machine (sessionStorage, never localStorage), and covers itself again once
+   the tab has been away long enough to have been left rather than glanced
+   away from. */
+
+var VAULT_REVEAL_KEY = "vaultRevealed";
+
+/* Long enough that switching tabs to copy an email address is not punished,
+   short enough that a walk to the coffee machine is. A cover that fires on
+   every blur gets revealed once and resented; this one is rarely wrong. */
+var VAULT_RECOVER_MS = 20000;
+
+/* ---- Icons --------------------------------------------------------------
+   One block rather than two scattered ones, all from the same 24x24 stroked
+   set, all sized by the class of the span that holds them rather than by a
+   width attribute. The stylesheet has a single rule that makes an svg fill
+   its span, so a new glyph needs no CSS of its own. */
+var ICON_DOC = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>';
+var ICON_DOWN = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+var ICON_EYE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+var ICON_EYE_OFF = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+var ICON_CHEVRON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+var ICON_MOON = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+var ICON_SUN = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
+var ICON_DOOR = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
+
+/* The bar stands for the title without measuring it. Quantised to steps of
+   four and capped, so a long name and a longer one look the same, while the
+   rows still vary enough not to read as a column of identical smudges. */
+function redactionBar(text) {
+  var len = Math.min(Math.max(Math.round((text || "").length / 4) * 4, 8), 24);
+  return new Array(len + 1).join("\u2588");
+}
+
 function initVault() {
   var list = document.getElementById("vault-list");
   var status = document.getElementById("vault-status");
+  var guard = document.getElementById("vault-guard");
+  var actions = document.getElementById("vault-actions");
   if (!list) return;
 
   if (isOffline()) {
     setText(status,
       "The Vault needs the live site. It cannot be opened from a local file.",
-      "Der Vault braucht die Live-Seite. Aus einer lokalen Datei lässt er sich nicht öffnen.");
+      "Der Vault braucht die Live-Seite. Aus einer lokalen Datei l\u00e4sst er sich nicht \u00f6ffnen.");
     return;
   }
 
@@ -465,20 +626,112 @@ function initVault() {
 
       if (!items.length) {
         setText(status, "No documents are published right now.",
-                        "Zurzeit sind keine Dokumente veröffentlicht.");
+                        "Zurzeit sind keine Dokumente ver\u00f6ffentlicht.");
         return;
       }
 
-      /* Redrawn rather than relabelled on a switch: a row carries a size and a
-         state, and rebuilding it is shorter than reaching into each part. */
+      var ready = 0;    // documents with a file behind them
+      var bytes = 0;
+      items.forEach(function (item) {
+        if (!item.available) return;
+        ready++;
+        bytes += item.sizeBytes || 0;
+      });
+
+      var revealed = recall(sessionStorage, VAULT_REVEAL_KEY) === "1";
+
+      var note = el("p", "doc-guard__note");
+
+      var eye = el("button", "doc-guard__btn");
+      eye.type = "button";
+      eye.setAttribute("aria-controls", "vault-list");
+      eye.addEventListener("click", function () { setRevealed(!revealed); });
+
+      var eyeMark = iconSpan("doc-guard__mark", "");
+      var eyeWord = el("span");
+
+      eye.appendChild(eyeMark);
+      eye.appendChild(eyeWord);
+      guard.appendChild(note);
+      guard.appendChild(eye);
+      guard.hidden = false;
+
+      /* Count and size are not sensitive and stay legible while the names are
+         covered: a visitor needs to know there is something worth fetching
+         before deciding whether to uncover anything. */
+      function drawGuard() {
+        var who = authUser ? authUser.username : "";
+        var count = items.length + " " + (items.length === 1
+          ? t("document", "Dokument")
+          : t("documents", "Dokumente"));
+
+        note.textContent =
+          (who ? t("Signed in as ", "Angemeldet als ") + who + " \u00b7 " : "") +
+          count + " \u00b7 " +
+          t("every download is recorded.", "jeder Download wird protokolliert.");
+
+        eyeMark.innerHTML = revealed ? ICON_EYE_OFF : ICON_EYE;
+        eyeWord.textContent = revealed
+          ? t("Cover names", "Namen verdecken")
+          : t("Show names", "Namen zeigen");
+        eye.setAttribute("aria-pressed", revealed ? "true" : "false");
+      }
+
+      /* One file per document means a reader clicking six times and answering
+         six save dialogs. The archive is built server-side and logs a download
+         per document, so the record stays as detailed as it was. */
+      function drawActions() {
+        if (ready < 2) return;
+        actions.textContent = "";
+
+        var size = formatBytes(bytes);
+        var all = el("a", "doc-all");
+        all.href = API_BASE + "/vault/archive";
+        all.setAttribute("download", "vault-documents.zip");
+
+        all.appendChild(iconSpan("doc-all__icon", ICON_DOWN));
+        all.appendChild(el("span", "doc-all__label",
+          t("Download all", "Alle herunterladen")));
+        all.appendChild(el("span", "doc-all__meta",
+          "ZIP \u00b7 " + ready + " " + t("files", "Dateien") +
+          (size ? " \u00b7 " + size : "")));
+
+        actions.appendChild(all);
+        actions.hidden = false;
+      }
+
+      /* Redrawn rather than relabelled on a switch: a row carries a size, a
+         state and a cover, and rebuilding it is shorter than reaching into
+         each part. */
       function draw() {
         list.textContent = "";
         items.forEach(function (item) {
-          list.appendChild(vaultRow(item));
+          list.appendChild(vaultRow(item, revealed));
         });
+        drawGuard();
+        drawActions();
       }
+
+      function setRevealed(on) {
+        revealed = on;
+        remember(sessionStorage, VAULT_REVEAL_KEY, on ? "1" : "0");
+        draw();
+        eye.focus();
+      }
+
+      var leftAt = 0;
+      document.addEventListener("visibilitychange", function () {
+        if (document.hidden) { leftAt = Date.now(); return; }
+        if (revealed && leftAt && Date.now() - leftAt > VAULT_RECOVER_MS) {
+          revealed = false;
+          remember(sessionStorage, VAULT_REVEAL_KEY, "0");
+          draw();
+        }
+      });
+
       draw();
       onLangChange(draw);
+      onAuth(drawGuard);
 
       list.hidden = false;
       if (status) status.remove();
@@ -490,47 +743,49 @@ function initVault() {
     });
 }
 
-function vaultRow(item) {
-  var li = document.createElement("li");
-  li.className = "doc";
+function vaultRow(item, revealed) {
+  var li = el("li", "doc" + (revealed ? "" : " doc--covered") +
+                    (item.available ? "" : " doc--missing"));
 
-  var row = document.createElement(item.available ? "a" : "span");
-  row.className = "doc__link";
+  /* An anchor when there is a file behind it, a span when there is not: a
+     link that goes nowhere is worse than a row that is plainly inert. */
+  var row = el(item.available ? "a" : "span", "doc__link");
   if (item.available) row.href = API_BASE + "/vault/items/" + item.id + "/file";
-  else li.classList.add("doc--missing");
 
-  var icon = document.createElement("span");
-  icon.className = "doc__icon";
-  icon.setAttribute("aria-hidden", "true");
-  icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>';
+  var size = item.available ? formatBytes(item.sizeBytes) : "";
 
-  var name = document.createElement("span");
-  name.className = "doc__name";
-  name.textContent = item.title;
+  row.appendChild(iconSpan("doc__icon", ICON_DOC));
+  row.appendChild(fillCovered(el("span", "doc__name"), item.title, revealed));
+  row.appendChild(el("span", "doc__meta", item.available
+    ? (size ? "PDF \u00b7 " + size : "PDF")
+    : t("Not uploaded", "Nicht hochgeladen")));
 
-  var meta = document.createElement("span");
-  meta.className = "doc__meta";
-  if (!item.available) {
-    meta.textContent = t("Not uploaded", "Nicht hochgeladen");
-  } else {
-    var size = formatBytes(item.sizeBytes);
-    meta.textContent = size ? "PDF · " + size : "PDF";
+  if (item.description) {
+    row.appendChild(fillCovered(el("span", "doc__desc"), item.description, revealed));
   }
 
-  row.appendChild(icon);
-  row.appendChild(name);
-  row.appendChild(meta);
-
-  if (item.available) {
-    var arrow = document.createElement("span");
-    arrow.className = "doc__arrow";
-    arrow.setAttribute("aria-hidden", "true");
-    arrow.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
-    row.appendChild(arrow);
-  }
+  if (item.available) row.appendChild(iconSpan("doc__arrow", ICON_DOWN));
 
   li.appendChild(row);
   return li;
+}
+
+/* Covered on screen, intact to a screen reader. The bar is what a room can
+   see; the words still reach assistive tech, which is read to one person
+   through an earpiece rather than shown to everyone standing behind them.
+   Covering it there would take the row's only meaning away and protect nobody. */
+function fillCovered(node, text, revealed) {
+  if (revealed) {
+    node.textContent = text;
+    return node;
+  }
+
+  var bar = el("span", "doc__redaction", redactionBar(text));
+  bar.setAttribute("aria-hidden", "true");
+
+  node.appendChild(bar);
+  node.appendChild(el("span", "visually-hidden", text));
+  return node;
 }
 
 function initLogin() {
@@ -642,13 +897,6 @@ function formatBytes(value) {
   return (u > 0 && bytes < 10 ? bytes.toFixed(1) : Math.round(bytes)) + " " + units[u];
 }
 
-var ICON_MOON =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
-var ICON_SUN =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
-var ICON_DOOR =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
-
 function initThemeToggle() {
   var root = document.documentElement;
   var toggle = document.getElementById("theme-toggle");
@@ -660,16 +908,14 @@ function initThemeToggle() {
     if (toggle) toggle.setAttribute("aria-pressed", String(light));
   }
 
-  var saved = null;
-  try { saved = localStorage.getItem("theme"); } catch (e) {}
-  apply(saved === "light");
+  apply(recall(localStorage, "theme") === "light");
 
   if (!toggle) return;
 
   toggle.addEventListener("click", function () {
     var light = !root.classList.contains("light");
     apply(light);
-    try { localStorage.setItem("theme", light ? "light" : "dark"); } catch (e) {}
+    remember(localStorage, "theme", light ? "light" : "dark");
   });
 }
 
@@ -813,18 +1059,16 @@ function ghDraw(root, days) {
     slots = slots.slice(slots.length - weeks * GH_ROWS);
   }
 
-  var cells = document.createElement("div");
-  cells.className = "gh-cells";
+  var cells = el("div", "gh-cells");
   cells.style.setProperty("--gh-weeks", String(weeks));
   cells.setAttribute("role", "img");
   cells.setAttribute("aria-label", ghLabel(slots));
 
   slots.forEach(function (d) {
-    var cell = document.createElement("span");
+    var cell = el("span", "gh-cell");
     if (!d) {
       cell.className = "gh-cell gh-cell--pad";
     } else {
-      cell.className = "gh-cell";
       cell.setAttribute("data-level", d.level);
       cell.setAttribute("data-date", d.date);
       cell.setAttribute("data-count", d.count);
@@ -873,8 +1117,7 @@ function ghWatch(root, days) {
 function ghTooltip(root, cells) {
   var tip = root.querySelector(".gh__tip");
   if (!tip) {
-    tip = document.createElement("span");
-    tip.className = "gh__tip";
+    tip = el("span", "gh__tip");
     root.appendChild(tip);
   }
   tip.hidden = true;
@@ -906,25 +1149,21 @@ function ghError(root) {
 
   chart.textContent = "";
 
-  var msg = document.createElement("p");
-  msg.className = "gh__status";
+  var msg = el("p", "gh__status");
 
   /* The words are their own element: setText writes textContent, which would
      take the retry button with it on a language switch. */
-  var words = document.createElement("span");
+  var words = el("span");
   setText(words, "Activity unavailable.", "Aktivität nicht verfügbar.");
   msg.appendChild(words);
 
-  var retry = document.createElement("button");
+  var retry = el("button", "gh__retry");
   retry.type = "button";
-  retry.className = "gh__retry";
   setText(retry, "Retry", "Erneut versuchen");
   retry.addEventListener("click", function () {
     chart.textContent = "";
-    var wait = document.createElement("p");
-    wait.className = "gh__status";
-    wait.textContent = t("Loading activity…", "Aktivität wird geladen…");
-    chart.appendChild(wait);
+    chart.appendChild(el("p", "gh__status",
+      t("Loading activity…", "Aktivität wird geladen…")));
     renderContributions();
   });
 

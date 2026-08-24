@@ -173,17 +173,6 @@ body {
   text-transform: uppercase;
 }
 
-/* The word is the whole brand now, so it carries the hover itself. */
-.site-brand:hover,
-.site-brand:focus-visible {
-  color: var(--accent);
-}
-
-.site-brand:focus-visible {
-  outline: 1px solid var(--accent);
-  outline-offset: 2px;
-}
-
 .site-controls {
   display: flex;
   align-items: center;
@@ -214,20 +203,22 @@ body {
   transition: color var(--motion), border-color var(--motion);
 }
 
+/* The rule under the word is the nav's own, and the only thing it adds. */
 .site-nav a:hover,
 .site-nav a:focus-visible {
-  color: var(--text);
-  border-bottom-color: var(--text);
-  outline: none;
+  border-bottom-color: var(--accent);
 }
 
+/* The current page is already marked by the accent rule, so its hover has
+   only the colour left to move. That is deliberate: the rule stays put and
+   nothing appears to change page under the pointer. */
 .site-nav a[aria-current="page"] {
   color: var(--text);
   border-bottom-color: var(--accent);
 }
 
+/* Inside the link, not around it: a sticky bar clips an outer ring. */
 .site-nav a:focus-visible {
-  outline: 1px solid var(--accent);
   outline-offset: -2px;
 }
 
@@ -245,10 +236,96 @@ body {
   transition: border-color var(--motion), color var(--motion);
 }
 
-/* Hover: border lifts to --border-hover and text goes to --fg-strong. */
+/* ==== The two hover signals, and which one a thing gets ====
+   A box lifts: --border-hover on the rim, --fg-strong on the type, plus the
+   corner wash below. It never takes the accent, because a page holds a dozen
+   boxes and a dozen red rims is a warning light, not a design.
+   Anything that is really a word — a link in prose, a nav item, the brand, a
+   footer link, a document row, a chip, an icon button — takes --accent. That
+   is the whole rule. If you are adding a hover and it is neither of these
+   two, one of them is what you actually wanted.
+
+   Both are declared once, as the two lists below, and a component adds its
+   selector to a list rather than writing the declaration again. That is not
+   tidiness: the site had three different hovers precisely because each new
+   component wrote its own, and fifteen copies of one colour drift the moment
+   somebody changes fourteen of them. What stays local to a component is only
+   what is unique to it — an underline, a rotation, an arrow that nudges. */
+
+/* --- Signal one: the word. Hover and focus always move together. --- */
+.site-brand:hover,
+.site-brand:focus-visible,
+.site-nav a:hover,
+.site-nav a:focus-visible,
+.site-footer a:hover,
+.site-footer a:focus-visible,
+.box__text a:hover,
+.box__text a:focus-visible,
+.link-box__note a:hover,
+.link-box__note a:focus-visible,
+.page-head__lede a:hover,
+.page-head__lede a:focus-visible,
+.reading a:hover,
+.reading a:focus-visible,
+.linklist a:hover,
+.linklist a:focus-visible,
+.doc__link:hover,
+.doc__link:focus-visible,
+.doc-all:hover,
+.doc-all:focus-visible,
+.doc-guard__btn:hover,
+.doc-guard__btn:focus-visible,
+.project-filter__toggle:hover,
+.project-filter__toggle:focus-visible,
+.chip--filter:hover,
+.icon-btn:hover,
+.icon-btn:focus-visible,
+.clip-btn:hover,
+.clip-btn:focus-visible,
+.gh__retry:hover,
+.admin-tab:hover,
+.reveal__summary:hover .reveal__mark,
+.reveal__summary:focus-visible .reveal__mark,
+.reveal__summary:hover > .section-label,
+.reveal__summary:focus-visible > .section-label {
+  color: var(--accent);
+}
+
+/* --- Signal two: the rim. Boxes, and the bordered controls that behave like
+   one. The type change that goes with it is on .box and .link-box, which are
+   the only two that carry body copy. --- */
+.box:hover,
+.box--link:focus-visible,
+.link-box:hover,
+.link-box:focus-visible,
+.pager a:hover,
+.pager a:focus-visible,
+.chip--filter:hover,
+.doc-all:hover,
+.doc-all:focus-visible,
+.doc-guard__btn:hover,
+.doc-guard__btn:focus-visible,
+.project-filter__toggle:hover,
+.project-filter__toggle:focus-visible,
+.pe-slot:hover {
+  border-color: var(--border-hover);
+}
+
+/* --- One focus ring, on everything the keyboard can land on. A component
+   writes its own only to change the offset, which three of them do. --- */
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .box:hover {
   color: var(--fg-strong);
-  border-color: var(--border-hover);
 }
 
 .box__body {
@@ -303,12 +380,45 @@ body {
   }
 }
 
+/* Off the screen, still in the accessibility tree. Not display:none and not
+   [hidden]: both remove the text from the tree, which is the opposite of what
+   this is for. The vault covers a document name visually and leaves this
+   copy of it for a screen reader. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Every glyph on the site is an inline SVG inside a span that has already
+   been given a size, and every one of them wants the same five lines. They
+   are declared here once; a component sizes its span and stops there. */
+.icon-btn [data-theme-icon] svg,
+.link-box__icon svg,
+.doc__icon svg,
+.doc__arrow svg,
+.doc-guard__mark svg,
+.doc-all__icon svg,
+.project-filter__mark svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+}
+
 /* ---- Shared type roles -------------------------------------------------- */
 
 .box__label,
 .link-box__caption,
 .page-head__label,
-.project-filter__label,
+.project-filter__word,
 .field__label,
 .section-label,
 .datarow dt,
@@ -377,17 +487,6 @@ body {
   text-decoration-thickness: 1px;   /* the 1px rule, applied to type */
   text-underline-offset: 2px;
   transition: color var(--motion);
-}
-
-.box__text a:hover,
-.box__text a:focus-visible,
-.link-box__note a:hover,
-.link-box__note a:focus-visible,
-.page-head__lede a:hover,
-.page-head__lede a:focus-visible,
-.reading a:hover,
-.reading a:focus-visible {
-  color: var(--accent);
 }
 
 /* Body copy: descriptions, pitch, prose — muted, capped line length. */
@@ -671,12 +770,6 @@ body {
 
 .gh__retry:hover {
   border-color: var(--accent);
-  color: var(--accent);
-}
-
-.gh__retry:focus-visible {
-  outline: 1px solid var(--accent);
-  outline-offset: 2px;
 }
 
 .gh-cell {
@@ -783,14 +876,6 @@ body {
 
 .box--link:focus-visible {
   color: var(--fg-strong);
-  border-color: var(--border-hover);
-}
-
-/* Visible focus everywhere */
-a:focus-visible,
-.box--link:focus-visible {
-  outline: 1px solid var(--accent);
-  outline-offset: 2px;
 }
 
 /* ==== Navigation arrow — top-right marker on boxes that link out ==== */
@@ -912,23 +997,11 @@ a:focus-visible,
   display: none;
 }
 
-.link-box__icon svg {
-  width: 100%;
-  height: 100%;
-  fill: none;
-  stroke: currentColor;
-}
 
-/* Hover/focus lifts the border and text without a brightness filter. */
+/* Lifts the type without a brightness filter. The rim is in the shared list. */
 .link-box:hover,
 .link-box:focus-visible {
   color: var(--fg-strong);
-  border-color: var(--border-hover);
-}
-
-.link-box:focus-visible {
-  outline: 1px solid var(--accent);
-  outline-offset: 2px;
 }
 
 /* ==== Subpages (projects / about / impressum) ==== */
@@ -1038,23 +1111,6 @@ a:focus-visible,
   stroke: currentColor;
 }
 
-.icon-btn [data-theme-icon] svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  fill: none;
-  stroke: currentColor;
-}
-
-.icon-btn:hover,
-.icon-btn:focus-visible {
-  color: var(--text);
-}
-
-.icon-btn:focus-visible {
-  outline: 1px solid var(--accent);
-  outline-offset: 2px;
-}
 
 /* ---- Impressum fields ---- */
 .field-list {
@@ -1126,11 +1182,6 @@ a:focus-visible,
   border-color: var(--accent);
 }
 
-.auth-field__input:focus-visible {
-  outline: 1px solid var(--accent);
-  outline-offset: 2px;
-}
-
 .auth-submit {
   align-self: flex-start;
   padding: calc(var(--space) * 1.25) calc(var(--space) * 3);
@@ -1147,11 +1198,6 @@ a:focus-visible,
 .auth-submit:hover:not(:disabled) {
   border-color: var(--accent);
   color: var(--accent);
-}
-
-.auth-submit:focus-visible {
-  outline: 1px solid var(--accent);
-  outline-offset: 2px;
 }
 
 .auth-submit:disabled {
@@ -1211,7 +1257,6 @@ a:focus-visible,
   transition: color var(--motion), border-color var(--motion);
 }
 
-.admin-tab:hover { color: var(--fg-strong); }
 
 .admin-tab[aria-selected="true"] {
   border-color: var(--line);
@@ -1220,8 +1265,8 @@ a:focus-visible,
   margin-bottom: calc(var(--border-width) * -1);
 }
 
+/* Inside the tab: the strip is clipped by the panel border below it. */
 .admin-tab:focus-visible {
-  outline: 1px solid var(--accent);
   outline-offset: -2px;
 }
 
@@ -1312,11 +1357,6 @@ a:focus-visible,
 .admin-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
-}
-
-.admin-btn:focus-visible {
-  outline: 1px solid var(--accent);
-  outline-offset: 2px;
 }
 
 .admin-btn--accent { color: var(--fg-strong); }
@@ -1497,8 +1537,7 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
   transition: border-color var(--motion), color var(--motion);
 }
 
-.pe-slot:hover { border-color: var(--border-hover); color: var(--fg); }
-.pe-slot:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+.pe-slot:hover { color: var(--fg); }
 
 /* Held by another project — clicking offers a swap rather than an error. */
 .pe-slot[data-taken] { color: var(--fg); border-style: dashed; }
@@ -1668,7 +1707,6 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
 }
 
 .pe-color__preset:hover { border-color: var(--fg-strong); }
-.pe-color__preset:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
 
 /* The point of the picker: the actual card rim, live. */
 .pe-color__demo { width: 12rem; padding: var(--space) calc(var(--space) * 1.25); }
@@ -1697,10 +1735,17 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
 
 .doc:last-child { border-bottom: 0; }
 
+/* Four tracks and two rows: the description hangs under the name, indented
+   past the icon, so a row grows downwards instead of squeezing the title. */
 .doc__link {
-  display: flex;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "icon name meta arrow"
+    ".    desc desc desc";
   align-items: center;
-  gap: calc(var(--space) * 1.5);
+  column-gap: calc(var(--space) * 1.5);
+  row-gap: calc(var(--space) * 0.5);
   padding: calc(var(--space) * 1.5) 0;
   color: var(--text);
   text-decoration: none;
@@ -1708,7 +1753,7 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
 }
 
 .doc__icon {
-  flex: 0 0 18px;
+  grid-area: icon;
   width: 18px;
   height: 18px;
   display: inline-flex;
@@ -1716,22 +1761,39 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
   transition: color var(--motion);
 }
 
-.doc__icon svg,
-.doc__arrow svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  fill: none;
-  stroke: currentColor;
-}
 
 .doc__name {
+  grid-area: name;
   font-size: var(--fs-body);
   min-width: 0;
 }
 
+/* The document's own sentence, from the panel. Secondary to the name and
+   covered along with it, so uncovering does not change the row's height. */
+.doc__desc {
+  grid-area: desc;
+  font-size: var(--fs-caption);
+  line-height: 1.5;
+  color: var(--fg-mute);
+  min-width: 0;
+}
+
+/* A redaction bar, not a blur. This is a site of hard 1px edges and a smeared
+   name would be the one soft thing on it. Mono so the blocks are all one
+   width, negative tracking so they butt together into a single bar. */
+.doc__redaction {
+  display: inline-block;
+  vertical-align: middle;
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  line-height: 1;
+  letter-spacing: -0.06em;
+  color: color-mix(in srgb, var(--fg-mute) 45%, transparent);
+  user-select: none;
+}
+
 .doc__meta {
-  margin-left: auto;
+  grid-area: meta;
   font-size: var(--fs-caption);
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -1740,7 +1802,7 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
 }
 
 .doc__arrow {
-  flex: 0 0 16px;
+  grid-area: arrow;
   width: 16px;
   height: 16px;
   display: inline-flex;
@@ -1749,19 +1811,17 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
   transition: transform var(--motion), opacity var(--motion), color var(--motion);
 }
 
-.doc__link:hover,
-.doc__link:focus-visible {
-  color: var(--fg-strong);
-}
-
+/* The two glyphs are muted at rest and inherit on hover, so the row moves as
+   one word rather than as three parts lighting up on their own schedule. */
 .doc__link:hover .doc__icon,
-.doc__link:focus-visible .doc__icon {
-  color: var(--text);
+.doc__link:focus-visible .doc__icon,
+.doc__link:hover .doc__arrow,
+.doc__link:focus-visible .doc__arrow {
+  color: inherit;
 }
 
 .doc__link:hover .doc__arrow,
 .doc__link:focus-visible .doc__arrow {
-  color: var(--text);
   opacity: 1;
   transform: translateY(2px);
 }
@@ -1772,6 +1832,121 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
 }
 
 .doc--missing .doc__arrow { display: none; }
+
+/* A row with no arrow drops the track as well, or the column gap after the
+   size is left behind as a stray 24px of padding on that row alone. */
+.doc--missing .doc__link {
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "icon name meta"
+    ".    desc desc";
+}
+
+/* ---- Vault guard bar ----
+   The state of the list in one line: who is signed in, how much is here, that
+   downloads are recorded, and the switch that uncovers the names. It sits
+   inside the box because it describes the list, not the page. */
+.doc-guard {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space);
+  padding: calc(var(--space) * 1.25) calc(var(--space) * 1.5);
+  border: var(--border-width) solid var(--line-soft);
+  background: var(--panel-alt);
+}
+
+.doc-guard__note {
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  line-height: 1.5;
+  color: var(--fg-mute);
+}
+
+.doc-guard__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--space) * 0.75);
+  background: none;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  padding: calc(var(--space) * 0.5) var(--space);
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.03em;
+  color: var(--text);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--motion), border-color var(--motion);
+}
+
+.doc-guard__mark {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  color: var(--fg-mute);
+  transition: color var(--motion);
+}
+
+
+.doc-guard__btn:hover .doc-guard__mark,
+.doc-guard__btn:focus-visible .doc-guard__mark {
+  color: inherit;
+}
+
+/* Pressed means the names are showing, which is the state worth marking. */
+.doc-guard__btn[aria-pressed="true"] {
+  border-color: var(--accent);
+}
+
+/* ---- Download all ----
+   The same bordered row a document is, given the full width so it reads as
+   the list's total rather than as one more entry in it. */
+.doc-actions {
+  display: flex;
+}
+
+.doc-all {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) * 1.5);
+  width: 100%;
+  padding: calc(var(--space) * 1.5);
+  border: var(--border-width) solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+  transition: color var(--motion), border-color var(--motion);
+}
+
+.doc-all__icon {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  color: var(--fg-mute);
+  transition: color var(--motion);
+}
+
+.doc-all__label {
+  font-size: var(--fs-body);
+}
+
+.doc-all__meta {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--fg-mute);
+  white-space: nowrap;
+}
+
+.doc-all:hover .doc-all__icon,
+.doc-all:focus-visible .doc-all__icon {
+  color: inherit;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .doc__link:hover .doc__arrow,
@@ -1794,7 +1969,12 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
 }
 
 /* Built by script.js from the chips already in the cards, so a page without JS
-   shows the whole list rather than a row of buttons that do nothing. */
+   shows the whole list rather than a row of buttons that do nothing.
+   Shut by default. The index's job is to show the projects; eleven chips
+   standing between the masthead and the first card are a tool nobody asked
+   for yet. The toggle keeps naming the active filter while the panel is shut,
+   so a closed panel can never be the unexplained reason two thirds of the
+   grid is missing. */
 .project-filter {
   display: flex;
   flex-direction: column;
@@ -1803,24 +1983,77 @@ textarea.admin-input { min-height: 5em; line-height: 1.5; resize: vertical; }
   padding-block: var(--stack-md);
 }
 
+.project-filter__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space);
+  background: none;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  padding: calc(var(--space) * 0.75) calc(var(--space) * 1.5);
+  font-family: inherit;
+  color: var(--text);
+  cursor: pointer;
+  transition: color var(--motion), border-color var(--motion);
+}
+
+.project-filter__state {
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.project-filter__mark {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  color: var(--fg-mute);
+  transition: transform var(--motion), color var(--motion);
+}
+
+
+.project-filter__toggle[aria-expanded="true"] .project-filter__mark {
+  transform: rotate(180deg);
+}
+
+/* The three parts move together, or the row reads as a label and a value that
+   happen to share a border. */
+.project-filter__toggle:hover .project-filter__word,
+.project-filter__toggle:focus-visible .project-filter__word,
+.project-filter__toggle:hover .project-filter__mark,
+.project-filter__toggle:focus-visible .project-filter__mark {
+  color: inherit;
+}
+
+/* An active filter wears the same accent rim the pressed chip does, so the
+   shut panel and the open one agree about what "on" looks like. */
+.project-filter.is-filtered .project-filter__toggle {
+  border-color: var(--accent);
+}
+
 .project-filter .chips { justify-content: center; }
+
+/* The count is the cost of the filter, shown before it is paid. */
+.chip__count {
+  color: var(--fg-mute);
+  font-variant-numeric: tabular-nums;
+}
+
+.chip--filter:hover .chip__count,
+.chip--filter[aria-pressed="true"] .chip__count {
+  color: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-filter__mark { transition: color var(--motion); }
+}
 
 .chip--filter {
   background: none;
   font-family: inherit;
   cursor: pointer;
   transition: color var(--motion), border-color var(--motion);
-}
-
-.chip--filter:hover {
-  color: var(--text);
-  border-color: var(--border-hover);
-}
-
-/* The blanket focus rule covers links, not buttons. */
-.chip--filter:focus-visible {
-  outline: 1px solid var(--accent);
-  outline-offset: 2px;
 }
 
 .chip--filter[aria-pressed="true"] {
@@ -2326,14 +2559,8 @@ code {
 
 .reveal[open] .reveal__mark { transform: rotate(180deg); }
 
-.reveal__summary:hover .reveal__mark,
-.reveal__summary:focus-visible .reveal__mark { color: var(--fg-strong); }
-
-.reveal__summary:hover > .section-label,
-.reveal__summary:focus-visible > .section-label { color: var(--fg-strong); }
-
+/* Wider than the standard ring: the summary's own rule sits right on it. */
 .reveal__summary:focus-visible {
-  outline: 1px solid var(--accent);
   outline-offset: 3px;
 }
 
@@ -2404,7 +2631,6 @@ code {
 
 .clip-btn:hover,
 .clip-btn:focus-visible {
-  color: var(--fg-strong);
   border-color: var(--accent);
 }
 
@@ -2472,11 +2698,6 @@ code {
   color: var(--text);
   text-decoration: none;
   transition: color var(--motion);
-}
-
-.linklist a:hover,
-.linklist a:focus-visible {
-  color: var(--accent);
 }
 
 .linklist__label {
@@ -2560,7 +2781,6 @@ code {
 
 .pager a:hover,
 .pager a:focus-visible {
-  border-color: var(--border-hover);
   color: var(--fg-strong);
 }
 
@@ -2616,7 +2836,6 @@ code {
 }
 
 
-
 /* ==== Footer (shared) — legal + credit, nothing else ==== */
 /* Centred, like the header it answers: one row of three, not a bar with a
    left end and a right end. */
@@ -2647,9 +2866,7 @@ code {
 
 .site-footer a:hover,
 .site-footer a:focus-visible {
-  color: var(--text);
-  border-bottom-color: var(--text);
-  outline: none;
+  border-bottom-color: var(--accent);
 }
 
 .footer-arrow {
@@ -2731,11 +2948,6 @@ code {
     z-index: 1;
   }
 
-  .is-home .box__body:focus-visible,
-  .is-home .link-box__note:focus-visible {
-    outline: 1px solid var(--accent);
-    outline-offset: 2px;
-  }
 }
 
 /* Short screens shrink the cells on their own; only the gap between them has

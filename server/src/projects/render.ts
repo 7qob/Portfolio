@@ -179,7 +179,7 @@ const CLIP_CONTROLS = `<button class="clip-btn clip-btn--play" type="button" dat
 <div class="clip-track" data-clip-track aria-hidden="true"><span class="clip-track__fill" data-clip-fill></span></div>`;
 
 const FAVICON =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='.5' y='.5' width='31' height='31' fill='%230e0e0e' stroke='%232a2a2a'/%3E%3Crect x='9' y='9' width='14' height='14' fill='%23ff1e2f'/%3E%3C/svg%3E";
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23000'/%3E%3C/svg%3E";
 
 /**
  * `titleDe` is the German title — the same data-de the hand-written pages put
@@ -560,7 +560,7 @@ function indexEndcap(p: string): string {
             </span>
             GitHub
           </span>
-          <span class="link-box__note" data-de="der Quellcode zu allem hier, plus die kleineren Sachen.">the source behind these, plus the smaller things.</span>
+          <span class="link-box__note" data-de="Der Quellcode zu allem hier, plus die kleineren Sachen.">The source behind these, plus the smaller things.</span>
           <span class="box-arrow box-arrow--external" aria-hidden="true">
             ${ICON_BOX_ARROW_EXT}
           </span>
@@ -574,7 +574,7 @@ function indexEndcap(p: string): string {
             </span>
             <span data-de="Über mich">About me</span>
           </span>
-          <span class="link-box__note" data-de="wer das hier baut, und warum diese Dinge.">who builds these, and why these things.</span>
+          <span class="link-box__note" data-de="Wer das hier baut, und warum diese Dinge.">Who builds these, and why these things.</span>
           <span class="box-arrow" aria-hidden="true">
             ${ICON_BOX_ARROW}
           </span>
