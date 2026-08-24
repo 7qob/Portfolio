@@ -344,12 +344,29 @@ One half only, when you know which one changed:
 The database and the documents are bind mounts, so pulling a new image never
 touches accounts, logs or PDFs.
 
-**A renderer change needs a Publish.** Every generated page on disk was
+**A renderer change needs a re-render.** Every generated page on disk was
 written by whichever renderer shipped before it, so a markup change in
-`server/src/projects/render.ts` does not reach a visitor until the panel runs
-Publish once. `update.sh` notices when that file was in the pull and says so
+`server/src/projects/render.ts` does not reach a visitor until something
+rewrites the pages. From the shell you already have open:
+
+```bash
+docker compose exec api node dist/cli.js render
+```
+
+It rewrites every published project page, the projects index and the home
+page from the database, publishes nothing new and changes no row, so running
+it twice costs nothing. The panel's Publish button does the same thing
+through `POST /api/admin/projects/render`; the command exists so that
+finishing a deploy does not require signing into a browser.
+
+`update.sh` notices when the renderer was in the pull and prints the command
 at the end, because this is the way a deploy most often looks finished and is
 not.
+
+If the live index ever shows the projects as a plain bulleted list with no
+cards and no covers, this is what happened: the pages on disk predate the
+rebuild that replaced `.project-row` with `.project-card`, and the classes
+they ask for are no longer in `style.css`. One `render` fixes it.
 
 ### What this protects against, and what it doesn't
 

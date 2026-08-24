@@ -168,7 +168,11 @@ if echo "$CHANGED" | grep -qE 'server/src/projects/(render|blocks)\.ts'; then
     ! The page renderer changed in this update.
       Every generated page on disk was written by the previous version, so
       the live project pages, the projects index and the home page still
-      carry the old markup. Open /admin.html and hit Publish once.
+      carry the old markup. Rewrite them from here:
+
+          docker compose exec api node dist/cli.js render
+
+      or open /admin.html and hit Publish, which does the same thing.
 EOF
 fi
 

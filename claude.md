@@ -447,7 +447,9 @@ adjusting this line get it wrong without you.
   `Co-Authored-By` trailer, no mention of Claude anywhere.
 - **A generated page carries only the German the renderer knows.** The chrome
   switches; the project's own words do not, because they are database text.
-- **A markup change in the renderer needs a Publish to take effect.** The
+- **A markup change in the renderer needs a Publish to take effect**, or
+  `docker compose exec api node dist/cli.js render`, which is the same
+  rewrite without the browser. The
   generated `projects.html` on the Pi was written by the renderer that shipped
   before it. After deploying the picture-rail index, publish once — the live
   page is still asking for `.project-row`, which no longer exists in
